@@ -1,15 +1,23 @@
 """Explicit, offline model preparation. Nothing in this module fits on a click.
 
-The fixed population, formula and covariance estimator follow notebook cell 23.
+The fixed population, formulas, covariance estimator and clustering parameters
+are those of notebook cells 23 and 26. Tables, rather than pickled fitted models,
+are persisted with the source revision and a versioned analytical contract.
 """
 
 from __future__ import annotations
+
+import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 from bh_itbi.analysis import diagnostic_rows
+from bh_itbi.data import CACHE_DIR, REVISION, SOURCE_SHA256, atomic_parquet
 
+MODEL_VERSION = "v1"
+MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
 FORMULA = (
     "log_price ~ log_area + C(building_age_band) + C(property_type)"
     " + C(neighbourhood) + C(quarter_label)"
@@ -91,3 +99,104 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "property_types": ["apartment", "house"],
     }
     return result, metadata
+
+
+def cluster_trajectories(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """Fixed k=4 on all ten annual real-median indices, with seed 42/n_init 20."""
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import silhouette_score
+
+    data = diagnostic_rows(frame)
+    data = data.loc[
+        data["property_type"].eq("apartment")
+        & data["year"].between(2016, 2025)
+        & data["price_per_m2_brl_real"].notna()
+    ]
+    yearly = (
+        data.groupby(["neighbourhood", "year"], observed=True)
+        .agg(median=("price_per_m2_brl_real", "median"), n=("price_per_m2_brl_real", "size"))
+        .reset_index()
+    )
+    yearly = yearly.loc[yearly["n"] >= 30]
+    trajectories = yearly.pivot(index="neighbourhood", columns="year", values="median")
+    trajectories = trajectories.reindex(columns=range(2016, 2026)).dropna()
+    trajectories = 100 * trajectories.div(trajectories[2016], axis=0)
+    if len(trajectories) < 7:
+        raise ValueError(
+            "Menos de sete bairros com cobertura anual suficiente para avaliar k=2…6."
+        )
+    fits = {
+        k: KMeans(n_clusters=k, n_init=20, random_state=42).fit(trajectories)
+        for k in range(2, 7)
+    }
+    silhouettes = {
+        k: float(silhouette_score(trajectories, fit.labels_)) for k, fit in fits.items()
+    }
+    fit = fits[4]
+    order = np.argsort(-fit.cluster_centers_[:, -1])
+    display_group = {cluster: rank for rank, cluster in enumerate(order, start=1)}
+    groups = pd.Series(
+        [display_group[label] for label in fit.labels_], index=trajectories.index, name="group"
+    )
+    members = (
+        trajectories.rename_axis("neighbourhood")
+        .reset_index()
+        .melt(id_vars="neighbourhood", var_name="year", value_name="index")
+    )
+    members["group"] = members["neighbourhood"].map(groups)
+    members = members.merge(yearly[["neighbourhood", "year", "n"]], validate="one_to_one")
+    centres = pd.DataFrame(fit.cluster_centers_[order], columns=trajectories.columns)
+    centres["group"] = range(1, 5)
+    centres = centres.melt(id_vars="group", var_name="year", value_name="index")
+    metadata = {
+        "n_neighbourhoods": len(trajectories),
+        "k": 4,
+        "n_init": 20,
+        "random_state": 42,
+        "silhouettes": silhouettes,
+        "members_per_group": {int(k): int(v) for k, v in groups.value_counts().items()},
+    }
+    return members, centres, metadata
+
+
+def prepare_models(frame: pd.DataFrame, *, force: bool = False) -> dict:
+    """Run explicitly before serving; publish metadata after every table exists."""
+    if not force and (existing := load_models()) is not None:
+        return existing["metadata"]
+    print("Estimando índice hedônico com IC de 95% agrupado por bairro…", flush=True)
+    hedonic, hedonic_metadata = fit_hedonic(frame)
+    print("Agrupando trajetórias de bairros (k=2…6; exibição k=4)…", flush=True)
+    members, centres, cluster_metadata = cluster_trajectories(frame)
+    atomic_parquet(hedonic, MODEL_DIR / "hedonic.parquet")
+    atomic_parquet(members, MODEL_DIR / "members.parquet")
+    atomic_parquet(centres, MODEL_DIR / "centres.parquet")
+    metadata = {
+        "revision": REVISION,
+        "source_sha256": SOURCE_SHA256,
+        "model_version": MODEL_VERSION,
+        "hedonic": hedonic_metadata,
+        "clusters": cluster_metadata,
+    }
+    path = MODEL_DIR / "metadata.json"
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    temporary.replace(path)
+    return metadata
+
+
+def load_models(directory: Path = MODEL_DIR) -> dict | None:
+    """Read only tables for this exact source/model contract; never fit here."""
+    metadata_path = directory / "metadata.json"
+    files = [directory / f"{name}.parquet" for name in ("hedonic", "members", "centres")]
+    if not metadata_path.exists() or not all(path.exists() for path in files):
+        return None
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if (
+        metadata.get("revision") != REVISION
+        or metadata.get("source_sha256") != SOURCE_SHA256
+        or metadata.get("model_version") != MODEL_VERSION
+    ):
+        return None
+    return {"metadata": metadata} | {path.stem: pd.read_parquet(path) for path in files}
