@@ -14,7 +14,14 @@ import numpy as np
 import pandas as pd
 
 from bh_itbi.analysis import diagnostic_rows
-from bh_itbi.data import CACHE_DIR, REVISION, SOURCE_SHA256, atomic_parquet
+from bh_itbi.data import (
+    CACHE_DIR,
+    REVISION,
+    SOURCE_SHA256,
+    atomic_json,
+    atomic_parquet,
+    file_sha256,
+)
 
 MODEL_VERSION = "v1"
 MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
@@ -176,18 +183,18 @@ def prepare_models(frame: pd.DataFrame, *, force: bool = False) -> dict:
         "model_version": MODEL_VERSION,
         "hedonic": hedonic_metadata,
         "clusters": cluster_metadata,
+        "tables_sha256": {
+            name: file_sha256(MODEL_DIR / f"{name}.parquet")
+            for name in ("hedonic", "members", "centres")
+        },
     }
-    path = MODEL_DIR / "metadata.json"
-    temporary = path.with_suffix(".tmp")
-    temporary.write_text(
-        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
-    temporary.replace(path)
+    atomic_json(metadata, MODEL_DIR / "metadata.json")
     return metadata
 
 
-def load_models(directory: Path = MODEL_DIR) -> dict | None:
+def load_models(directory: Path | None = None) -> dict | None:
     """Read only tables for this exact source/model contract; never fit here."""
+    directory = MODEL_DIR if directory is None else directory
     metadata_path = directory / "metadata.json"
     files = [directory / f"{name}.parquet" for name in ("hedonic", "members", "centres")]
     if not metadata_path.exists() or not all(path.exists() for path in files):
@@ -197,6 +204,12 @@ def load_models(directory: Path = MODEL_DIR) -> dict | None:
         metadata.get("revision") != REVISION
         or metadata.get("source_sha256") != SOURCE_SHA256
         or metadata.get("model_version") != MODEL_VERSION
+        or any(
+            metadata.get("tables_sha256", {}).get(path.stem) != file_sha256(path)
+            for path in files
+        )
     ):
         return None
-    return {"metadata": metadata} | {path.stem: pd.read_parquet(path) for path in files}
+    return {"metadata": metadata} | {
+        path.stem: pd.read_parquet(path, use_threads=False) for path in files
+    }

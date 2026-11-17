@@ -4,19 +4,28 @@ import pandas as pd
 from dash import Dash
 
 from bh_itbi.callbacks import register_callbacks
-from bh_itbi.data import ROOT, load_source_metadata, load_transactions
+from bh_itbi.data import ROOT, DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
 from bh_itbi.models import load_models
 
 
-def create_app(*, frame: pd.DataFrame | None = None, models: dict | None = None) -> Dash:
+def create_app(
+    *,
+    frame: pd.DataFrame | None = None,
+    models: dict | None = None,
+    require_prepared: bool = False,
+) -> Dash:
     """Build a server; explicit frame injection keeps unit tests fully offline."""
     if frame is None:
-        frame = load_transactions()
+        frame = load_transactions(allow_prepare=not require_prepared)
         models = load_models()
-        provenance = load_source_metadata()
+        provenance = load_source_metadata(allow_prepare=not require_prepared)
     else:
         provenance = {"source_rows": len(frame)}
+    if require_prepared and models is None:
+        raise DataError(
+            "Modelos preparados ausentes ou incompatíveis. Execute main.py prepare."
+        )
     neighbourhoods = sorted(frame["neighbourhood"].dropna().unique().tolist())
     app = Dash(
         __name__,
@@ -44,4 +53,10 @@ def create_app(*, frame: pd.DataFrame | None = None, models: dict | None = None)
 </html>"""
     app.layout = build_layout(neighbourhoods, models, provenance["source_rows"])
     register_callbacks(app, frame, models)
+
+    @app.server.get("/healthz")
+    def health():
+        # Production reaches this route only after every required table loaded.
+        return {"status": "ok"}
+
     return app

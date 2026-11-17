@@ -16,7 +16,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from huggingface_hub import hf_hub_download
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO_ID = "pracadata/brazil-itbi"
@@ -24,7 +23,7 @@ REVISION = "5908d77ed56fc9adb6dbafaf2cb38f34245bcd76"
 FILENAME = "data/belo_horizonte_transactions.parquet"
 SOURCE_SHA256 = "386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86"
 IPCA_BASE = "setembro de 2026"  # DATA_DICTIONARY.md at the pinned revision.
-CACHE_VERSION = "v2"
+CACHE_VERSION = "v3"
 CACHE_DIR = ROOT / "data" / "cache" / f"{CACHE_VERSION}-{REVISION[:12]}"
 YEARS = tuple(range(2016, 2026))
 PRACA_SETE = (-19.9191, -43.9386)
@@ -49,6 +48,21 @@ REQUIRED_COLUMNS = [
     "value_flag",
     "geo_precision",
     *NUMERIC_COLUMNS,
+]
+# Validation still uses every required source field. Only these redundant fields
+# are omitted from the generated table; all eligible rows and float64 values stay.
+UNUSED_COLUMNS = {
+    "transaction_id",
+    "city",
+    "value_flag",
+    "geo_precision",
+    "value_declared_brl_real",
+}
+TRANSACTION_COLUMNS = [c for c in REQUIRED_COLUMNS if c not in UNUSED_COLUMNS] + [
+    "month",
+    "quarter",
+    "face_geocoded",
+    "distance_km",
 ]
 
 
@@ -124,19 +138,46 @@ def atomic_parquet(frame: pd.DataFrame, destination: Path) -> None:
         name.unlink(missing_ok=True)
 
 
+def file_sha256(path: Path) -> str:
+    """Hash a file without materialising its bytes in memory."""
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def atomic_json(report: dict, destination: Path) -> None:
+    """Publish a manifest only after its tables have been written successfully."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=destination.parent, delete=False
+    ) as temporary:
+        name = Path(temporary.name)
+        json.dump(report, temporary, ensure_ascii=False, indent=2)
+        temporary.write("\n")
+    try:
+        os.replace(name, destination)
+    finally:
+        name.unlink(missing_ok=True)
+
+
 def prepare_cache() -> dict:
     """Fetch the pinned snapshot, verify its published hash and cache typed rows."""
+    # The serving process needs neither the downloader nor its HTTP dependencies.
+    from huggingface_hub import hf_hub_download
+
     path = Path(
         hf_hub_download(
             repo_id=REPO_ID, repo_type="dataset", filename=FILENAME, revision=REVISION
         )
     )
-    with path.open("rb") as stream:
-        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    digest = file_sha256(path)
     if digest != SOURCE_SHA256:
         raise DataError("O SHA-256 do Parquet não coincide com o manifesto da fonte.")
-    source = pd.read_parquet(path, columns=REQUIRED_COLUMNS)
+    source = pd.read_parquet(path, columns=REQUIRED_COLUMNS, use_threads=False)
     frame = prepare_transactions(source)
+    frame = frame[TRANSACTION_COLUMNS]
+    frame["year"] = pd.to_numeric(frame["year"], downcast="integer")
+    table_path = CACHE_DIR / "transactions.parquet"
+    atomic_parquet(frame, table_path)
     report = {
         "revision": REVISION,
         "cache_version": CACHE_VERSION,
@@ -146,29 +187,41 @@ def prepare_cache() -> dict:
         "first_date": str(source["transaction_date"].min()),
         "last_date": str(source["transaction_date"].max()),
         "ipca_base": IPCA_BASE,
+        "transactions_sha256": file_sha256(table_path),
     }
-    atomic_parquet(frame, CACHE_DIR / "transactions.parquet")
-    (CACHE_DIR / "source.json").write_text(
-        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
-    load_transactions.cache_clear()
+    atomic_json(report, CACHE_DIR / "source.json")
+    _read_transactions.cache_clear()
     return report
 
 
-def load_source_metadata() -> dict:
+def load_source_metadata(*, allow_prepare: bool = True) -> dict:
     """Return validated metadata for the cached transaction snapshot."""
     path = CACHE_DIR / "transactions.parquet"
     metadata = CACHE_DIR / "source.json"
     if not path.exists() or not metadata.exists():
+        if not allow_prepare:
+            raise DataError(
+                "Dados preparados ausentes. Execute python main.py prepare no build."
+            )
         prepare_cache()
     report = json.loads(metadata.read_text(encoding="utf-8"))
-    if report.get("revision") != REVISION or report.get("cache_version") != CACHE_VERSION:
+    if (
+        report.get("revision") != REVISION
+        or report.get("cache_version") != CACHE_VERSION
+        or report.get("source_sha256") != SOURCE_SHA256
+        or report.get("transactions_sha256") != file_sha256(path)
+    ):
         raise DataError("Cache incompatível. Execute novamente a preparação dos dados.")
     return report
 
 
 @lru_cache(maxsize=1)
-def load_transactions() -> pd.DataFrame:
+def _read_transactions(path: Path) -> pd.DataFrame:
+    # Serial decoding bounds Arrow's temporary buffers on the 512 MB instance.
+    return pd.read_parquet(path, columns=TRANSACTION_COLUMNS, use_threads=False)
+
+
+def load_transactions(*, allow_prepare: bool = True) -> pd.DataFrame:
     """Load once per server process; subsequent callbacks share read-only rows."""
-    load_source_metadata()
-    return pd.read_parquet(CACHE_DIR / "transactions.parquet")
+    load_source_metadata(allow_prepare=allow_prepare)
+    return _read_transactions(CACHE_DIR / "transactions.parquet")

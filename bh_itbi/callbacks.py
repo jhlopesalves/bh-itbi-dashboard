@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import lru_cache, wraps
+from threading import Lock
 
 import pandas as pd
 from dash import Input, Output, State, ctx, html, no_update
@@ -68,16 +69,34 @@ def clicked_neighbourhood(click_data: dict | None, available: set[str]) -> str |
 
 
 def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
+    view_lock = Lock()
+
+    def serialise_view(callback):
+        """Bound transaction intermediates while other threads serve light requests."""
+
+        @wraps(callback)
+        def guarded(*args, **kwargs):
+            with view_lock:
+                return callback(*args, **kwargs)
+
+        return guarded
+
     filters_inputs = [
         Input("property-type", "value"),
         Input("year-range", "value"),
         Input("neighbourhoods", "value"),
     ]
 
-    @lru_cache(maxsize=16)
+    # Maps contain up to 8,000 hover records. Bound their retained memory rather
+    # than keeping sixteen full sets of Plotly figures for arbitrary selections.
+    @lru_cache(maxsize=2)
     def overview(filters: Filters, distribution_metric: str, map_style: str):
         selected = filter_transactions(frame, filters)
-        city = filter_transactions(frame, filters.city_reference())
+        city = (
+            filter_transactions(frame, filters.city_reference())
+            if filters.neighbourhoods
+            else selected
+        )
         points, map_stats = map_points(selected)
         values = summary(selected)
         comparison_names = filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS
@@ -148,6 +167,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         Input("distribution-metric", "value"),
         Input("map-style", "value"),
     )
+    @serialise_view
     def update_overview(property_type, years, neighbourhoods, metric, style):
         filters = Filters.from_controls(property_type, years, neighbourhoods)
         return overview(filters, metric, style)
@@ -233,6 +253,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         *filters_inputs,
         Input("view-tabs", "data"),
     )
+    @serialise_view
     def update_diagnostics(property_type, years, neighbourhoods, tab):
         if tab != "diagnostics":
             raise PreventUpdate
@@ -264,6 +285,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             Output("cluster-members", "children"),
             Input("cluster-group", "value"),
         )
+        @serialise_view
         def update_models(group):
             group_id = None if group == "all" else int(group)
             members = models["members"].drop_duplicates(["neighbourhood", "group"])

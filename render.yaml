@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: bh-itbi-dashboard
+    runtime: python
+    plan: free
+    autoDeployTrigger: "off"
+    buildCommand: uv sync --frozen --no-dev && uv run --no-sync python main.py prepare --force
+    # View callbacks serialise their large intermediates; spare request threads
+    # keep health checks responsive on the Free plan's shared CPU.
+    startCommand: uv run --no-sync gunicorn wsgi:server --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 120 --access-logfile -
+    healthCheckPath: /healthz
+    envVars:
+      - key: UV_VERSION
+        value: "0.12.6"
+      - key: OPENBLAS_NUM_THREADS
+        value: "1"
+      - key: OMP_NUM_THREADS
+        value: "1"

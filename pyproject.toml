@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "dash>=4.5.0",
+    "gunicorn>=27.0.1",
     "h3>=4.5.0",
     "huggingface-hub>=2.4.0",
     "numpy>=2.5.5",

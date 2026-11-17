@@ -184,7 +184,9 @@ def _band(fig: go.Figure, rows: pd.DataFrame, x: str, color: str, group: str) ->
 def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters) -> go.Figure:
     """Keep transaction dispersion distinct from the city-reference median."""
     monthly = temporal_table(selected, filters)
-    reference = temporal_table(city, filters.city_reference())
+    reference = (
+        temporal_table(city, filters.city_reference()) if filters.neighbourhoods else None
+    )
     fig = go.Figure()
     geographical = bool(filters.neighbourhoods)
     for property_type, label in TYPE_LABELS.items():
@@ -316,7 +318,7 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
 
 def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
     """Shared geometric bins show every positive value without tail trimming."""
-    values = frame.loc[frame[column].gt(0)]
+    values = frame.loc[frame[column].gt(0), ["property_type", column]]
     if len(values) < 5:
         return empty_figure("São necessários ao menos 5 valores válidos.", 330)
     low, high = values[column].min(), values[column].max()

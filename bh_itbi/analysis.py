@@ -70,7 +70,8 @@ def quantile_table(
     the minimum remain present with missing estimates so time-series gaps can
     be represented honestly. P25–P75 describes dispersion, not a confidence band.
     """
-    data = frame.loc[frame[column].notna()]
+    data = frame[groups + [column]]
+    data = data.loc[data[column].notna()]
     grouped = data.groupby(groups, observed=True)[column]
     result = grouped.quantile([0.25, 0.5, 0.75]).unstack()
     result = result.reindex(columns=[0.25, 0.5, 0.75])
@@ -135,7 +136,16 @@ def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     the original filtered eligible records. Identical centroids are not jittered
     or treated as precise property locations.
     """
-    candidates = frame.loc[frame["face_geocoded"] & frame["built_area_m2"].gt(0)]
+    columns = [
+        "neighbourhood",
+        "property_type",
+        "built_area_m2",
+        "transaction_date",
+        "lat",
+        "lon",
+        "price_per_m2_brl",
+    ]
+    candidates = frame.loc[frame["face_geocoded"] & frame["built_area_m2"].gt(0), columns]
     limits = candidates["price_per_m2_brl"].quantile([0.02, 0.98])
     screened = candidates.loc[candidates["price_per_m2_brl"].between(*limits)]
     points = screened.sample(n=min(8000, len(screened)), random_state=42)
@@ -169,8 +179,10 @@ def diagnostic_rows(frame: pd.DataFrame) -> pd.DataFrame:
 
 def tax_base_table(frame: pd.DataFrame) -> pd.DataFrame:
     """A share's denominator includes only positive, recorded tax bases."""
-    data = diagnostic_rows(frame)
-    data = data.loc[data["value_tax_base_brl"] > 0].copy()
+    data = frame.loc[
+        frame["built_area_m2"].gt(0) & frame["value_tax_base_brl"].gt(0),
+        ["quarter", "property_type", "value_declared_brl", "value_tax_base_brl"],
+    ]
     data["below"] = data["value_declared_brl"] < data["value_tax_base_brl"]
     result = data.groupby(["quarter", "property_type"], observed=True).agg(
         share=("below", "mean"), n=("below", "size")
@@ -185,9 +197,11 @@ def heaping_table(frame: pd.DataFrame) -> pd.DataFrame:
     A highlighted bin is *near* a multiple of R$50,000, not necessarily an exact
     multiple. This distinction corrects the notebook's original chart wording.
     """
-    data = diagnostic_rows(frame)
-    data = data.loc[
-        data["year"].between(2023, 2025) & data["value_declared_brl"].between(50_000, 1_000_000)
+    data = frame.loc[
+        frame["built_area_m2"].gt(0)
+        & frame["year"].between(2023, 2025)
+        & frame["value_declared_brl"].between(50_000, 1_000_000),
+        ["value_declared_brl"],
     ]
     centres = (data["value_declared_brl"] / 5000).round().mul(5000).astype(int)
     counts = centres.value_counts().reindex(range(50_000, 1_000_001, 5000), fill_value=0)
@@ -207,12 +221,13 @@ def heaping_summary(table: pd.DataFrame) -> tuple[int, float]:
 
 def age_table(frame: pd.DataFrame) -> pd.DataFrame:
     """Recent apartments, pooled P99 exclusion, then quartiles within age band."""
-    data = diagnostic_rows(frame)
-    data = data.loc[
-        data["property_type"].eq("apartment")
-        & data["year"].between(2023, 2025)
-        & data["building_age_band"].isin(AGE_LABELS)
-        & data["price_per_m2_brl_real"].notna()
+    data = frame.loc[
+        frame["built_area_m2"].gt(0)
+        & frame["property_type"].eq("apartment")
+        & frame["year"].between(2023, 2025)
+        & frame["building_age_band"].isin(AGE_LABELS)
+        & frame["price_per_m2_brl_real"].notna(),
+        ["building_age_band", "price_per_m2_brl_real"],
     ]
     cap = data["price_per_m2_brl_real"].quantile(0.99)
     return quantile_table(
@@ -222,13 +237,14 @@ def age_table(frame: pd.DataFrame) -> pd.DataFrame:
 
 def distance_table(frame: pd.DataFrame) -> pd.DataFrame:
     """Straight-line, street-face-centroid distances; 1 km bins, n >= 50."""
-    data = diagnostic_rows(frame)
-    data = data.loc[
-        data["property_type"].eq("apartment")
-        & data["year"].between(2016, 2025)
-        & data["distance_km"].lt(14)
-        & data["price_per_m2_brl_real"].notna()
-    ].copy()
+    data = frame.loc[
+        frame["built_area_m2"].gt(0)
+        & frame["property_type"].eq("apartment")
+        & frame["year"].between(2016, 2025)
+        & frame["distance_km"].lt(14)
+        & frame["price_per_m2_brl_real"].notna(),
+        ["year", "distance_km", "price_per_m2_brl_real"],
+    ]
     data["band_km"] = np.floor(data["distance_km"]) + 0.5
     data["period"] = pd.cut(
         data["year"], bins=[2015, 2018, 2021, 2025], labels=list(DISTANCE_PERIODS)
