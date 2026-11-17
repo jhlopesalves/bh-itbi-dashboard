@@ -68,7 +68,7 @@ def test_connected_callback_and_empty_neighbourhood_selection(app):
 
 def test_map_click_selects_source_neighbourhood_and_reset_returns_to_city(app):
     click = {"points": [{"customdata": ["SAVASSI", "Savassi"]}]}
-    values = [0, click]
+    values = [None, 0, click]
     states = ["apartment", [2016, 2016], []]
     selected = post_callback(
         app, "property-type.value", values, changed="geo-map.clickData", states=states
@@ -77,7 +77,7 @@ def test_map_click_selects_source_neighbourhood_and_reset_returns_to_city(app):
     cleared = post_callback(
         app,
         "property-type.value",
-        [1, click],
+        [None, 1, click],
         changed="reset-filters.n_clicks",
         states=["apartment", [2016, 2016], ["SAVASSI"]],
     )

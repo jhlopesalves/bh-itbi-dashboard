@@ -28,7 +28,7 @@ DISTANCE_PERIODS = {
 class Filters:
     """Shared population filters; neighbourhood membership is recorded by the source."""
 
-    property_type: str = "apartment"
+    property_type: str = "all"
     start_year: int = 2016
     end_year: int = 2025
     neighbourhoods: tuple[str, ...] = ()

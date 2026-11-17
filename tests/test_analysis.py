@@ -121,7 +121,8 @@ def test_months_and_ribbons_do_not_bridge_absent_or_suppressed_periods(source_fa
     source.loc[30:59, "transaction_date"] = "2016-03-01"
     source.loc[60:, "transaction_date"] = "2016-04-01"
     frame = prepare_transactions(source)
-    filters = Filters(start_year=2016, end_year=2016)
+    # Exercise the apartment series explicitly; the dashboard now defaults to both types.
+    filters = Filters(property_type="apartment", start_year=2016, end_year=2016)
     rows = temporal_table(frame, filters)
     assert len(rows) == 12
     assert pd.isna(rows.loc[rows["month"].eq("2016-02-01"), "median"].iat[0])

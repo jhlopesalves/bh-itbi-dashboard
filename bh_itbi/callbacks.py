@@ -6,7 +6,7 @@ from functools import lru_cache, wraps
 from threading import Lock
 
 import pandas as pd
-from dash import Input, Output, State, ctx, html, no_update
+from dash import ClientsideFunction, Input, Output, State, ctx, html, no_update
 from dash.exceptions import PreventUpdate
 
 from bh_itbi.analysis import (
@@ -39,6 +39,7 @@ from bh_itbi.figures import (
     tax_base_figure,
     temporal_figure,
 )
+from bh_itbi.urls import decode_query, default_controls
 
 
 def scope_text(filters: Filters) -> str:
@@ -70,6 +71,7 @@ def clicked_neighbourhood(click_data: dict | None, available: set[str]) -> str |
 
 def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
     view_lock = Lock()
+    neighbourhood_options = set(frame["neighbourhood"].dropna())
 
     def serialise_view(callback):
         """Bound transaction intermediates while other threads serve light requests."""
@@ -86,6 +88,26 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         Input("year-range", "value"),
         Input("neighbourhoods", "value"),
     ]
+    selection_inputs = [
+        *filters_inputs,
+        Input("distribution-metric", "value"),
+        Input("map-style", "value"),
+    ]
+
+    # Location writes use pushState. A small clientside history bridge instead
+    # replaces the current entry and reports only genuine browser navigation.
+    # Keeping navigation separate from URL writes makes the callback graph acyclic.
+    app.clientside_callback(
+        ClientsideFunction(namespace="sharing", function_name="observeNavigation"),
+        Output("url-navigation", "data"),
+        Input("url-config", "data"),
+    )
+    app.clientside_callback(
+        ClientsideFunction(namespace="sharing", function_name="updateUrl"),
+        *selection_inputs,
+        Input("url-ready", "data"),
+        State("url-config", "data"),
+    )
 
     # Maps contain up to 8,000 hover records. Bound their retained memory rather
     # than keeping sixteen full sets of Plotly figures for arbitrary selections.
@@ -163,9 +185,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             Output("neighbourhood-caption", "children"),
             Output("comparison-figure", "style"),
         ],
-        *filters_inputs,
-        Input("distribution-metric", "value"),
-        Input("map-style", "value"),
+        *selection_inputs,
     )
     @serialise_view
     def update_overview(property_type, years, neighbourhoods, metric, style):
@@ -176,22 +196,29 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         Output("property-type", "value"),
         Output("year-range", "value"),
         Output("neighbourhoods", "value"),
+        Output("distribution-metric", "value"),
+        Output("map-style", "value"),
+        Output("url-ready", "data"),
+        Input("url-navigation", "data"),
         Input("reset-filters", "n_clicks"),
         Input("geo-map", "clickData"),
         State("property-type", "value"),
         State("year-range", "value"),
         State("neighbourhoods", "value"),
-        prevent_initial_call=True,
     )
-    def select_neighbourhood_or_reset(_clicks, click_data, property_type, years, current):
+    def restore_selection(navigation, _clicks, click_data, property_type, years, current):
         if ctx.triggered_id == "reset-filters":
-            return "apartment", [2016, 2025], []
+            return *default_controls(), True
+        if ctx.triggered_id != "geo-map":
+            if navigation is None:
+                raise PreventUpdate
+            return *decode_query(navigation["search"], neighbourhood_options), True
         filters = Filters.from_controls(property_type, years, [])
         available = set(filter_transactions(frame, filters)["neighbourhood"].dropna())
         selected = clicked_neighbourhood(click_data, available)
         if selected is None or current == [selected]:
             raise PreventUpdate
-        return no_update, no_update, [selected]
+        return no_update, no_update, [selected], no_update, no_update, no_update
 
     @app.callback(Output("years-value", "children"), Input("year-range", "value"))
     def show_period(years):

@@ -4,6 +4,7 @@ from dash import dcc, html
 
 from bh_itbi.data import IPCA_BASE, REPO_ID, REVISION, YEARS
 from bh_itbi.figures import DISTRIBUTION_LABELS, TEAL, empty_figure, number
+from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC, QUERY_OPTIONS, default_controls
 
 GRAPH_CONFIG = {
     "displaylogo": False,
@@ -133,7 +134,7 @@ def overview_panel():
                                         {"label": "Com ruas", "value": "carto-voyager"},
                                         {"label": "Sem fundo", "value": "white-bg"},
                                     ],
-                                    value="carto-voyager",
+                                    value=DEFAULT_MAP_STYLE,
                                     clearable=False,
                                     searchable=False,
                                 ),
@@ -158,7 +159,7 @@ def overview_panel():
                                             {"label": label, "value": key}
                                             for key, label in DISTRIBUTION_LABELS.items()
                                         ],
-                                        value="price_per_m2_brl_real",
+                                        value=DEFAULT_METRIC,
                                         clearable=False,
                                         searchable=False,
                                     ),
@@ -534,6 +535,12 @@ def methodology():
 def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
     return html.Div(
         [
+            dcc.Store(id="url-navigation"),
+            dcc.Store(id="url-ready", data=False),
+            dcc.Store(
+                id="url-config",
+                data={"options": QUERY_OPTIONS, "defaults": default_controls()},
+            ),
             html.A("Ir para os gráficos", href="#conteudo", className="skip-link"),
             html.Header(
                 [
@@ -602,7 +609,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                                             {"label": "Casas", "value": "house"},
                                             {"label": "Apartamentos e casas", "value": "all"},
                                         ],
-                                        value="apartment",
+                                        value="all",
                                         clearable=False,
                                         searchable=False,
                                     ),
