@@ -7,23 +7,21 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bh_itbi.analysis import (
-    Filters,
-    city_quarterly_table,
-    distribution_quartiles,
-    filter_transactions,
-    heaping_summary,
-    heaping_table,
-    map_points,
-    quantile_table,
-    summary,
-    tax_base_table,
-    temporal_table,
-)
 from bh_itbi.callbacks import clicked_neighbourhood
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
-from bh_itbi.figures import distribution_figure, number, temporal_figure
+from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
+from bh_itbi.figures import distribution_figure, temporal_figure
+from bh_itbi.filters import Filters, filter_transactions
+from bh_itbi.formatting import number
 from bh_itbi.models import model_population
+from bh_itbi.overview import (
+    city_quarterly_table,
+    distribution_quartiles,
+    map_points,
+    summary,
+    temporal_table,
+)
+from bh_itbi.stats import quantile_table
 
 
 def test_notebook_eligibility_keeps_inclusive_bounds_and_real_tail(source_factory):

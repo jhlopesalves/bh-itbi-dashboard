@@ -3,7 +3,8 @@
 import numpy as np
 import pandas as pd
 
-from bh_itbi.figures import COMPOSITION_HUES, band_traces, ribbon_grid
+from bh_itbi.figures import band_traces, ribbon_grid
+from bh_itbi.theme import COMPOSITION_HUES
 
 
 def test_ribbon_bands_close_at_interpolated_sign_changes() -> None:

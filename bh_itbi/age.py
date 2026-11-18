@@ -6,17 +6,37 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from bh_itbi.analysis import AGE_LABELS
+from bh_itbi.config import (
+    AGE_INTERVAL,
+    AGE_MIN_NEIGHBOURHOODS,
+    AGE_MINIMUM,
+    AGE_REFERENCE,
+    AGE_YEARS,
+    IDENTITY_TOLERANCE,
+)
 from bh_itbi.models import hedonic_complete_cases
+from bh_itbi.text import (
+    AGE_LABELS,
+    FEW_NEIGHBOURHOODS,
+    MISSING_REFERENCE,
+    UNIDENTIFIED_ADJUSTMENT,
+)
 
-AGE_YEARS = (2023, 2025)
-AGE_REFERENCE = "26_plus"
-AGE_MINIMUM = 15
 AGE_GROUPS = ("Bairro", "Área", "Trimestre")
-AGE_INTERVAL = 1.96
-FEW_NEIGHBOURHOODS = "Ajuste indisponível: a seleção tem menos de 20 bairros."
-UNIDENTIFIED_ADJUSTMENT = "Ajuste indisponível: a seleção não identifica todos os efeitos."
-MISSING_REFERENCE = "São necessárias 15 transações na faixa de referência (26 anos ou mais)."
+__all__ = [
+    "AGE_GROUPS",
+    "AGE_INTERVAL",
+    "AGE_MINIMUM",
+    "AGE_MIN_NEIGHBOURHOODS",
+    "AGE_REFERENCE",
+    "AGE_YEARS",
+    "FEW_NEIGHBOURHOODS",
+    "MISSING_REFERENCE",
+    "UNIDENTIFIED_ADJUSTMENT",
+    "AgePremiums",
+    "age_premiums",
+    "within_neighbourhood",
+]
 
 
 @dataclass(frozen=True)
@@ -94,7 +114,7 @@ def age_premiums(frame: pd.DataFrame) -> AgePremiums:
             "observed": means - means[AGE_REFERENCE],
         }
     )
-    if groups < 20:
+    if groups < AGE_MIN_NEIGHBOURHOODS:
         return AgePremiums(table, excluded, groups, FEW_NEIGHBOURHOODS)
     if len(bands) == 1:
         return AgePremiums(table, excluded, groups)
@@ -132,6 +152,6 @@ def age_premiums(frame: pd.DataFrame) -> AgePremiums:
     table["lower"] = adjusted - margin
     table["upper"] = adjusted + margin
     table["identity_error"] = table["observed"] - adjusted - table[list(AGE_GROUPS)].sum(axis=1)
-    if not table["identity_error"].abs().lt(1e-8).all():
+    if not table["identity_error"].abs().lt(IDENTITY_TOLERANCE).all():
         raise ValueError("A decomposição por idade não satisfaz a identidade contábil.")
     return AgePremiums(table, excluded, groups)

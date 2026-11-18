@@ -15,8 +15,8 @@ from bh_itbi.age import (
     age_premiums,
     within_neighbourhood,
 )
-from bh_itbi.analysis import Filters, filter_transactions
 from bh_itbi.data import load_transactions
+from bh_itbi.filters import Filters, filter_transactions
 from bh_itbi.urls import default_controls
 
 

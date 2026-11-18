@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bh_itbi.analysis import neighbourhood_price_distributions, silverman_bandwidth
-from bh_itbi.figures import trim_log_density
+from bh_itbi.overview import neighbourhood_price_distributions
+from bh_itbi.stats import silverman_bandwidth, trim_log_density
 
 
 def test_silverman_bandwidth_matches_sample_iqr() -> None:

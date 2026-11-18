@@ -8,186 +8,108 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from bh_itbi.analysis import (
+from bh_itbi.config import (
+    COMPOSITION_LABEL_THRESHOLD,
     DEFAULT_NEIGHBOURHOODS,
+    DISTANCE_BAND_WIDTH_KM,
+    DISTANCE_MAX_KM,
+    DISTANCE_PAD_FRACTION,
     DISTANCE_PERIODS,
-    TYPE_LABELS,
-    Filters,
+    DISTANCE_PRICE_STEP,
+    DISTRIBUTION_BINS,
+    DISTRIBUTION_MINIMUM,
+    HEAPING_BAR_WIDTH,
+    HEAPING_MINIMUM,
+    MAP_CENTRE,
+    MAP_ZOOM,
+    YEAR_TICKS,
+)
+from bh_itbi.filters import Filters
+from bh_itbi.formatting import (
+    composition_number,
+    currency,
+    month_label,
+    number,
+    quarter_label,
+)
+from bh_itbi.models import COMPOSITION_TERMS
+from bh_itbi.overview import (
     NeighbourhoodDistribution,
     city_quarterly_table,
     temporal_table,
 )
-from bh_itbi.data import IPCA_BASE
-from bh_itbi.models import COMPOSITION_TERMS
+from bh_itbi.stats import trim_log_density
+from bh_itbi.text import (
+    CITY_NAME,
+    CITY_REFERENCE_EXTRA,
+    CLUSTER_INDEX_AXIS_TITLE,
+    COMPARISON_AXIS_TITLE,
+    DISTANCE_AXIS_TITLE,
+    DISTANCE_EMPTY_MESSAGE,
+    DISTRIBUTION_EMPTY_MESSAGE,
+    DISTRIBUTION_LABELS,
+    HEAPING_EMPTY_MESSAGE,
+    HEAPING_OTHER_BINS_LABEL,
+    HEAPING_ROUND_BINS_LABEL,
+    HEDONIC_INDEX_TRACE_NAME,
+    HEDONIC_RAW_TRACE_NAME,
+    LOG_CURRENCY_AXIS_TITLE,
+    MAP_COLORBAR_TITLE,
+    MAP_EMPTY_MESSAGE,
+    NOMINAL_DECLARED_AXIS_TITLE,
+    REAL_PRICE_AXIS_TITLE,
+    TAX_BASE_EMPTY_MESSAGE,
+    TAX_SHARE_AXIS_TITLE,
+    TEMPORAL_EMPTY_MESSAGE,
+    TRANSACTIONS_AXIS_TITLE,
+    TYPE_LABELS,
+    UNKNOWN_NEIGHBOURHOOD_LABEL,
+    cluster_group_heading,
+)
+from bh_itbi.theme import (
+    CLUSTER_COLORS,
+    COMPOSITION_HUES,
+    DISTANCE_PERIOD_STYLES,
+    INK,
+    MUTED,
+    NEIGHBOURHOOD_COLORS,
+    NEUTRAL_BAR,
+    PALETTE,
+    PRICE_SCALE,
+    SURFACE,
+    TEAL,
+    TYPE_COLORS,
+    composition_tint,
+    empty_figure,
+    hex_to_rgb,
+    themed,
+)
 
-# Editorial palette, mirrored in assets/dashboard.css. The categorical order was
-# checked for colour-vision-deficiency separation on the chart surface.
-INK = "#22313a"
-INK_SOFT = "#24343d"
-MUTED = "#667784"
-TEAL = "#1d6f73"
-CLAY = "#c0603a"
-BLUE = "#3e6daa"
-GOLD = "#a88620"
-PLUM = "#8f579f"
-SURFACE = "#fdfdfc"
-GRID = "#e6eae6"
-AXIS = "#c9d1cb"
-TEAL_TINT = "#b9d3d1"
-NEUTRAL_BAR = "#d6d0c5"
-FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
-TYPE_COLORS = {"apartment": TEAL, "house": CLAY}
-PALETTE = [TEAL, CLAY, BLUE, GOLD, PLUM, "#5f8f3a", "#b85079", "#5b78c0"]
-CLUSTER_COLORS = {1: "#6c4fae", 2: "#3d7f4a", 3: "#d77a9a", 4: "#e09a3e"}
-# Matplotlib's "jet", as in Géron's California housing map (translucent,
-# size-encoded circles coloured by price).
-PRICE_SCALE = [
-    [0.0, "#00007f"],
-    [0.125, "#0000ff"],
-    [0.375, "#00ffff"],
-    [0.625, "#ffff00"],
-    [0.875, "#ff0000"],
-    [1.0, "#7f0000"],
+__all__ = [
+    "DISTRIBUTION_LABELS",
+    "ComparisonPlot",
+    "ComparisonRow",
+    "band_traces",
+    "clusters_figure",
+    "distance_figure",
+    "distribution_figure",
+    "heaping_figure",
+    "hedonic_figure",
+    "label_ribbon",
+    "map_figure",
+    "neighbourhood_comparison_data",
+    "neighbourhood_trajectories_figure",
+    "ribbon_grid",
+    "tax_base_figure",
+    "temporal_figure",
 ]
-NEIGHBOURHOOD_COLORS = dict(zip(DEFAULT_NEIGHBOURHOODS, PALETTE, strict=False))
-MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
-DISTRIBUTION_LABELS = {
-    "price_per_m2_brl_real": "Valor declarado real (R$/m²)",
-    "price_per_m2_brl": "Valor declarado nominal (R$/m²)",
-    "value_declared_brl": "Valor declarado nominal (R$)",
-}
-# In draw order, from the earliest period at the back to the latest in front.
-DISTANCE_PERIOD_STYLES = {
-    "2016–2018": ("#e8a33d", 1.6, 3.0),
-    "2019–2021": ("#c94f7c", 2.0, 3.5),
-    "2022–2025": ("#5e2a6e", 2.8, 4.0),
-}
-DISTANCE_PRICE_STEP = 500
-# Keep the original cluster hues for the composition bands.
-COMPOSITION_HUES = {
-    "Bairro": "#c0603a",
-    "Área": "#3e6daa",
-    "Faixa de idade": "#a88620",
-    "Tipo": "#8a929a",
-}
-COMPOSITION_LABEL_THRESHOLD = 0.012
-
-
-def number(value: float, decimals: int = 0) -> str:
-    """Format only the display value; calculations retain unrounded precision."""
-    if pd.isna(value) or not np.isfinite(value):
-        return "—"
-    return f"{value:,.{decimals}f}".translate(str.maketrans(",.", ".,"))
-
-
-def composition_number(value: float) -> str:
-    """Display signed log × 100, keeping small non-zero values legible."""
-    scaled = value * 100
-    decimals = 4 if 0 < abs(scaled) < 0.05 else 1
-    magnitude = number(abs(scaled), decimals)
-    if decimals == 4:
-        magnitude = magnitude.rstrip("0").rstrip(",")
-    sign = "−" if scaled < 0 else "+" if scaled > 0 else ""
-    return sign + magnitude
-
-
-def currency(value: float) -> str:
-    return "—" if pd.isna(value) else f"R$ {number(value)}"
-
-
-def month_label(value) -> str:
-    date = pd.Timestamp(value)
-    return f"{MONTHS[date.month - 1]}/{date.year}"
-
-
-def quarter_label(value) -> str:
-    date = pd.Timestamp(value)
-    return f"{date.quarter}º tri. {date.year}"
-
-
-def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
-    """A quiet publication theme; HTML owns chart titles and explanatory copy."""
-    fig.update_layout(
-        template="plotly_white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font={"family": FONT, "size": 12, "color": INK},
-        separators=",.",
-        colorway=PALETTE,
-        height=height,
-        margin={"l": 65, "r": 22, "t": 18, "b": 8},
-        legend={
-            "orientation": "h",
-            # Align with the card and let Plotly reserve space for wrapped
-            # rows outside the axes.
-            "xref": "container",
-            "yref": "container",
-            "x": 0,
-            "y": 0,
-            "yanchor": "bottom",
-            # Pack entries in trace order, retaining legendgroup click behaviour.
-            "traceorder": "normal",
-            "font": {"size": 11, "color": INK_SOFT},
-            "title": {"text": ""},
-        },
-        hoverlabel={
-            "bgcolor": "#ffffff",
-            "bordercolor": AXIS,
-            "font": {"family": FONT, "color": INK, "size": 12},
-            "align": "left",
-        },
-        hovermode="closest",
-        modebar={
-            "orientation": "h",
-            "bgcolor": "rgba(0,0,0,0)",
-            "color": "#b3ada3",
-            "activecolor": TEAL,
-        },
-    )
-    axis = {
-        "zeroline": False,
-        "automargin": True,
-        "tickfont": {"size": 11, "color": MUTED},
-        "title_font": {"size": 11, "color": INK_SOFT},
-    }
-    fig.update_xaxes(
-        showgrid=False,
-        showline=True,
-        linecolor=AXIS,
-        linewidth=1,
-        ticks="outside",
-        ticklen=4,
-        tickcolor=AXIS,
-        **axis,
-    )
-    fig.update_yaxes(gridcolor=GRID, gridwidth=1, tickformat=",.0f", **axis)
-    return fig
-
-
-def empty_figure(
-    message: str = "Sem transações elegíveis neste recorte.", height=360
-) -> go.Figure:
-    fig = themed(go.Figure(), height=height)
-    fig.add_annotation(
-        x=0.5,
-        y=0.5,
-        xref="paper",
-        yref="paper",
-        text=message,
-        showarrow=False,
-        font={"size": 13, "color": MUTED},
-        align="center",
-    )
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(visible=False)
-    return fig
 
 
 def _band(fig: go.Figure, rows: pd.DataFrame, x: str, color: str, group: str) -> None:
     """Draw each contiguous observed band separately; never fill across a gap."""
     valid = rows["p25"].notna() & rows["p75"].notna()
     segments = (~valid).cumsum()
-    red, green, blue = (int(color[i : i + 2], 16) for i in (1, 3, 5))
+    red, green, blue = hex_to_rgb(color)
     for _, segment in rows.loc[valid].groupby(segments[valid], sort=False):
         if len(segment) < 2:
             continue
@@ -272,9 +194,7 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
                 )
             )
     if not any(pd.Series(trace.y).notna().any() for trace in fig.data):
-        return empty_figure(
-            "São necessárias 30 transações por mês e tipo.<br>Amplie o recorte."
-        )
+        return empty_figure(TEMPORAL_EMPTY_MESSAGE)
     themed(fig)
     fig.update_xaxes(
         dtick="M24"
@@ -285,22 +205,20 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
         tickformat="%Y" if filters.end_year > filters.start_year else "%b",
         range=[f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"],
     )
-    fig.update_yaxes(title_text="R$/m² · IPCA", rangemode="tozero")
+    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE, rangemode="tozero")
     return fig
 
 
 def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
     """Translucent, area-scaled circles following the notebook's price map."""
     if points.empty:
-        return empty_figure(
-            "Sem registros com localização de face e área válida neste recorte.", 540
-        )
+        return empty_figure(MAP_EMPTY_MESSAGE, 540)
     custom = [
         [
             str(row.neighbourhood) if pd.notna(row.neighbourhood) else "",
             str(row.neighbourhood).title()
             if pd.notna(row.neighbourhood)
-            else "Bairro não informado",
+            else UNKNOWN_NEIGHBOURHOOD_LABEL,
             TYPE_LABELS[row.property_type],
             number(row.built_area_m2, 1),
             month_label(row.transaction_date),
@@ -322,7 +240,7 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
                 "colorscale": PRICE_SCALE,
                 "showscale": True,
                 "colorbar": {
-                    "title": {"text": "R$/m²<br>nominal", "font": {"size": 10, "color": INK}},
+                    "title": {"text": MAP_COLORBAR_TITLE, "font": {"size": 10, "color": INK}},
                     "thickness": 8,
                     "len": 0.82,
                     "outlinewidth": 0,
@@ -343,7 +261,11 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
     )
     themed(fig, height=540)
     fig.update_layout(
-        map={"style": style, "center": {"lat": -19.92, "lon": -43.96}, "zoom": 10.25},
+        map={
+            "style": style,
+            "center": {"lat": MAP_CENTRE[0], "lon": MAP_CENTRE[1]},
+            "zoom": MAP_ZOOM,
+        },
         margin={"l": 0, "r": 12, "t": 0, "b": 0},
         uirevision="bh-point-map",
         clickmode="event",
@@ -355,12 +277,12 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
 def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
     """Shared geometric bins show every positive value without tail trimming."""
     values = frame.loc[frame[column].gt(0), ["property_type", column]]
-    if len(values) < 5:
-        return empty_figure("São necessários ao menos 5 valores válidos.", 330)
+    if len(values) < DISTRIBUTION_MINIMUM:
+        return empty_figure(DISTRIBUTION_EMPTY_MESSAGE, 330)
     low, high = values[column].min(), values[column].max()
     if low == high:
         low, high = low * 0.9, high * 1.1
-    edges = np.geomspace(low, high, 37)
+    edges = np.geomspace(low, high, DISTRIBUTION_BINS + 1)
     centres = np.sqrt(edges[:-1] * edges[1:])
     fig = go.Figure()
     for property_type, label in TYPE_LABELS.items():
@@ -384,7 +306,7 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
                 "<extra>%{fullData.name}</extra>",
             )
         )
-        if len(subset) >= 5:
+        if len(subset) >= DISTRIBUTION_MINIMUM:
             fig.add_vline(
                 x=subset.median(),
                 line={"color": TYPE_COLORS[property_type], "dash": "dot", "width": 1.5},
@@ -413,12 +335,12 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
     ]
     fig.update_xaxes(
         type="log",
-        title_text="R$ · escala logarítmica",
+        title_text=LOG_CURRENCY_AXIS_TITLE,
         tickmode="array",
         tickvals=ticks,
         ticktext=labels,
     )
-    fig.update_yaxes(title_text="Transações", rangemode="tozero", tickformat=",.0f")
+    fig.update_yaxes(title_text=TRANSACTIONS_AXIS_TITLE, rangemode="tozero", tickformat=",.0f")
     return fig
 
 
@@ -434,24 +356,6 @@ class ComparisonPlot(TypedDict):
     rows: list[ComparisonRow]
     city_median: float | None
     axis_title: str
-
-
-def trim_log_density(grid: np.ndarray, density: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Trim the outer tails at 1.5% of peak, preserving any troughs between modes."""
-    threshold = 0.015 * density.max()
-    visible = np.flatnonzero(density > threshold)
-    first, last = visible[0], visible[-1]
-    log_prices = grid[first : last + 1]
-    heights = density[first : last + 1]
-    if first > 0:
-        left = np.interp(threshold, density[first - 1 : first + 1], grid[first - 1 : first + 1])
-        log_prices = np.r_[left, log_prices]
-        heights = np.r_[threshold, heights]
-    if last < len(grid) - 1:
-        right = np.interp(threshold, density[[last + 1, last]], grid[[last + 1, last]])
-        log_prices = np.r_[log_prices, right]
-        heights = np.r_[heights, threshold]
-    return np.exp(log_prices), heights
 
 
 def neighbourhood_comparison_data(
@@ -480,7 +384,7 @@ def neighbourhood_comparison_data(
     return {
         "rows": visible,
         "city_median": float(city_median) if pd.notna(city_median) else None,
-        "axis_title": f"R$/m², valores reais (IPCA {IPCA_BASE}) · escala log",
+        "axis_title": COMPARISON_AXIS_TITLE,
     }
 
 
@@ -519,7 +423,7 @@ def neighbourhood_trajectories_figure(
         go.Scatter(
             x=ref["quarter"],
             y=ref["median"],
-            name="Belo Horizonte",
+            name=CITY_NAME,
             mode="lines",
             line={"color": MUTED, "width": 2, "dash": "dash"},
             connectgaps=False,
@@ -528,7 +432,7 @@ def neighbourhood_trajectories_figure(
                 for t, n in zip(ref["quarter"], ref["n"], strict=True)
             ],
             hovertemplate="%{customdata[0]}<br>BH: R$ %{y:,.0f}/m²"
-            "<br>Transações: %{customdata[1]}<extra>Referência municipal</extra>",
+            f"<br>Transações: %{{customdata[1]}}<extra>{CITY_REFERENCE_EXTRA}</extra>",
         )
     )
     themed(fig, height=370)
@@ -541,7 +445,7 @@ def neighbourhood_trajectories_figure(
         tickformat="%Y" if filters.end_year > filters.start_year else "%b",
         range=[f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"],
     )
-    fig.update_yaxes(title_text="R$/m² · IPCA", rangemode="tozero")
+    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE, rangemode="tozero")
     # Show up to six rows before scrolling, preserving room for the trajectories.
     fig.update_layout(legend={"maxheight": 124})
     return fig
@@ -550,9 +454,7 @@ def neighbourhood_trajectories_figure(
 def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
     """Retain missing or suppressed quarters instead of joining across them."""
     if table.empty or table["share"].isna().all():
-        return empty_figure(
-            "São necessárias 100 transações com base válida<br>por trimestre e tipo."
-        )
+        return empty_figure(TAX_BASE_EMPTY_MESSAGE)
     fig = go.Figure()
     periods = pd.date_range(
         f"{filters.start_year}-01-01", f"{filters.end_year}-10-01", freq="QS"
@@ -584,27 +486,25 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
         )
     themed(fig)
     fig.update_xaxes(tickformat="%Y", dtick="M24")
-    fig.update_yaxes(range=[0, 1], tickformat=".0%", title_text="Parcela das transações")
+    fig.update_yaxes(range=[0, 1], tickformat=".0%", title_text=TAX_SHARE_AXIS_TITLE)
     return fig
 
 
 def heaping_figure(table: pd.DataFrame) -> go.Figure:
     """Highlight centred bins near round amounts, without a fitted counterfactual."""
-    if table["n"].sum() < 5:
-        return empty_figure(
-            "Sem amostra suficiente na janela de 2023–2025<br>e de R$ 50 mil a R$ 1 milhão."
-        )
+    if table["n"].sum() < HEAPING_MINIMUM:
+        return empty_figure(HEAPING_EMPTY_MESSAGE)
     fig = go.Figure()
     for highlighted, label, color in [
-        (False, "Demais faixas", NEUTRAL_BAR),
-        (True, "Perto de múltiplos de R$ 50 mil", TEAL),
+        (False, HEAPING_OTHER_BINS_LABEL, NEUTRAL_BAR),
+        (True, HEAPING_ROUND_BINS_LABEL, TEAL),
     ]:
         rows = table.loc[table["is_round_bin"].eq(highlighted)]
         fig.add_trace(
             go.Bar(
                 x=rows["value"],
                 y=rows["n"],
-                width=4500,
+                width=HEAPING_BAR_WIDTH,
                 name=label,
                 marker={"color": color, "line": {"width": 0}},
                 hovertemplate=(
@@ -614,8 +514,8 @@ def heaping_figure(table: pd.DataFrame) -> go.Figure:
         )
     themed(fig)
     fig.update_layout(barmode="overlay", margin={"l": 50, "r": 18, "t": 12})
-    fig.update_xaxes(title_text="Valor declarado nominal (R$)", tickformat=",.0f", nticks=5)
-    fig.update_yaxes(title_text="Transações", rangemode="tozero")
+    fig.update_xaxes(title_text=NOMINAL_DECLARED_AXIS_TITLE, tickformat=",.0f", nticks=5)
+    fig.update_yaxes(title_text=TRANSACTIONS_AXIS_TITLE, rangemode="tozero")
     return fig
 
 
@@ -626,19 +526,14 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
         if unknown:
             raise ValueError(f"Períodos de distância sem estilo: {', '.join(sorted(unknown))}.")
     if table.empty or table["median"].isna().all():
-        return empty_figure(
-            "São necessários 50 apartamentos por faixa de 1 km<br>e período, com "
-            "localização de face."
-        )
+        return empty_figure(DISTANCE_EMPTY_MESSAGE)
     fig = go.Figure()
     plotted = []
+    half_band = DISTANCE_BAND_WIDTH_KM / 2
+    band_centres = np.arange(half_band, DISTANCE_MAX_KM, DISTANCE_BAND_WIDTH_KM)
     for period in DISTANCE_PERIODS:
         colour, width, radius = DISTANCE_PERIOD_STYLES[period]
-        rows = (
-            table.loc[table["period"].eq(period)]
-            .set_index("band_km")
-            .reindex(np.arange(0.5, 14, 1))
-        )
+        rows = table.loc[table["period"].eq(period)].set_index("band_km").reindex(band_centres)
         medians = rows["median"].dropna()
         if medians.empty:
             continue
@@ -659,7 +554,7 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
                 meta=f"{swatch}&nbsp;&nbsp;{period}",
                 connectgaps=False,
                 customdata=[
-                    [number(t - 0.5), number(t + 0.5), number(n)]
+                    [number(t - half_band), number(t + half_band), number(n)]
                     for t, n in zip(rows.index, rows["n"], strict=True)
                 ],
                 hovertemplate="%{customdata[0]}–%{customdata[1]} km<br>Mediana: R$ %{y:,.0f}/m²"
@@ -667,7 +562,7 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
             )
         )
     low, high = min(plotted), max(plotted)
-    pad = 0.05 * (high - low)
+    pad = DISTANCE_PAD_FRACTION * (high - low)
     step = DISTANCE_PRICE_STEP
     floor = step * np.floor((low - pad) / step)
     ceiling = step * np.ceil((high + pad) / step)
@@ -675,10 +570,12 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
         floor, ceiling = floor - step, ceiling + step
     themed(fig).update_layout(showlegend=True)
     fig.update_xaxes(
-        title_text="Distância em linha reta da Praça Sete (km)", range=[0, 14], dtick=2
+        title_text=DISTANCE_AXIS_TITLE,
+        range=[0, DISTANCE_MAX_KM],
+        dtick=2,
     )
     fig.update_yaxes(
-        title_text="R$/m² · IPCA",
+        title_text=REAL_PRICE_AXIS_TITLE,
         range=[floor, ceiling],
         tick0=0,
         dtick=step,
@@ -686,14 +583,6 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
         separatethousands=True,
     )
     return fig
-
-
-def composition_tint(hue: str, *, strength: float = 0.62) -> str:
-    channels = (
-        round(strength * int(hue[i : i + 2], 16) + (1 - strength) * int(SURFACE[i : i + 2], 16))
-        for i in (1, 3, 5)
-    )
-    return "#" + "".join(f"{value:02x}" for value in channels)
 
 
 def ribbon_grid(
@@ -880,7 +769,7 @@ def hedonic_figure(table: pd.DataFrame) -> go.Figure:
             x=table["date"],
             y=table["media_geometrica_bruta"],
             mode="lines",
-            name="Média bruta",
+            name=HEDONIC_RAW_TRACE_NAME,
             legendrank=1,
             line={"color": INK, "width": 1.2, "dash": "dot"},
             hoverinfo="skip",
@@ -891,7 +780,7 @@ def hedonic_figure(table: pd.DataFrame) -> go.Figure:
             x=table["date"],
             y=table["indice_hedonico"],
             mode="lines",
-            name="Índice hedônico · IC 95%",
+            name=HEDONIC_INDEX_TRACE_NAME,
             legendrank=0,
             line={"color": TEAL, "width": 2.4},
             customdata=[
@@ -986,7 +875,7 @@ def clusters_figure(models: dict, group: int | None = None) -> go.Figure:
                 x=centroid["year"],
                 y=centroid["index"],
                 mode="lines+markers",
-                name=f"Grupo {group_id} · {n} bairros",
+                name=cluster_group_heading(group_id, n),
                 legendgroup=str(group_id),
                 line={"color": color, "width": 3},
                 marker={"size": 5},
@@ -997,6 +886,6 @@ def clusters_figure(models: dict, group: int | None = None) -> go.Figure:
         )
     themed(fig, height=410)
     fig.add_hline(y=100, line={"color": MUTED, "width": 1, "dash": "dot"})
-    fig.update_xaxes(tickvals=[2016, 2019, 2022, 2025])
-    fig.update_yaxes(title_text="Índice · 2016 = 100")
+    fig.update_xaxes(tickvals=list(YEAR_TICKS))
+    fig.update_yaxes(title_text=CLUSTER_INDEX_AXIS_TITLE)
     return fig

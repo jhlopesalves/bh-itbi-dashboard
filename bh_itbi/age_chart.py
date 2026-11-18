@@ -3,42 +3,26 @@
 from collections.abc import Mapping
 from typing import TypedDict
 
-import numpy as np
-
-from bh_itbi.age import AGE_GROUPS, AGE_MINIMUM, AGE_REFERENCE, AGE_YEARS, AgePremiums
-from bh_itbi.analysis import AGE_LABELS, Filters
-from bh_itbi.figures import (
-    COMPOSITION_HUES,
-    TEAL,
-    composition_number,
-    composition_tint,
-    currency,
-    number,
+from bh_itbi.age import AGE_GROUPS, AgePremiums
+from bh_itbi.config import (
+    AGE_REFERENCE,
+    QUARTER_VISIBILITY,
 )
-
-QUARTER_VISIBILITY = 0.005
-AGE_FILLS = {
-    group: composition_tint(hue, strength=0.75)
-    for group, hue in {
-        "Bairro": COMPOSITION_HUES["Bairro"],
-        "Área": COMPOSITION_HUES["Área"],
-        "Trimestre": "#8a929a",
-    }.items()
-}
-AGE_METHOD = (
-    "Regressão do log do valor real/m² com faixa de idade, log da área, bairro e trimestre, "
-    "ajustada nesta amostra. O IC 95% usa erros agrupados por bairro. "
-    "A diferença observada é entre médias geométricas. A decomposição é uma identidade "
-    "contábil do modelo ajustado. Características não observadas (padrão construtivo, "
-    "lazer, conservação) não estão controladas. A diferença ajustada não é uma "
-    "estimativa causal."
+from bh_itbi.filters import Filters
+from bh_itbi.formatting import age_percent
+from bh_itbi.text import (
+    AGE_EMPTY_MESSAGE,
+    AGE_LABELS,
+    AGE_REFERENCE_LABEL,
+    age_row_tooltip,
 )
-AGE_ELIGIBILITY_NOTE = (
-    "A fonte reúne imóveis na planta e prontos na faixa «Até 2 anos / na planta». "
-    "A triagem do índice hedônico mantém registros sem marcação de valor, com valor "
-    "nominal de R$ 100 a R$ 200.000/m², área construída positiva e dados completos "
-    "para o modelo. Não há corte por percentil."
+from bh_itbi.text import (
+    age_note as format_age_note,
 )
+from bh_itbi.text import (
+    age_subtitle as format_age_subtitle,
+)
+from bh_itbi.theme import AGE_FILLS, TEAL
 
 
 class AgeSegment(TypedDict):
@@ -101,33 +85,19 @@ def age_segments(
     return segments
 
 
-def age_percent(points: float, decimals: int = 0) -> str:
-    """Display a log difference as a signed relative change in geometric means."""
-    percent = float(np.expm1(points) * 100)
-    sign = ""
-    if round(percent, decimals):
-        sign = "−" if percent < 0 else "+"
-    return f"{sign}{number(abs(percent), decimals)}%"
-
-
 def age_chart_data(result: AgePremiums) -> AgeChart:
     """Keep axis coordinates in log points and send preformatted tooltip strings."""
     rows: list[AgeChartRow] = []
-    visible = set()
+    visible: set[str] = set()
     for key, row in result.table.iterrows():
         label = AGE_LABELS[str(key)]
         observed = float(row["observed"])
         reference = key == AGE_REFERENCE
         observed_percent = age_percent(observed)
-        tooltip = [
-            label,
-            f"Transações: {number(row['n'])}",
-            f"Média geométrica observada: {currency(row['geometric_mean'])}/m²",
-            f"Diferença observada: {age_percent(observed, 1)}",
-        ]
         adjusted_label = ""
-        segments = []
-        interval = None
+        segments: list[AgeSegment] = []
+        interval: tuple[float, float] | None = None
+        adjusted_details: tuple[float, float, float, dict[str, float]] | None = None
         if not reference and "adjusted" in row:
             adjusted = float(row["adjusted"])
             adjusted_percent = age_percent(adjusted)
@@ -137,23 +107,20 @@ def age_chart_data(result: AgePremiums) -> AgeChart:
             lower, upper = float(row["lower"]), float(row["upper"])
             interval = (lower, upper)
             adjusted_label = f"ajustado {adjusted_percent}"
-            tooltip.extend(
-                [
-                    f"Diferença ajustada: {age_percent(adjusted, 1)}",
-                    f"IC 95%: {age_percent(lower, 1)} a {age_percent(upper, 1)}",
-                    "Contribuição (log × 100)",
-                    *(
-                        f"{group}: {composition_number(v)}"
-                        for group, v in contributions.items()
-                    ),
-                ]
-            )
+            adjusted_details = (adjusted, lower, upper, contributions)
+        tooltip = age_row_tooltip(
+            label,
+            float(row["n"]),
+            float(row["geometric_mean"]),
+            observed,
+            adjusted_details,
+        )
         rows.append(
             {
                 "label": label,
                 "reference": reference,
                 "observed": observed,
-                "observed_label": "referência"
+                "observed_label": AGE_REFERENCE_LABEL
                 if reference
                 else f"observado {observed_percent}",
                 "adjusted_label": adjusted_label,
@@ -166,49 +133,32 @@ def age_chart_data(result: AgePremiums) -> AgeChart:
         "rows": rows,
         "fills": {group: fill for group, fill in AGE_FILLS.items() if group in visible},
         "teal": TEAL,
-        "empty": result.unavailable or "Sem apartamentos elegíveis no recorte de 2023–2025.",
+        "empty": result.unavailable or AGE_EMPTY_MESSAGE,
     }
 
 
 def age_subtitle(filters: Filters, *, adjusted: bool) -> str:
     """Describe the intersection with the fixed apartment cohort in plain words."""
-    if filters.property_type == "house":
-        return "O tipo de imóvel selecionado não inclui apartamentos."
-    start, end = max(filters.start_year, AGE_YEARS[0]), min(filters.end_year, AGE_YEARS[1])
-    if start > end:
-        return "Apartamentos · janela de 2023–2025 fora do período selecionado."
-    population = (
-        "Apartamentos nos bairros selecionados" if filters.neighbourhoods else "Apartamentos"
+    return format_age_subtitle(
+        filters.property_type,
+        filters.start_year,
+        filters.end_year,
+        has_neighbourhoods=bool(filters.neighbourhoods),
+        adjusted=adjusted,
     )
-    period = str(start) if start == end else f"{start}–{end}"
-    subtitle = f"{population}, {period} · diferença em relação a imóveis com 26 anos ou mais."
-    if adjusted:
-        subtitle += (
-            " Teal: diferença ajustada por bairro, área e trimestre. "
-            "Segmentos: quanto a composição acrescenta até a diferença observada."
-        )
-    return subtitle
 
 
 def age_note(result: AgePremiums) -> str:
     """Explain the adjustment and add any selection-specific qualifications."""
-    if "adjusted" in result.table:
-        sentences = [AGE_METHOD]
-        for key, value in result.table["Trimestre"].items():
-            if key != AGE_REFERENCE and abs(value) < QUARTER_VISIBILITY:
-                sentences.append(
-                    f"Trimestre: contribuição desprezível ({composition_number(value)}) "
-                    f"na faixa {AGE_LABELS[str(key)]}."
-                )
-    else:
-        sentences = ["A diferença observada é entre médias geométricas."]
-        if result.unavailable:
-            sentences.insert(0, result.unavailable)
-    if result.excluded:
-        suppressed = ", ".join(
-            f"{AGE_LABELS[key]} (n = {number(n)})" for key, n in result.excluded.items()
-        )
-        sentences.append(
-            f"Faixas excluídas por terem menos de {AGE_MINIMUM} transações: {suppressed}."
-        )
-    return " ".join([*sentences, AGE_ELIGIBILITY_NOTE])
+    adjusted = "adjusted" in result.table
+    quarter_values = (
+        {str(key): float(value) for key, value in result.table["Trimestre"].items()}
+        if adjusted
+        else {}
+    )
+    return format_age_note(
+        adjusted=adjusted,
+        quarter_values=quarter_values,
+        unavailable=result.unavailable,
+        excluded=result.excluded,
+    )

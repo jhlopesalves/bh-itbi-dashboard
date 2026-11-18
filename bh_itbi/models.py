@@ -14,21 +14,51 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from bh_itbi.analysis import diagnostic_rows
-from bh_itbi.data import (
+from bh_itbi.config import (
     CACHE_DIR,
+    CLUSTER_K,
+    CLUSTER_K_RANGE,
+    CLUSTER_MIN_NEIGHBOURHOODS,
+    CLUSTER_N_INIT,
+    CLUSTER_RANDOM_STATE,
+    CLUSTER_YEAR_MINIMUM,
+    END_YEAR,
+    HEDONIC_ALPHA,
+    HEDONIC_CONFIDENCE_LEVEL,
+    HEDONIC_NEIGHBOURHOOD_MINIMUM,
+    IDENTITY_TOLERANCE,
+    MODEL_DIR,
+    MODEL_VERSION,
     REVISION,
     SOURCE_SHA256,
+    START_YEAR,
+    YEARS,
+)
+from bh_itbi.data import (
     atomic_json,
     atomic_parquet,
     file_sha256,
 )
+from bh_itbi.diagnostics import diagnostic_rows
 
 if TYPE_CHECKING:
     from statsmodels.regression.linear_model import RegressionResultsWrapper
 
-MODEL_VERSION = "v2"
-MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
+__all__ = [
+    "CACHE_DIR",
+    "COMPOSITION_TERMS",
+    "FORMULA",
+    "MODEL_DIR",
+    "MODEL_VERSION",
+    "QUARTER_TERM",
+    "cluster_trajectories",
+    "fit_hedonic",
+    "hedonic_complete_cases",
+    "hedonic_composition",
+    "load_models",
+    "model_population",
+    "prepare_models",
+]
 FORMULA = (
     "log_price ~ log_area + C(building_age_band) + C(property_type)"
     " + C(neighbourhood) + C(quarter_label)"
@@ -57,9 +87,11 @@ def hedonic_complete_cases(frame: pd.DataFrame) -> pd.DataFrame:
 
 def model_population(frame: pd.DataFrame) -> pd.DataFrame:
     """Complete-case residential sample, neighbourhoods with >= 100 records."""
-    data = hedonic_complete_cases(frame.loc[frame["year"].between(2016, 2025)])
+    data = hedonic_complete_cases(frame.loc[frame["year"].between(START_YEAR, END_YEAR)])
     sizes = data["neighbourhood"].value_counts()
-    data = data.loc[data["neighbourhood"].isin(sizes.index[sizes >= 100])].copy()
+    data = data.loc[
+        data["neighbourhood"].isin(sizes.index[sizes >= HEDONIC_NEIGHBOURHOOD_MINIMUM])
+    ].copy()
     # Remove unused levels so the formula matches the notebook's string columns.
     for column in ["neighbourhood", "building_age_band", "property_type"]:
         data[column] = data[column].astype("category").cat.remove_unused_categories()
@@ -89,7 +121,7 @@ def hedonic_composition(fit: RegressionResultsWrapper, quarters: pd.Series) -> p
         changes["raw"] - changes["adjusted"] - changes[list(COMPOSITION_TERMS)].sum(axis=1)
     )
     # OLS with quarter indicators gives zero mean residual within each quarter.
-    if not changes["erro_identidade"].abs().lt(1e-8).all():
+    if not changes["erro_identidade"].abs().lt(IDENTITY_TOLERANCE).all():
         raise ValueError("A decomposição hedônica não satisfaz a identidade contábil.")
     return changes
 
@@ -106,7 +138,7 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         cov_type="cluster", cov_kwds={"groups": data["neighbourhood"].cat.codes.to_numpy()}
     )
     terms = fit.params.index[fit.params.index.str.startswith("C(quarter_label)[T.")]
-    intervals = fit.conf_int(alpha=0.05).loc[terms]
+    intervals = fit.conf_int(alpha=HEDONIC_ALPHA).loc[terms]
     result = pd.DataFrame(
         {
             "quarter": terms.str.extract(r"T\.(\d{4}Q[1-4])\]")[0].to_numpy(),
@@ -153,9 +185,9 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "base_quarter": base,
         "formula": FORMULA,
         "covariance": "cluster (neighbourhood)",
-        "confidence_level": 0.95,
-        "start_date": "2016-01-01",
-        "end_date": "2025-12-31",
+        "confidence_level": HEDONIC_CONFIDENCE_LEVEL,
+        "start_date": f"{START_YEAR}-01-01",
+        "end_date": f"{END_YEAR}-12-31",
         "property_types": ["apartment", "house"],
     }
     return result, metadata
@@ -169,7 +201,7 @@ def cluster_trajectories(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
     data = diagnostic_rows(frame)
     data = data.loc[
         data["property_type"].eq("apartment")
-        & data["year"].between(2016, 2025)
+        & data["year"].between(START_YEAR, END_YEAR)
         & data["price_per_m2_brl_real"].notna()
     ]
     yearly = (
@@ -177,22 +209,25 @@ def cluster_trajectories(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
         .agg(median=("price_per_m2_brl_real", "median"), n=("price_per_m2_brl_real", "size"))
         .reset_index()
     )
-    yearly = yearly.loc[yearly["n"] >= 30]
+    yearly = yearly.loc[yearly["n"] >= CLUSTER_YEAR_MINIMUM]
     trajectories = yearly.pivot(index="neighbourhood", columns="year", values="median")
-    trajectories = trajectories.reindex(columns=range(2016, 2026)).dropna()
-    trajectories = 100 * trajectories.div(trajectories[2016], axis=0)
-    if len(trajectories) < 7:
+    trajectories = trajectories.reindex(columns=YEARS).dropna()
+    trajectories = 100 * trajectories.div(trajectories[START_YEAR], axis=0)
+    if len(trajectories) < CLUSTER_MIN_NEIGHBOURHOODS:
         raise ValueError(
-            "Menos de sete bairros com cobertura anual suficiente para avaliar k=2…6."
+            "Menos de sete bairros com cobertura anual suficiente para avaliar "
+            f"k={CLUSTER_K_RANGE[0]}…{CLUSTER_K_RANGE[-1]}."
         )
     fits = {
-        k: KMeans(n_clusters=k, n_init=20, random_state=42).fit(trajectories)
-        for k in range(2, 7)
+        k: KMeans(n_clusters=k, n_init=CLUSTER_N_INIT, random_state=CLUSTER_RANDOM_STATE).fit(
+            trajectories
+        )
+        for k in CLUSTER_K_RANGE
     }
     silhouettes = {
         k: float(silhouette_score(trajectories, fit.labels_)) for k, fit in fits.items()
     }
-    fit = fits[4]
+    fit = fits[CLUSTER_K]
     order = np.argsort(-fit.cluster_centers_[:, -1])
     display_group = {cluster: rank for rank, cluster in enumerate(order, start=1)}
     groups = pd.Series(
@@ -206,13 +241,13 @@ def cluster_trajectories(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
     members["group"] = members["neighbourhood"].map(groups)
     members = members.merge(yearly[["neighbourhood", "year", "n"]], validate="one_to_one")
     centres = pd.DataFrame(fit.cluster_centers_[order], columns=trajectories.columns)
-    centres["group"] = range(1, 5)
+    centres["group"] = range(1, CLUSTER_K + 1)
     centres = centres.melt(id_vars="group", var_name="year", value_name="index")
     metadata = {
         "n_neighbourhoods": len(trajectories),
-        "k": 4,
-        "n_init": 20,
-        "random_state": 42,
+        "k": CLUSTER_K,
+        "n_init": CLUSTER_N_INIT,
+        "random_state": CLUSTER_RANDOM_STATE,
         "silhouettes": silhouettes,
         "members_per_group": {int(k): int(v) for k, v in groups.value_counts().items()},
     }
@@ -225,7 +260,11 @@ def prepare_models(frame: pd.DataFrame, *, force: bool = False) -> dict:
         return existing["metadata"]
     print("Estimando índice hedônico com IC de 95% agrupado por bairro…", flush=True)
     hedonic, hedonic_metadata = fit_hedonic(frame)
-    print("Agrupando trajetórias de bairros (k=2…6; exibição k=4)…", flush=True)
+    print(
+        f"Agrupando trajetórias de bairros "
+        f"(k={CLUSTER_K_RANGE[0]}…{CLUSTER_K_RANGE[-1]}; exibição k={CLUSTER_K})…",
+        flush=True,
+    )
     members, centres, cluster_metadata = cluster_trajectories(frame)
     atomic_parquet(hedonic, MODEL_DIR / "hedonic.parquet")
     atomic_parquet(members, MODEL_DIR / "members.parquet")

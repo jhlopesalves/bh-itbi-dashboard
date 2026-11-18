@@ -17,16 +17,43 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-REPO_ID = "pracadata/brazil-itbi"
-REVISION = "5908d77ed56fc9adb6dbafaf2cb38f34245bcd76"
-FILENAME = "data/belo_horizonte_transactions.parquet"
-SOURCE_SHA256 = "386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86"
-IPCA_BASE = "setembro de 2026"  # DATA_DICTIONARY.md at the pinned revision.
-CACHE_VERSION = "v3"
-CACHE_DIR = ROOT / "data" / "cache" / f"{CACHE_VERSION}-{REVISION[:12]}"
-YEARS = tuple(range(2016, 2026))
-PRACA_SETE = (-19.9191, -43.9386)
+from bh_itbi.config import (
+    CACHE_DIR,
+    CACHE_VERSION,
+    EARTH_RADIUS_KM,
+    FILENAME,
+    IPCA_BASE,
+    PRACA_SETE,
+    PRICE_PER_M2_MAX,
+    PRICE_PER_M2_MIN,
+    REPO_ID,
+    REVISION,
+    ROOT,
+    SOURCE_SHA256,
+    YEARS,
+)
+
+__all__ = [
+    "CACHE_DIR",
+    "CACHE_VERSION",
+    "FILENAME",
+    "IPCA_BASE",
+    "PRACA_SETE",
+    "REPO_ID",
+    "REVISION",
+    "ROOT",
+    "SOURCE_SHA256",
+    "TRANSACTION_COLUMNS",
+    "YEARS",
+    "DataError",
+    "atomic_json",
+    "atomic_parquet",
+    "file_sha256",
+    "load_source_metadata",
+    "load_transactions",
+    "prepare_cache",
+    "prepare_transactions",
+]
 NUMERIC_COLUMNS = [
     "value_declared_brl",
     "value_tax_base_brl",
@@ -101,7 +128,7 @@ def prepare_transactions(source: pd.DataFrame) -> pd.DataFrame:
     frame = frame.loc[
         frame["property_type"].isin(["apartment", "house"])
         & frame["value_flag"].isna()
-        & frame["price_per_m2_brl"].between(100, 200_000)
+        & frame["price_per_m2_brl"].between(PRICE_PER_M2_MIN, PRICE_PER_M2_MAX)
     ].copy()
     frame["month"] = frame["transaction_date"].dt.to_period("M").dt.start_time
     frame["quarter"] = frame["transaction_date"].dt.to_period("Q").dt.start_time
@@ -118,7 +145,9 @@ def prepare_transactions(source: pd.DataFrame) -> pd.DataFrame:
         np.sin((lat - centre_lat) / 2) ** 2
         + np.cos(lat) * np.cos(centre_lat) * np.sin((lon - centre_lon) / 2) ** 2
     )
-    frame["distance_km"] = (2 * 6371.0 * np.arcsin(np.sqrt(a.clip(0, 1)))).where(valid_geo)
+    frame["distance_km"] = (2 * EARTH_RADIUS_KM * np.arcsin(np.sqrt(a.clip(0, 1)))).where(
+        valid_geo
+    )
     for column in ["property_type", "geo_precision", "building_age_band", "neighbourhood"]:
         frame[column] = frame[column].astype("category")
     return frame.reset_index(drop=True)

@@ -11,25 +11,19 @@ from dash.exceptions import PreventUpdate
 
 from bh_itbi.age import age_premiums
 from bh_itbi.age_chart import age_chart_data, age_note, age_subtitle
-from bh_itbi.analysis import (
+from bh_itbi.config import (
     COMPARISON_RIDGE_LIMIT,
     DEFAULT_NEIGHBOURHOODS,
     RIDGE_MINIMUM,
-    TYPE_LABELS,
-    Filters,
+)
+from bh_itbi.diagnostics import (
     distance_table,
-    distribution_quartiles,
-    filter_transactions,
     heaping_summary,
     heaping_table,
-    map_points,
-    neighbourhood_price_distributions,
-    summary,
     tax_base_table,
 )
 from bh_itbi.figures import (
     clusters_figure,
-    currency,
     distance_figure,
     distribution_figure,
     heaping_figure,
@@ -37,25 +31,50 @@ from bh_itbi.figures import (
     map_figure,
     neighbourhood_comparison_data,
     neighbourhood_trajectories_figure,
-    number,
     tax_base_figure,
     temporal_figure,
 )
-from bh_itbi.layout import COMPARISON_INTERVAL_SUBTITLE, COMPARISON_SUBTITLE
+from bh_itbi.filters import Filters, filter_transactions
+from bh_itbi.formatting import currency, number
+from bh_itbi.overview import (
+    distribution_quartiles,
+    map_points,
+    neighbourhood_price_distributions,
+    summary,
+)
+from bh_itbi.text import (
+    COMPARISON_INTERVAL_SUBTITLE,
+    COMPARISON_SUBTITLE,
+    DISTRIBUTION_EMPTY_SUMMARY,
+    DISTRIBUTION_QUARTILE_LABELS,
+    FILTER_NOTE_ACTIVE,
+    FILTER_NOTE_MODELS,
+    cluster_group_heading,
+    comparison_caption,
+    heaping_caption,
+    kpi_coverage_note,
+    kpi_coverage_value,
+    period_text,
+)
+from bh_itbi.text import (
+    comparison_note as format_comparison_note,
+)
+from bh_itbi.text import (
+    map_caption as format_map_caption,
+)
+from bh_itbi.text import (
+    scope_text as format_scope_text,
+)
 from bh_itbi.urls import decode_query, default_controls
 
 
 def scope_text(filters: Filters) -> str:
-    period = (
-        str(filters.start_year)
-        if filters.start_year == filters.end_year
-        else f"{filters.start_year}–{filters.end_year}"
+    return format_scope_text(
+        filters.property_type,
+        filters.start_year,
+        filters.end_year,
+        filters.neighbourhoods,
     )
-    label = TYPE_LABELS.get(filters.property_type, "Apartamentos e casas")
-    neighbourhood = (
-        ", ".join(name.title() for name in filters.neighbourhoods) or "Toda a cidade"
-    )
-    return f"{label} · {period} · {neighbourhood}"
 
 
 def clicked_neighbourhood(click_data: dict | None, available: set[str]) -> str | None:
@@ -142,54 +161,29 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             else COMPARISON_SUBTITLE
         )
         excluded = len(comparison_names) - len(comparison_rows)
-        comparison_note = (
-            "A mediana da cidade inclui todos os bairros para o tipo de imóvel "
-            "e o período selecionados."
-        )
-        if not filters.neighbourhoods:
-            comparison_note += " Sem seleção, exibem-se cinco bairros de referência."
-        if excluded == 1:
-            comparison_note += " 1 bairro com menos de 15 transações não exibido."
-        elif excluded:
-            comparison_note += (
-                f" {number(excluded)} bairros com menos de 15 transações não exibidos."
-            )
-        if len(comparison_rows) <= COMPARISON_RIDGE_LIMIT and any(
+        missing_ridge_curve = len(comparison_rows) <= COMPARISON_RIDGE_LIMIT and any(
             row.n >= RIDGE_MINIMUM and row.density is None for row in comparison_rows
-        ):
-            comparison_note += (
-                " Curvas indisponíveis na escala comum de densidade "
-                "são exibidas como intervalos."
-            )
-        if comparison_subtitle == COMPARISON_SUBTITLE and any(
-            row.density is None for row in comparison_rows
-        ):
-            comparison_note += (
-                " Nos resumos, o ponto marca a mediana e a faixa clara cobre P10–P90."
-            )
-        map_caption = (
-            f"{number(map_stats['shown'])} pontos de {number(map_stats['screened'])} "
-            "registros entre P2 e P98, após exigir localização de face e área positiva. "
-            "Amostra de até 8.000 pontos; os indicadores usam todo o recorte elegível."
         )
+        show_interval_legend = comparison_subtitle == COMPARISON_SUBTITLE and any(
+            row.density is None for row in comparison_rows
+        )
+        comparison_note = format_comparison_note(
+            has_neighbourhood_filter=bool(filters.neighbourhoods),
+            excluded=excluded,
+            missing_ridge_curve=missing_ridge_curve,
+            show_interval_legend=show_interval_legend,
+        )
+        map_caption = format_map_caption(map_stats["shown"], map_stats["screened"])
         quartiles = distribution_quartiles(selected, distribution_metric)
         if quartiles is not None:
             distribution_stats = [
                 html.Div([html.Span(label), html.Strong(currency(value))])
-                for label, value in zip(["P25", "Mediana", "P75"], quartiles, strict=True)
+                for label, value in zip(DISTRIBUTION_QUARTILE_LABELS, quartiles, strict=True)
             ]
         else:
-            distribution_stats = html.P("Amostra insuficiente para resumir esta distribuição.")
-        caption = (
-            "Comparação: "
-            + ", ".join(name.title() for name in comparison_names)
-            + ". "
-            + (
-                "Os bairros selecionados também filtram o mapa e o resumo. "
-                if filters.neighbourhoods
-                else "Sem filtro de bairro, exibem-se cinco bairros de referência. "
-            )
-            + "A referência de Belo Horizonte preserva tipo e período, sem filtro geográfico."
+            distribution_stats = html.P(DISTRIBUTION_EMPTY_SUMMARY)
+        caption = comparison_caption(
+            comparison_names, has_neighbourhood_filter=bool(filters.neighbourhoods)
         )
         return (
             map_figure(points, map_style),
@@ -197,8 +191,8 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             number(values["n"]),
             currency(values["nominal"]),
             currency(values["real"]),
-            f"{number(100 * values['geocoded'] / values['n'], 1)}%" if values["n"] else "—",
-            f"{number(values['geocoded'])} de {number(values['n'])} registros",
+            kpi_coverage_value(values["geocoded"], values["n"]),
+            kpi_coverage_note(values["geocoded"], values["n"]),
             scope_text(filters),
             temporal_figure(selected, city, filters),
             distribution_figure(selected, distribution_metric),
@@ -266,7 +260,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
 
     @app.callback(Output("years-value", "children"), Input("year-range", "value"))
     def show_period(years):
-        return str(years[0]) if years[0] == years[1] else f"{years[0]}–{years[1]}"
+        return period_text(int(years[0]), int(years[1]))
 
     @app.callback(
         Output("view-tabs", "data"),
@@ -300,12 +294,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             for name in ("overview", "diagnostics", "models")
         ]
         fixed = tab == "models"
-        note = (
-            "Índices estimados sobre populações fixas de 2016–2025; "
-            "os filtros não se aplicam a esta seção."
-            if fixed
-            else "Filtros aplicados ao panorama e aos diagnósticos."
-        )
+        note = FILTER_NOTE_MODELS if fixed else FILTER_NOTE_ACTIVE
         names = ("overview", "diagnostics", "models")
         tab_classes = [
             "view-tab view-tab-selected" if tab == name else "view-tab" for name in names
@@ -335,13 +324,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         age = age_premiums(rows)
         heaping = heaping_table(rows)
         total, share = heaping_summary(heaping)
-        caption = (
-            f"{number(total)} registros nesta janela; {number(share * 100, 1)}% em faixas "
-            "centradas em múltiplos de R$ 50 mil. A faixa inclui valores próximos ao múltiplo; "
-            "não é a proporção de valores exatamente redondos."
-            if total >= 5
-            else "Sem amostra suficiente para este diagnóstico no recorte ativo."
-        )
+        caption = heaping_caption(total, share)
         return (
             tax_base_figure(tax_base_table(rows), filters),
             heaping_figure(heaping),
@@ -370,7 +353,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             content = [
                 html.Div(
                     [
-                        html.H3(f"Grupo {int(identifier)} · {len(rows)} bairros"),
+                        html.H3(cluster_group_heading(int(identifier), len(rows))),
                         html.P(
                             ", ".join(sorted(rows["neighbourhood"].astype(str).str.title()))
                         ),

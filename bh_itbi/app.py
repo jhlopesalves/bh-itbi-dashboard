@@ -4,9 +4,12 @@ import pandas as pd
 from dash import Dash
 
 from bh_itbi.callbacks import register_callbacks
-from bh_itbi.data import ROOT, DataError, load_source_metadata, load_transactions
+from bh_itbi.config import ROOT
+from bh_itbi.data import DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
 from bh_itbi.models import load_models
+from bh_itbi.text import APP_TITLE, APP_UPDATE_TITLE
+from bh_itbi.theme import PAPER
 
 
 def create_app(
@@ -30,25 +33,25 @@ def create_app(
     app = Dash(
         __name__,
         assets_folder=str(ROOT / "assets"),
-        title="Painel do Mercado Residencial de Belo Horizonte",
-        update_title="Atualizando…",
+        title=APP_TITLE,
+        update_title=APP_UPDATE_TITLE,
         serve_locally=True,
     )
-    app.index_string = """<!DOCTYPE html>
+    app.index_string = f"""<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    {%metas%}
+    {{%metas%}}
     <meta name="description" content="Panorama analítico do mercado residencial de
     Belo Horizonte a partir dos registros do ITBI: distribuição espacial, séries
     temporais, diagnósticos e índices.">
-    <meta name="theme-color" content="#FAFAF8">
-    <title>{%title%}</title>
-    {%favicon%}
-    {%css%}
+    <meta name="theme-color" content="{PAPER.upper()}">
+    <title>{{%title%}}</title>
+    {{%favicon%}}
+    {{%css%}}
   </head>
   <body>
-    {%app_entry%}
-    <footer>{%config%}{%scripts%}{%renderer%}</footer>
+    {{%app_entry%}}
+    <footer>{{%config%}}{{%scripts%}}{{%renderer%}}</footer>
   </body>
 </html>"""
     app.layout = build_layout(neighbourhoods, models, provenance["source_rows"])

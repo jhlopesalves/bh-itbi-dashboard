@@ -1,25 +1,44 @@
 """Portuguese editorial layout; analytical content is supplied by callbacks."""
 
+from __future__ import annotations
+
 from dash import dcc, html
 
-from bh_itbi.data import IPCA_BASE, REPO_ID, REVISION, YEARS
-from bh_itbi.figures import (
-    CLUSTER_COLORS,
-    COMPOSITION_LABEL_THRESHOLD,
-    DISTRIBUTION_LABELS,
-    TEAL,
-    composition_number,
-    empty_figure,
-    number,
+from bh_itbi import text
+from bh_itbi.config import (
+    CLUSTER_K,
+    SOURCE_BLOB_URL,
+    SOURCE_URL,
+    YEAR_TICKS,
+    YEARS,
 )
+from bh_itbi.formatting import number
 from bh_itbi.models import COMPOSITION_TERMS
+from bh_itbi.text import (
+    COMPARISON_INTERVAL_SUBTITLE,
+    COMPARISON_SUBTITLE,
+    DROPDOWN_LABELS,
+    hedonic_note,
+)
+from bh_itbi.theme import CLUSTER_COLORS, TEAL, empty_figure
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC, QUERY_OPTIONS, default_controls
 
-COMPARISON_SUBTITLE = (
-    "Distribuição do preço por m² em cada bairro. Faixa escura: P25–P75; "
-    "linha clara: mediana. Escala de densidade comum a todos os bairros."
-)
-COMPARISON_INTERVAL_SUBTITLE = "Ponto: mediana. Faixa escura: P25–P75. Faixa clara: P10–P90."
+__all__ = [
+    "COMPARISON_INTERVAL_SUBTITLE",
+    "COMPARISON_SUBTITLE",
+    "DROPDOWN_LABELS",
+    "GRAPH_CONFIG",
+    "build_layout",
+    "card",
+    "diagnostics_panel",
+    "dropdown",
+    "graph",
+    "hedonic_note",
+    "methodology",
+    "metric",
+    "models_panel",
+    "overview_panel",
+]
 
 GRAPH_CONFIG = {
     "displaylogo": False,
@@ -28,15 +47,6 @@ GRAPH_CONFIG = {
     "scrollZoom": False,
     "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d", "sendChartToCloud"],
     "toImageButtonOptions": {"format": "png", "scale": 2, "filename": "mercado-residencial-bh"},
-}
-DROPDOWN_LABELS = {
-    "select_all": "Selecionar todos",
-    "deselect_all": "Limpar todos",
-    "selected_count": "selecionados",
-    "search": "Pesquisar",
-    "clear_search": "Limpar pesquisa",
-    "clear_selection": "Limpar seleção",
-    "no_options_found": "Nenhum resultado",
 }
 
 
@@ -51,7 +61,7 @@ def graph(identifier: str, *, height=360, map_view=False):
     config = GRAPH_CONFIG | ({"scrollZoom": True} if map_view else {})
     return dcc.Graph(
         id=identifier,
-        figure=empty_figure("Carregando dados…", height),
+        figure=empty_figure(text.LOADING_MESSAGE, height),
         config=config,
         responsive=True,
         className="plot",
@@ -93,7 +103,7 @@ def overview_panel():
         [
             html.Div(
                 [
-                    html.P("RESUMO ESTATÍSTICO DO RECORTE", className="eyebrow"),
+                    html.P(text.OVERVIEW_EYEBROW, className="eyebrow"),
                     html.P(
                         id="scope-label",
                         className="scope-label",
@@ -105,21 +115,14 @@ def overview_panel():
             ),
             html.Div(
                 [
-                    metric("Transações elegíveis", "kpi-count", "registros no recorte ativo"),
-                    metric("Mediana nominal por m²", "kpi-nominal", "R$/m² · valor declarado"),
-                    metric(
-                        "Mediana real por m²",
-                        "kpi-real",
-                        f"R$/m² · corrigida pelo IPCA de {IPCA_BASE}",
-                    ),
+                    metric(text.KPI_COUNT_LABEL, "kpi-count", text.KPI_COUNT_UNIT),
+                    metric(text.KPI_NOMINAL_LABEL, "kpi-nominal", text.KPI_NOMINAL_UNIT),
+                    metric(text.KPI_REAL_LABEL, "kpi-real", text.KPI_REAL_UNIT),
                     html.Div(
                         [
-                            html.P("Geolocalização por face", className="metric-label"),
+                            html.P(text.KPI_COVERAGE_LABEL, className="metric-label"),
                             html.Div("—", id="kpi-coverage", className="metric-value"),
-                            html.P(
-                                "dos registros com centroide de face de quadra",
-                                className="metric-unit",
-                            ),
+                            html.P(text.KPI_COVERAGE_UNIT, className="metric-unit"),
                             html.P(id="kpi-coverage-note", className="metric-note"),
                         ],
                         className="metric",
@@ -130,9 +133,8 @@ def overview_panel():
             html.Div(
                 [
                     card(
-                        "Distribuição espacial do valor declarado",
-                        "Cor: valor declarado nominal por m². Área do marcador: área "
-                        "construída. Um clique filtra pelo bairro informado no registro.",
+                        text.MAP_TITLE,
+                        text.MAP_SUBTITLE,
                         [
                             graph("geo-map", height=540, map_view=True),
                             html.P(id="map-caption", className="card-footnote", role="status"),
@@ -141,13 +143,15 @@ def overview_panel():
                         extra=html.Div(
                             [
                                 html.Label(
-                                    "Fundo do mapa", htmlFor="map-style", className="sr-only"
+                                    text.MAP_STYLE_LABEL,
+                                    htmlFor="map-style",
+                                    className="sr-only",
                                 ),
                                 dropdown(
                                     "map-style",
                                     options=[
-                                        {"label": "Com ruas", "value": "carto-voyager"},
-                                        {"label": "Sem fundo", "value": "white-bg"},
+                                        {"label": label, "value": value}
+                                        for label, value in text.MAP_STYLE_OPTIONS
                                     ],
                                     value=DEFAULT_MAP_STYLE,
                                     clearable=False,
@@ -158,13 +162,13 @@ def overview_panel():
                         ),
                     ),
                     card(
-                        "Distribuição dos valores",
-                        "Todas as observações válidas, sem truncamento das caudas.",
+                        text.DISTRIBUTION_TITLE,
+                        text.DISTRIBUTION_SUBTITLE,
                         [
                             html.Div(
                                 [
                                     html.Label(
-                                        "Medida da distribuição",
+                                        text.DISTRIBUTION_METRIC_LABEL,
                                         htmlFor="distribution-metric",
                                         className="sr-only",
                                     ),
@@ -172,7 +176,7 @@ def overview_panel():
                                         "distribution-metric",
                                         options=[
                                             {"label": label, "value": key}
-                                            for key, label in DISTRIBUTION_LABELS.items()
+                                            for key, label in text.DISTRIBUTION_LABELS.items()
                                         ],
                                         value=DEFAULT_METRIC,
                                         clearable=False,
@@ -185,22 +189,11 @@ def overview_panel():
                             html.Div(
                                 id="distribution-summary", className="distribution-summary"
                             ),
-                            html.P(
-                                "Eixo logarítmico; os valores extremos são preservados. "
-                                "Linhas pontilhadas: mediana por tipo (mínimo de 5 "
-                                "observações). As barras contam transações em faixas "
-                                "de largura crescente.",
-                                className="card-footnote",
-                            ),
+                            html.P(text.DISTRIBUTION_FOOTNOTE, className="card-footnote"),
                             html.Div(
                                 [
-                                    html.P("LOCALIZAÇÃO GENERALIZADA", className="eyebrow"),
-                                    html.P(
-                                        "Os pontos são centroides de face de quadra, "
-                                        "não localizações exatas dos imóveis. Ao clicar, "
-                                        "o filtro usa o bairro informado no registro, "
-                                        "sem inferir seus limites a partir das coordenadas."
-                                    ),
+                                    html.P(text.GEOGRAPHY_NOTE_EYEBROW, className="eyebrow"),
+                                    html.P(text.GEOGRAPHY_NOTE_BODY),
                                 ],
                                 className="geography-note",
                             ),
@@ -213,22 +206,15 @@ def overview_panel():
             html.Div(
                 [
                     card(
-                        "Evolução mensal do valor real",
-                        "Mediana e intervalo interquartil (P25–P75), corrigidos pelo IPCA. "
-                        "Mínimo de 30 transações por mês e tipo.",
+                        text.TREND_TITLE,
+                        text.TREND_SUBTITLE,
                         [
                             graph("trend-figure"),
-                            html.P(
-                                "A faixa representa a dispersão entre transações, não um "
-                                "intervalo de confiança. Com recorte geográfico, a linha "
-                                "pontilhada mantém a referência municipal do mesmo tipo "
-                                "e período.",
-                                className="card-footnote",
-                            ),
+                            html.P(text.TREND_FOOTNOTE, className="card-footnote"),
                         ],
                     ),
                     card(
-                        "Comparação entre bairros",
+                        text.COMPARISON_TITLE,
                         html.Span(COMPARISON_SUBTITLE, id="comparison-subtitle"),
                         [
                             dcc.Store(id="comparison-data"),
@@ -243,9 +229,8 @@ def overview_panel():
                 className="analysis-grid",
             ),
             card(
-                "Trajetórias trimestrais por bairro",
-                "Medianas reais por trimestre, com referência municipal. Mínimo de 15 "
-                "transações por bairro e trimestre; 30 para a referência de BH.",
+                text.TRAJECTORIES_TITLE,
+                text.TRAJECTORIES_SUBTITLE,
                 [
                     graph("neighbourhood-figure", height=370),
                     html.P(id="neighbourhood-caption", className="card-footnote"),
@@ -262,12 +247,8 @@ def diagnostics_panel():
         [
             html.Div(
                 [
-                    html.P("DIAGNÓSTICOS DOS REGISTROS", className="eyebrow"),
-                    html.P(
-                        "Os filtros compartilhados aplicam-se a esta seção. "
-                        "Cada análise declara sua janela temporal e sua amostra.",
-                        className="section-description",
-                    ),
+                    html.P(text.DIAGNOSTICS_EYEBROW, className="eyebrow"),
+                    html.P(text.DIAGNOSTICS_DESCRIPTION, className="section-description"),
                 ],
                 className="section-intro",
             ),
@@ -275,37 +256,28 @@ def diagnostics_panel():
             html.Div(
                 [
                     card(
-                        "Valor declarado frente à base de cálculo",
-                        "Parcela trimestral de transações com valor declarado inferior "
-                        "à base de cálculo do ITBI. Base positiva; mínimo de 100 por "
-                        "trimestre e tipo.",
+                        text.TAX_TITLE,
+                        text.TAX_SUBTITLE,
                         [
                             graph("tax-figure"),
-                            html.P(
-                                "A divergência entre valor declarado e base "
-                                "tributária é descritiva; "
-                                "não demonstra subdeclaração ou evasão.",
-                                className="card-footnote",
-                            ),
+                            html.P(text.TAX_FOOTNOTE, className="card-footnote"),
                         ],
                     ),
                     card(
-                        "Concentração em valores redondos",
-                        "Recorte ∩ 2023–2025 · R$ 50 mil a R$ 1 milhão · faixas "
-                        "centradas a "
-                        "cada R$ 5 mil.",
+                        text.HEAPING_TITLE,
+                        text.HEAPING_SUBTITLE,
                         [
                             graph("heaping-figure"),
                             html.P(id="heaping-caption", className="card-footnote"),
                         ],
                     ),
                     card(
-                        "Valor real por idade da construção",
+                        text.AGE_TITLE,
                         html.Span(id="age-subtitle"),
                         [
                             dcc.Store(id="age-data"),
                             html.Div(
-                                html.P("Carregando dados…", className="comparison-empty"),
+                                html.P(text.LOADING_MESSAGE, className="comparison-empty"),
                                 id="age-plot",
                             ),
                             html.P(id="age-note", className="card-footnote"),
@@ -313,20 +285,11 @@ def diagnostics_panel():
                         class_name="age-card",
                     ),
                     card(
-                        "Valor real por distância à Praça Sete",
-                        "Apartamentos · valores reais · faixas de 1 km, até 14 km"
-                        " · mínimo de "
-                        "50 por faixa e período.",
+                        text.DISTANCE_TITLE,
+                        text.DISTANCE_SUBTITLE,
                         [
                             graph("distance-figure"),
-                            html.P(
-                                "Distância em linha reta a partir dos centroides "
-                                "de face, não tempo de "
-                                "deslocamento. Os períodos da legenda são "
-                                "intersectados com o filtro de"
-                                " anos.",
-                                className="card-footnote",
-                            ),
+                            html.P(text.DISTANCE_FOOTNOTE, className="card-footnote"),
                         ],
                     ),
                 ],
@@ -338,37 +301,9 @@ def diagnostics_panel():
     )
 
 
-def hedonic_note(final_contributions: dict[str, float]) -> str:
-    """Explain the estimand and include groups without direct labels."""
-    note = (
-        "Regressão do log do valor declarado real/m² com controles de log da área, "
-        "faixa de idade, tipo, bairro e trimestre; erros agrupados por bairro. "
-        "A média bruta é a média geométrica da mesma amostra. As faixas são uma "
-        "identidade contábil do modelo ajustado: variação do log médio bruto = "
-        "variação do índice + Σ β × variação das médias das características. "
-        "Mudanças em características não observadas (conservação, andar, acabamento) "
-        "não aparecem nas faixas e podem afetar o índice; o índice não é uma estimativa "
-        "causal. A base 100 é uma normalização."
-    )
-    for group, value in final_contributions.items():
-        if abs(value) < COMPOSITION_LABEL_THRESHOLD:
-            note += f" {group}: contribuição desprezível ({composition_number(value)}) no"
-            note += " último trimestre."
-    if any(value > 0 for value in final_contributions.values()):
-        note += (
-            " Faixas acima do índice indicam características cuja mudança de composição "
-            "elevou a média bruta."
-        )
-    return note
-
-
 def models_panel(models):
     if models is None:
-        content = html.P(
-            "Os índices ainda não estão disponíveis nesta instalação. Consulte a "
-            "preparação descrita no README.",
-            className="scope-banner",
-        )
+        content = html.P(text.MODELS_UNAVAILABLE_BANNER, className="scope-banner")
     else:
         metadata = models["metadata"]
         hedonic = metadata["hedonic"]
@@ -377,16 +312,9 @@ def models_panel(models):
         content = [
             html.Div(
                 [
-                    html.P("POPULAÇÕES FIXAS · 2016–2025", className="eyebrow"),
-                    html.H2(
-                        "Índice hedônico e agrupamento de trajetórias",
-                        className="section-title",
-                    ),
-                    html.P(
-                        "Estimativas sobre a amostra fixa descrita em cada análise. Os "
-                        "filtros do panorama não alteram estes resultados.",
-                        className="section-description",
-                    ),
+                    html.P(text.MODELS_EYEBROW, className="eyebrow"),
+                    html.H2(text.MODELS_SECTION_TITLE, className="section-title"),
+                    html.P(text.MODELS_DESCRIPTION, className="section-description"),
                 ],
                 className="section-intro",
             ),
@@ -395,29 +323,27 @@ def models_panel(models):
                     html.Div(
                         [
                             html.Strong(number(hedonic["n"])),
-                            html.Span("observações no modelo hedônico"),
+                            html.Span(text.MODEL_METRIC_OBSERVATIONS),
                         ]
                     ),
                     html.Div(
                         [
                             html.Strong(number(hedonic["neighbourhoods"])),
-                            html.Span("bairros com ao menos 100 registros"),
+                            html.Span(text.MODEL_METRIC_NEIGHBOURHOODS),
                         ]
                     ),
                     html.Div(
                         [
                             html.Strong(number(hedonic["r_squared"], 3)),
-                            html.Span("R² · log do valor declarado real por m²"),
+                            html.Span(text.MODEL_METRIC_R2),
                         ]
                     ),
                 ],
                 className="model-metrics",
             ),
             card(
-                "Preço ajustado, média bruta e o que separa as duas",
-                "Apartamentos e casas · escala log, 1º tri. 2016 = 100 · faixas: "
-                "contribuição de cada característica observada para a diferença entre "
-                "a média bruta e o índice (log × 100).",
+                text.HEDONIC_TITLE,
+                text.HEDONIC_SUBTITLE,
                 [
                     graph("hedonic-figure", height=420),
                     html.P(
@@ -427,24 +353,17 @@ def models_panel(models):
                 ],
             ),
             card(
-                "Agrupamento de trajetórias por similaridade",
-                f"Apartamentos · K-médias, quatro grupos · "
-                f"{number(clusters['n_neighbourhoods'])} bairros com ao menos 30 registros "
-                "em cada um dos dez anos · 2016 = 100.",
+                text.CLUSTERS_TITLE,
+                text.clusters_subtitle(clusters["n_neighbourhoods"]),
                 [
                     graph("clusters-figure", height=410),
                     html.P(
-                        "Linhas finas: bairros; linhas fortes: centros dos grupos. "
-                        "O número de grupos é uma escolha analítica, não um ótimo estimado. "
-                        f"Silhueta: {number(clusters['silhouettes']['4'], 2)}; "
-                        "há sobreposição entre trajetórias. Os grupos descrevem "
-                        "a forma da evolução, não o nível de preços "
-                        "ou regiões administrativas.",
+                        text.clusters_footnote(clusters["silhouettes"][str(CLUSTER_K)]),
                         className="card-footnote",
                     ),
                     html.Details(
                         [
-                            html.Summary("Composição de cada grupo"),
+                            html.Summary(text.CLUSTERS_MEMBERS_SUMMARY),
                             html.Div(id="cluster-members", className="members-list"),
                         ],
                         className="members-details",
@@ -453,12 +372,14 @@ def models_panel(models):
                 extra=html.Div(
                     [
                         html.Label(
-                            "Grupo de trajetórias", htmlFor="cluster-group", className="sr-only"
+                            text.CLUSTER_GROUP_LABEL,
+                            htmlFor="cluster-group",
+                            className="sr-only",
                         ),
                         dropdown(
                             "cluster-group",
                             options=[
-                                {"label": "Todos os grupos", "value": "all"},
+                                {"label": text.CLUSTER_ALL_GROUPS_LABEL, "value": "all"},
                                 *[
                                     {
                                         "label": html.Span(
@@ -490,81 +411,42 @@ def models_panel(models):
 
 
 def methodology():
-    source = f"https://huggingface.co/datasets/{REPO_ID}/blob/{REVISION}"
     return html.Details(
         [
-            html.Summary("Dados, critérios e limites de interpretação"),
+            html.Summary(text.METHODOLOGY_SUMMARY),
             html.Div(
                 [
                     html.Div(
                         [
-                            html.H3("O que é observado"),
-                            html.P(
-                                "Valores declarados à autoridade tributária na "
-                                "data de pagamento do "
-                                "ITBI. A fonte de BH não distingue a natureza da "
-                                "transferência; os "
-                                "registros não podem ser tratados como vendas de "
-                                "mercado verificadas."
-                            ),
-                            html.P(
-                                "Apartamentos e casas sem sinalização em "
-                                "value_flag e com valor nominal"
-                                " entre R$ 100 e R$ 200.000/m², inclusive. As "
-                                "contagens do painel são "
-                                "de registros elegíveis, não de todo o ITBI. "
-                                "Medianas do resumo e "
-                                "distribuições exigem ao menos cinco observações."
-                            ),
+                            html.H3(text.METHODOLOGY_OBSERVED_HEADING),
+                            html.P(text.METHODOLOGY_OBSERVED_P1),
+                            html.P(text.METHODOLOGY_OBSERVED_P2),
                         ]
                     ),
                     html.Div(
                         [
-                            html.H3("Tempo, moeda e dispersão"),
-                            html.P(
-                                "Janela de exploração: 2016–2025, como nas séries do notebook. "
-                                "Valores reais vêm da própria fonte, corrigidos pelo IPCA "
-                                f"para {IPCA_BASE}; não são recalculados no painel. "
-                                "Valores nominais de vários anos não descontam a inflação."
-                            ),
-                            html.P(
-                                "Quartis usam interpolação linear do pandas. "
-                                "Períodos sem amostra "
-                                "suficiente permanecem como lacunas; P25–P75 não "
-                                "é um intervalo de "
-                                "confiança. O diagnóstico exige também área "
-                                "construída positiva."
-                            ),
+                            html.H3(text.METHODOLOGY_TIME_HEADING),
+                            html.P(text.METHODOLOGY_TIME_P1),
+                            html.P(text.METHODOLOGY_TIME_P2),
                         ]
                     ),
                     html.Div(
                         [
-                            html.H3("Geografia e proveniência"),
-                            html.P(
-                                "O mapa mostra até 8.000 registros com área positiva "
-                                "e centroide de face, após restringir o valor nominal/m² "
-                                "a P2–P98 do recorte. Centroides de CEP e bairro não "
-                                "entram no mapa. Não há deslocamento artificial dos pontos. "
-                                "Os resumos e as séries usam todos os registros elegíveis, "
-                                "independentemente da amostra desenhada."
-                            ),
+                            html.H3(text.METHODOLOGY_GEO_HEADING),
+                            html.P(text.METHODOLOGY_GEO_P1),
                             html.P(
                                 [
-                                    "Fonte: Prefeitura de Belo Horizonte, dados "
-                                    "abertos. Tratamento: "
-                                    "pracadata/brazil-itbi. Licença dos dados de "
-                                    "BH: CC-BY. Trabalho "
-                                    "derivado e não oficial. ",
+                                    text.METHODOLOGY_GEO_P2_PREFIX,
                                     html.A(
-                                        "Dicionário e limitações",
-                                        href=f"{source}/DATA_DICTIONARY.md",
+                                        text.METHODOLOGY_DICTIONARY_LINK,
+                                        href=f"{SOURCE_BLOB_URL}/DATA_DICTIONARY.md",
                                         target="_blank",
                                         rel="noopener noreferrer",
                                     ),
                                     " · ",
                                     html.A(
-                                        "Versão da fonte",
-                                        href=f"{source}/README.md",
+                                        text.METHODOLOGY_VERSION_LINK,
+                                        href=f"{SOURCE_BLOB_URL}/README.md",
                                         target="_blank",
                                         rel="noopener noreferrer",
                                     ),
@@ -590,14 +472,16 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                 id="url-config",
                 data={"options": QUERY_OPTIONS, "defaults": default_controls()},
             ),
-            html.A("Ir para os gráficos", href="#conteudo", className="skip-link"),
+            html.A(text.SKIP_LINK_TEXT, href="#conteudo", className="skip-link"),
             html.Header(
                 [
                     html.Div(
                         [
-                            html.Span("BELO HORIZONTE / MG", className="eyebrow"),
+                            html.Span(text.MASTHEAD_EYEBROW, className="eyebrow"),
                             html.A(
-                                "Sobre os dados", href="#metodologia", className="about-link"
+                                text.MASTHEAD_ABOUT_LINK,
+                                href="#metodologia",
+                                className="about-link",
                             ),
                         ],
                         className="masthead-top",
@@ -606,28 +490,22 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                         [
                             html.Div(
                                 [
-                                    html.H1("Painel do Mercado Residencial de Belo Horizonte"),
-                                    html.P(
-                                        "Panorama analítico do mercado residencial a partir "
-                                        "dos registros do ITBI.",
-                                        className="subtitle",
-                                    ),
+                                    html.H1(text.APP_TITLE),
+                                    html.P(text.APP_SUBTITLE, className="subtitle"),
                                 ],
                                 className="masthead-title",
                             ),
                             html.Div(
                                 [
-                                    html.P(
-                                        "Base analítica dos registros", className="meta-label"
-                                    ),
+                                    html.P(text.MASTHEAD_META_LABEL, className="meta-label"),
                                     html.Dl(
                                         [
-                                            html.Dt("Período"),
-                                            html.Dd("2016–2025"),
-                                            html.Dt("Registros na fonte"),
+                                            html.Dt(text.MASTHEAD_PERIOD_DT),
+                                            html.Dd(text.MASTHEAD_PERIOD_DD),
+                                            html.Dt(text.MASTHEAD_ROWS_DT),
                                             html.Dd(number(raw_rows)),
-                                            html.Dt("Valores reais"),
-                                            html.Dd(f"IPCA, {IPCA_BASE}"),
+                                            html.Dt(text.MASTHEAD_REAL_DT),
+                                            html.Dd(text.MASTHEAD_REAL_DD),
                                         ],
                                         className="masthead-facts",
                                     ),
@@ -647,16 +525,25 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                             html.Div(
                                 [
                                     html.Label(
-                                        "Tipo de imóvel",
+                                        text.PROPERTY_TYPE_LABEL,
                                         htmlFor="property-type",
                                         id="property-type-label",
                                     ),
                                     dropdown(
                                         "property-type",
                                         options=[
-                                            {"label": "Apartamentos", "value": "apartment"},
-                                            {"label": "Casas", "value": "house"},
-                                            {"label": "Apartamentos e casas", "value": "all"},
+                                            {
+                                                "label": text.TYPE_LABELS["apartment"],
+                                                "value": "apartment",
+                                            },
+                                            {
+                                                "label": text.TYPE_LABELS["house"],
+                                                "value": "house",
+                                            },
+                                            {
+                                                "label": text.ALL_TYPES_LABEL,
+                                                "value": "all",
+                                            },
                                         ],
                                         value="all",
                                         clearable=False,
@@ -671,9 +558,9 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                                 [
                                     html.Div(
                                         [
-                                            html.Label("Período", id="years-label"),
+                                            html.Label(text.PERIOD_LABEL, id="years-label"),
                                             html.Span(
-                                                "2016–2025",
+                                                text.MASTHEAD_PERIOD_DD,
                                                 id="years-value",
                                                 className="period-value",
                                             ),
@@ -687,11 +574,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                                         step=1,
                                         value=[YEARS[0], YEARS[-1]],
                                         allowCross=False,
-                                        marks={
-                                            y: str(y)
-                                            for y in YEARS
-                                            if y in (2016, 2019, 2022, 2025)
-                                        },
+                                        marks={y: str(y) for y in YEARS if y in YEAR_TICKS},
                                         tooltip={
                                             "placement": "bottom",
                                             "always_visible": False,
@@ -707,7 +590,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                             html.Div(
                                 [
                                     html.Label(
-                                        "Bairros",
+                                        text.NEIGHBOURHOODS_LABEL,
                                         htmlFor="neighbourhoods",
                                         id="neighbourhoods-label",
                                     ),
@@ -719,7 +602,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                                         ],
                                         value=[],
                                         multi=True,
-                                        placeholder="Toda a cidade",
+                                        placeholder=text.ALL_NEIGHBOURHOODS_LABEL,
                                         clearable=True,
                                     ),
                                 ],
@@ -728,7 +611,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                                 **{"aria-labelledby": "neighbourhoods-label"},
                             ),
                             html.Button(
-                                "Restaurar filtros",
+                                text.RESET_FILTERS_LABEL,
                                 id="reset-filters",
                                 className="button button-quiet reset-button",
                             ),
@@ -737,7 +620,7 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                         className="filters",
                     ),
                     html.P(
-                        "Filtros aplicados ao panorama e aos diagnósticos.",
+                        text.FILTER_NOTE_ACTIVE,
                         id="filter-note",
                         className="filter-note",
                         role="status",
@@ -760,15 +643,11 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
                             "aria-controls": f"{name}-panel",
                         },
                     )
-                    for name, label in [
-                        ("overview", "Panorama"),
-                        ("diagnostics", "Diagnósticos"),
-                        ("models", "Índices e trajetórias"),
-                    ]
+                    for name, label in text.TAB_LABELS
                 ],
                 className="view-tabs view-tabs-parent",
                 role="tablist",
-                **{"aria-label": "Seções do painel"},
+                **{"aria-label": text.TABLIST_ARIA_LABEL},
             ),
             dcc.Store(id="view-tabs", data="overview"),
             html.Main(
@@ -794,16 +673,11 @@ def build_layout(neighbourhoods: list[str], models: dict | None, raw_rows: int):
             methodology(),
             html.Footer(
                 [
-                    html.Span(
-                        "Mercado Residencial de Belo Horizonte", className="footer-brand"
-                    ),
-                    html.P(
-                        "Fonte: Prefeitura de Belo Horizonte, dados abertos. Tratamento: "
-                        "pracadata/brazil-itbi (Hugging Face). Trabalho derivado e não oficial."
-                    ),
+                    html.Span(text.FOOTER_BRAND, className="footer-brand"),
+                    html.P(text.FOOTER_PROVENANCE),
                     html.A(
-                        "Consultar a fonte",
-                        href=f"https://huggingface.co/datasets/{REPO_ID}",
+                        text.FOOTER_SOURCE_LINK,
+                        href=SOURCE_URL,
                         target="_blank",
                         rel="noopener noreferrer",
                     ),

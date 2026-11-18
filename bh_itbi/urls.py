@@ -2,7 +2,7 @@
 
 from urllib.parse import parse_qs
 
-from bh_itbi.data import YEARS
+from bh_itbi.config import YEARS
 
 QUERY_OPTIONS = {
     "tipo": {"apartamento": "apartment", "casa": "house", "ambos": "all"},
