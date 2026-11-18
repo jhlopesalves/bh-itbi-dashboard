@@ -3,7 +3,16 @@
 from dash import dcc, html
 
 from bh_itbi.data import IPCA_BASE, REPO_ID, REVISION, YEARS
-from bh_itbi.figures import CLUSTER_COLORS, DISTRIBUTION_LABELS, TEAL, empty_figure, number
+from bh_itbi.figures import (
+    CLUSTER_COLORS,
+    COMPOSITION_LABEL_THRESHOLD,
+    DISTRIBUTION_LABELS,
+    TEAL,
+    composition_number,
+    empty_figure,
+    number,
+)
+from bh_itbi.models import COMPOSITION_TERMS
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC, QUERY_OPTIONS, default_controls
 
 GRAPH_CONFIG = {
@@ -321,6 +330,30 @@ def diagnostics_panel():
     )
 
 
+def hedonic_note(final_contributions: dict[str, float]) -> str:
+    """Explain the estimand and include groups without direct labels."""
+    note = (
+        "Regressão do log do valor declarado real/m² com controles de log da área, "
+        "faixa de idade, tipo, bairro e trimestre; erros agrupados por bairro. "
+        "A média bruta é a média geométrica da mesma amostra. As faixas são uma "
+        "identidade contábil do modelo ajustado: variação do log médio bruto = "
+        "variação do índice + Σ β × variação das médias das características. "
+        "Mudanças em características não observadas (conservação, andar, acabamento) "
+        "não aparecem nas faixas e podem afetar o índice; o índice não é uma estimativa "
+        "causal. A base 100 é uma normalização."
+    )
+    for group, value in final_contributions.items():
+        if abs(value) < COMPOSITION_LABEL_THRESHOLD:
+            note += f" {group}: contribuição desprezível ({composition_number(value)}) no"
+            note += " último trimestre."
+    if any(value > 0 for value in final_contributions.values()):
+        note += (
+            " Faixas acima do índice indicam características cuja mudança de composição "
+            "elevou a média bruta."
+        )
+    return note
+
+
 def models_panel(models):
     if models is None:
         content = html.P(
@@ -332,6 +365,7 @@ def models_panel(models):
         metadata = models["metadata"]
         hedonic = metadata["hedonic"]
         clusters = metadata["clusters"]
+        final = models["hedonic"].iloc[-1]
         content = [
             html.Div(
                 [
@@ -372,20 +406,14 @@ def models_panel(models):
                 className="model-metrics",
             ),
             card(
-                "Índice hedônico e mediana bruta",
-                "Apartamentos e casas · 1º trimestre de 2016 = 100 · faixa: IC 95%, com"
-                " erros agrupados por bairro.",
+                "Preço ajustado, média bruta e o que separa as duas",
+                "Apartamentos e casas · escala log, 1º tri. 2016 = 100 · faixas: "
+                "contribuição de cada característica observada para a diferença entre "
+                "a média bruta e o índice (log × 100).",
                 [
                     graph("hedonic-figure", height=420),
                     html.P(
-                        "Regressão do log do valor declarado real/m² com "
-                        "controles de log da "
-                        "área, faixa de idade, tipo, bairro e trimestre. A "
-                        "mediana bruta usa "
-                        "exatamente a mesma amostra. Os controles observados não esgotam a "
-                        "qualidade do imóvel; o índice não é uma estimativa "
-                        "causal. A base 100 "
-                        "é uma normalização.",
+                        hedonic_note({group: final[group] for group in COMPOSITION_TERMS}),
                         className="card-footnote",
                     ),
                 ],

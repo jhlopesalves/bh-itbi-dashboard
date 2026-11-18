@@ -15,6 +15,7 @@ from bh_itbi.analysis import (
     city_quarterly_table,
     temporal_table,
 )
+from bh_itbi.models import COMPOSITION_TERMS
 
 # Editorial palette, mirrored in assets/dashboard.css. The categorical order was
 # checked for colour-vision-deficiency separation on the chart surface.
@@ -59,6 +60,14 @@ DISTANCE_PERIOD_STYLES = {
     "2022–2025": ("#5e2a6e", 2.8, 4.0),
 }
 DISTANCE_PRICE_STEP = 500
+# Keep the original cluster hues for the composition bands.
+COMPOSITION_HUES = {
+    "Bairro": "#c0603a",
+    "Área": "#3e6daa",
+    "Faixa de idade": "#a88620",
+    "Tipo": "#8a929a",
+}
+COMPOSITION_LABEL_THRESHOLD = 0.012
 
 
 def number(value: float, decimals: int = 0) -> str:
@@ -66,6 +75,17 @@ def number(value: float, decimals: int = 0) -> str:
     if pd.isna(value) or not np.isfinite(value):
         return "—"
     return f"{value:,.{decimals}f}".translate(str.maketrans(",.", ".,"))
+
+
+def composition_number(value: float) -> str:
+    """Display signed log × 100, keeping small non-zero values legible."""
+    scaled = value * 100
+    decimals = 4 if 0 < abs(scaled) < 0.05 else 1
+    magnitude = number(abs(scaled), decimals)
+    if decimals == 4:
+        magnitude = magnitude.rstrip("0").rstrip(",")
+    sign = "−" if scaled < 0 else "+" if scaled > 0 else ""
+    return sign + magnitude
 
 
 def currency(value: float) -> str:
@@ -695,55 +715,267 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def composition_tint(hue: str) -> str:
+    channels = (
+        round(0.62 * int(hue[i : i + 2], 16) + 0.38 * int(SURFACE[i : i + 2], 16))
+        for i in (1, 3, 5)
+    )
+    return "#" + "".join(f"{value:02x}" for value in channels)
+
+
+def ribbon_grid(
+    table: pd.DataFrame, groups: list[str]
+) -> tuple[pd.DatetimeIndex, np.ndarray, dict[str, np.ndarray]]:
+    """Interpolate in log space on a shared grid that includes each zero crossing."""
+    quarters = np.arange(len(table))
+    crossings = {}
+    for group in groups:
+        values = table[group].to_numpy()
+        flips = np.flatnonzero(values[:-1] * values[1:] < 0)
+        crossings[group] = flips + values[flips] / (values[flips] - values[flips + 1])
+    points = np.unique(np.concatenate([quarters, *crossings.values()]))
+    millis = table["date"].to_numpy(dtype="datetime64[ms]").astype("int64")
+    dates = pd.to_datetime(np.interp(points, quarters, millis), unit="ms")
+    hedonic = np.interp(points, quarters, np.log(table["indice_hedonico"]))
+    contributions = {}
+    for group in groups:
+        values = np.interp(points, quarters, table[group])
+        values[np.searchsorted(points, crossings[group])] = 0
+        contributions[group] = values
+    return dates, hedonic, contributions
+
+
+def band_traces(
+    dates: pd.DatetimeIndex, inner: np.ndarray, outer: np.ndarray, hue: str
+) -> tuple[go.Scatter, go.Scatter] | None:
+    """Close each active run at zero width and leave gaps in the separators."""
+    active = inner != outer
+    intervals = active[:-1] | active[1:]
+    edges = np.flatnonzero(np.diff(np.r_[False, intervals, False]))
+    if not len(edges):
+        return None
+    polygon_x, polygon_y, edge_x, edge_y = [], [], [], []
+    inside, outside = np.exp(inner), np.exp(outer)
+    for start, stop in zip(edges[::2], edges[1::2], strict=True):
+        section = slice(start, stop + 1)
+        x = dates[section].tolist()
+        polygon_x.extend([*x, *reversed(x), None])
+        polygon_y.extend([*outside[section], *inside[section][::-1], None])
+        edge_x.extend([*x, None])
+        edge_y.extend([*outside[section], None])
+    return (
+        go.Scatter(
+            x=polygon_x,
+            y=polygon_y,
+            mode="lines",
+            line={"width": 0},
+            fill="toself",
+            fillcolor=composition_tint(hue),
+            hoverinfo="skip",
+            showlegend=False,
+        ),
+        go.Scatter(
+            x=edge_x,
+            y=edge_y,
+            mode="lines",
+            line={"color": SURFACE, "width": 1.6},
+            hoverinfo="skip",
+            showlegend=False,
+        ),
+    )
+
+
+def label_ribbon(
+    fig: go.Figure,
+    final: pd.Series,
+    centres: dict[str, float],
+    axis_min: float,
+    axis_max: float,
+) -> None:
+    """Place right-edge labels in plot coordinates with room between them."""
+    axis_span = axis_max - axis_min
+    labels = [
+        (
+            (centre - axis_min) / axis_span,
+            f'<span style="color:{COMPOSITION_HUES[group]}">■</span> '
+            f"{group}&nbsp; {composition_number(final[group])}",
+            INK,
+        )
+        for group, centre in centres.items()
+        if abs(final[group]) >= COMPOSITION_LABEL_THRESHOLD
+    ]
+    labels.extend(
+        [
+            (
+                (np.log(final["indice_hedonico"]) - axis_min) / axis_span + 0.04,
+                f"<b>Índice hedônico&nbsp; {number(final['indice_hedonico'])}</b>",
+                TEAL,
+            ),
+            (
+                (np.log(final["media_geometrica_bruta"]) - axis_min) / axis_span - 0.04,
+                f"Média bruta&nbsp; {number(final['media_geometrica_bruta'])}",
+                INK,
+            ),
+        ]
+    )
+    labels.sort(key=lambda label: label[0])
+    minimum_gap = 0.065
+    positions = [max(minimum_gap / 2, labels[0][0])]
+    for target, _, _ in labels[1:]:
+        positions.append(max(target, positions[-1] + minimum_gap))
+    positions[-1] = min(1 - minimum_gap / 2, positions[-1])
+    for i in range(len(positions) - 2, -1, -1):
+        positions[i] = min(positions[i], positions[i + 1] - minimum_gap)
+    for y, (_, label, colour) in zip(positions, labels, strict=True):
+        fig.add_annotation(
+            x=1,
+            xref="paper",
+            xanchor="left",
+            xshift=6,
+            y=y,
+            yref="paper",
+            yanchor="middle",
+            text=label,
+            font={"size": 11, "color": colour},
+            showarrow=False,
+        )
+
+
 def hedonic_figure(table: pd.DataFrame) -> go.Figure:
-    """Display fixed-population estimates and their clustered confidence bounds."""
+    """Display the adjusted index and the signed composition of the raw gap."""
     fig = go.Figure()
-    for bound in ["upper", "lower"]:
+    final = table.iloc[-1]
+    groups = sorted(COMPOSITION_TERMS, key=lambda group: abs(final[group]), reverse=True)
+    dates, adjusted, contributions = ribbon_grid(table, groups)
+    stacks = [adjusted.copy(), adjusted.copy()]
+    separators = []
+    centres = {}
+    for rank, group in enumerate(groups, start=2):
+        hue = COMPOSITION_HUES[group]
+        for stack, signed in zip(
+            stacks,
+            (contributions[group].clip(max=0), contributions[group].clip(min=0)),
+            strict=True,
+        ):
+            outer = stack + signed
+            if traces := band_traces(dates, stack, outer, hue):
+                band, edge = traces
+                fig.add_trace(band)
+                separators.append(edge)
+            if signed[-1]:
+                centres[group] = (stack[-1] + outer[-1]) / 2
+            stack[:] = outer
+        fig.add_trace(
+            go.Scatter(
+                x=[None],
+                y=[None],
+                mode="markers",
+                name=group,
+                legendrank=rank,
+                marker={"symbol": "square", "size": 8, "color": hue},
+                hoverinfo="skip",
+            )
+        )
+    fig.add_traces(separators)
+
+    # Trace order keeps the reference above the fills and the estimate on top.
+    fig.add_trace(
+        go.Scatter(
+            x=table["date"].iloc[[0, -1]],
+            y=[100, 100],
+            mode="lines",
+            line={"color": INK, "width": 0.7, "dash": "dash"},
+            opacity=0.45,
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+    for bound in ("lower", "upper"):
         fig.add_trace(
             go.Scatter(
                 x=table["date"],
                 y=table[bound],
                 mode="lines",
-                line={"width": 0},
-                fill="tonexty" if bound == "lower" else None,
-                fillcolor="rgba(29,111,115,0.13)",
+                line={"color": TEAL, "width": 0.7},
+                opacity=0.7,
                 hoverinfo="skip",
                 showlegend=False,
-                legendgroup="hedonic",
             )
         )
     fig.add_trace(
         go.Scatter(
             x=table["date"],
-            y=table["raw_index"],
-            name="Mediana bruta da mesma amostra",
+            y=table["media_geometrica_bruta"],
             mode="lines",
-            line={"color": MUTED, "width": 2, "dash": "dot"},
-            customdata=[quarter_label(date) for date in table["date"]],
-            hovertemplate="%{customdata}<br>Índice da mediana: %{y:.1f}<extra></extra>",
+            name="Média bruta",
+            legendrank=1,
+            line={"color": INK, "width": 1.2, "dash": "dot"},
+            hoverinfo="skip",
         )
     )
     fig.add_trace(
         go.Scatter(
             x=table["date"],
-            y=table["index"],
-            name="Índice hedônico · IC 95%",
+            y=table["indice_hedonico"],
             mode="lines",
-            line={"color": TEAL, "width": 2.6},
-            legendgroup="hedonic",
+            name="Índice hedônico · IC 95%",
+            legendrank=0,
+            line={"color": TEAL, "width": 2.4},
             customdata=[
-                [quarter_label(r.date), number(r.lower, 1), number(r.upper, 1), number(r.n)]
-                for r in table.itertuples()
+                [
+                    quarter_label(row["date"]),
+                    number(row["indice_hedonico"], 1),
+                    number(row["lower"], 1),
+                    number(row["upper"], 1),
+                    number(row["media_geometrica_bruta"], 1),
+                    *(composition_number(row[group]) for group in groups),
+                ]
+                for row in table.to_dict("records")
             ],
-            hovertemplate="%{customdata[0]}<br>Índice: %{y:.1f}"
-            "<br>IC 95%: %{customdata[1]} a %{customdata[2]}"
-            "<br>Transações no trimestre: %{customdata[3]}<extra></extra>",
+            hovertemplate=(
+                "<b>%{customdata[0]}</b><br>Índice hedônico: %{customdata[1]}"
+                "<br>IC 95%: %{customdata[2]} a %{customdata[3]}"
+                "<br>Média bruta: %{customdata[4]}<br><br>Composição (log × 100)"
+                + "".join(
+                    f"<br>{group}: %{{customdata[{i}]}}"
+                    for i, group in enumerate(groups, start=5)
+                )
+                + "<extra></extra>"
+            ),
         )
     )
+    low = min(stacks[0].min(), np.log(table["lower"].min()), np.log(100))
+    high = max(stacks[1].max(), np.log(table["upper"].max()), np.log(100))
+    padding = max(0.025, 0.08 * (high - low))
+    axis_min, axis_max = low - padding, high + padding
+    floor, ceiling = np.exp([axis_min, axis_max])
+    tick_step = 10 * max(1, int(np.ceil((ceiling - floor) / 70)))
+    ticks = np.arange(np.ceil(floor / tick_step) * tick_step, ceiling, tick_step)
     themed(fig, height=420)
-    fig.add_hline(y=100, line={"color": AXIS, "width": 1})
-    fig.update_xaxes(tickformat="%Y", dtick="M24")
-    fig.update_yaxes(title_text="Índice · 1º tri. 2016 = 100", tickformat=",.0f")
+    fig.update_layout(
+        margin={"l": 35, "r": 127},
+        hovermode="x",
+        hoverdistance=-1,
+        legend={"itemclick": False, "itemdoubleclick": False},
+    )
+    fig.update_xaxes(
+        tickformat="%Y",
+        dtick="M24",
+        showspikes=True,
+        spikemode="across",
+        spikesnap="data",
+        spikethickness=1,
+        spikecolor=MUTED,
+        spikedash="dot",
+    )
+    fig.update_yaxes(
+        type="log",
+        range=[axis_min / np.log(10), axis_max / np.log(10)],
+        tickvals=ticks,
+        tickformat=",.0f",
+        showline=False,
+    )
+    label_ribbon(fig, final, centres, axis_min, axis_max)
     return fig
 
 

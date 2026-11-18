@@ -21,7 +21,7 @@ def prepared_cache(tmp_path, monkeypatch, source_factory):
     source = tmp_path / "source.parquet"
     source_factory().to_parquet(source, index=False)
     monkeypatch.setattr(data, "CACHE_DIR", tmp_path / "cache")
-    monkeypatch.setattr(models, "MODEL_DIR", data.CACHE_DIR / "models-v1")
+    monkeypatch.setattr(models, "MODEL_DIR", data.CACHE_DIR / f"models-{models.MODEL_VERSION}")
     monkeypatch.setattr(data, "SOURCE_SHA256", data.file_sha256(source))
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda **kwargs: source)
     data.prepare_cache()
@@ -179,7 +179,9 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     cluster_colours = {"1": "#6c4fae", "2": "#3d7f4a", "3": "#d77a9a", "4": "#e09a3e"}
     for group in ("all", *cluster_colours):
         result = post_callback(app, "hedonic-figure.figure", [group])
-        assert len(result["hedonic-figure"]["figure"]["data"]) == 4
+        hedonic_figure = result["hedonic-figure"]["figure"]
+        assert hedonic_figure["layout"]["yaxis"]["type"] == "log"
+        assert hedonic_figure["data"][-1]["name"] == "Índice hedônico · IC 95%"
         traces = result["clusters-figure"]["figure"]["data"]
         expected = cluster_colours if group == "all" else {group: cluster_colours[group]}
         assert {trace["legendgroup"] for trace in traces} == set(expected)
@@ -192,4 +194,13 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     assert fitted["metadata"]["hedonic"]["n"] == 202204
     assert fitted["metadata"]["clusters"]["n_neighbourhoods"] == 94
     assert fitted["hedonic"]["n"].sum() == 202204
-    assert np.isfinite(fitted["hedonic"][["index", "lower", "upper"]]).all().all()
+    hedonic = fitted["hedonic"]
+    indices = ["indice_hedonico", "lower", "upper", "media_geometrica_bruta"]
+    assert np.isfinite(hedonic[indices]).all().all()
+    assert hedonic["erro_identidade"].abs().max() < 1e-8
+    contributions = hedonic[list(models.COMPOSITION_TERMS)]
+    gap = np.log(hedonic["media_geometrica_bruta"] / hedonic["indice_hedonico"])
+    np.testing.assert_allclose(gap, contributions.sum(axis=1), atol=1e-8, rtol=0)
+    assert hedonic.iloc[0]["quarter"] == "2016Q1"
+    assert hedonic.iloc[0][indices].eq(100).all()
+    assert contributions.iloc[0].eq(0).all()

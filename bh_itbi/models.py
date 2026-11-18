@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -23,12 +24,22 @@ from bh_itbi.data import (
     file_sha256,
 )
 
-MODEL_VERSION = "v1"
+if TYPE_CHECKING:
+    from statsmodels.regression.linear_model import RegressionResultsWrapper
+
+MODEL_VERSION = "v2"
 MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
 FORMULA = (
     "log_price ~ log_area + C(building_age_band) + C(property_type)"
     " + C(neighbourhood) + C(quarter_label)"
 )
+COMPOSITION_TERMS = {
+    "Bairro": "C(neighbourhood)",
+    "Área": "log_area",
+    "Faixa de idade": "C(building_age_band)",
+    "Tipo": "C(property_type)",
+}
+QUARTER_TERM = "C(quarter_label)"
 
 
 def model_population(frame: pd.DataFrame) -> pd.DataFrame:
@@ -53,14 +64,40 @@ def model_population(frame: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
+def hedonic_composition(fit: RegressionResultsWrapper, quarters: pd.Series) -> pd.DataFrame:
+    """Decompose the fitted sample's quarterly log means relative to the base."""
+    slices = fit.model.data.model_spec.term_name_slices
+    terms = {**COMPOSITION_TERMS, "adjusted": QUARTER_TERM}
+    if extra := set(slices) - {"Intercept", *terms.values()}:
+        raise ValueError(f"Termos do modelo fora da decomposição: {', '.join(sorted(extra))}")
+
+    design = fit.model.exog
+    coefficients = fit.params.to_numpy()
+    components = {
+        label: design[:, slices[term]] @ coefficients[slices[term]]
+        for label, term in terms.items()
+    }
+    components["raw"] = fit.model.endog
+    by_quarter = pd.DataFrame(components).groupby(quarters.to_numpy()).mean()
+    changes = by_quarter - by_quarter.iloc[0]
+    changes["erro_identidade"] = (
+        changes["raw"] - changes["adjusted"] - changes[list(COMPOSITION_TERMS)].sum(axis=1)
+    )
+    # OLS with quarter indicators gives zero mean residual within each quarter.
+    if not changes["erro_identidade"].abs().lt(1e-8).all():
+        raise ValueError("A decomposição hedônica não satisfaz a identidade contábil.")
+    return changes
+
+
 def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    """OLS log-price index with neighbourhood-clustered 95% confidence intervals."""
+    """Fit the OLS index, clustered 95% intervals and same-sample composition."""
     import statsmodels.formula.api as smf
 
     data = model_population(frame)
     if data.empty or data["neighbourhood"].nunique() < 2:
         raise ValueError("Amostra insuficiente para o modelo hedônico agrupado por bairro.")
-    fit = smf.ols(FORMULA, data=data).fit(
+    # The quarter labels and clustering codes must align with every fitted row.
+    fit = smf.ols(FORMULA, data=data, missing="raise").fit(
         cov_type="cluster", cov_kwds={"groups": data["neighbourhood"].cat.codes.to_numpy()}
     )
     terms = fit.params.index[fit.params.index.str.startswith("C(quarter_label)[T.")]
@@ -68,7 +105,7 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     result = pd.DataFrame(
         {
             "quarter": terms.str.extract(r"T\.(\d{4}Q[1-4])\]")[0].to_numpy(),
-            "index": 100 * np.exp(fit.params.loc[terms].to_numpy()),
+            "indice_hedonico": 100 * np.exp(fit.params.loc[terms].to_numpy()),
             "lower": 100 * np.exp(intervals[0].to_numpy()),
             "upper": 100 * np.exp(intervals[1].to_numpy()),
         }
@@ -76,13 +113,17 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     base = data["quarter_label"].min()
     result = pd.concat(
         [
-            pd.DataFrame([{"quarter": base, "index": 100.0, "lower": 100.0, "upper": 100.0}]),
+            pd.DataFrame(
+                [{"quarter": base, "indice_hedonico": 100.0, "lower": 100.0, "upper": 100.0}]
+            ),
             result,
         ],
         ignore_index=True,
     ).sort_values("quarter")
-    raw = data.groupby("quarter_label", observed=True)["price_per_m2_brl_real"].median()
-    result["raw_index"] = (100 * raw / raw.loc[base]).reindex(result["quarter"]).to_numpy()
+    composition = hedonic_composition(fit, data["quarter_label"]).reindex(result["quarter"])
+    result["media_geometrica_bruta"] = 100 * np.exp(composition["raw"].to_numpy())
+    composition_columns = [*COMPOSITION_TERMS, "erro_identidade"]
+    result[composition_columns] = composition[composition_columns].to_numpy()
     result["date"] = pd.PeriodIndex(result["quarter"], freq="Q").start_time
     result["n"] = (
         data.groupby("quarter_label", observed=True)
@@ -90,7 +131,14 @@ def fit_hedonic(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         .reindex(result["quarter"])
         .to_numpy()
     )
-    if not np.isfinite(result[["index", "lower", "upper", "raw_index"]]).all().all():
+    columns = [
+        "indice_hedonico",
+        "lower",
+        "upper",
+        "media_geometrica_bruta",
+        *composition_columns,
+    ]
+    if not np.isfinite(result[columns]).all().all():
         raise ValueError("O modelo produziu estimativas ou intervalos não finitos.")
     metadata = {
         "n": int(fit.nobs),
