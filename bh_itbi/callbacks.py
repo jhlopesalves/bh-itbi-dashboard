@@ -9,13 +9,14 @@ import pandas as pd
 from dash import ClientsideFunction, Input, Output, State, ctx, html, no_update
 from dash.exceptions import PreventUpdate
 
+from bh_itbi.age import age_premiums
+from bh_itbi.age_chart import age_chart_data, age_note, age_subtitle
 from bh_itbi.analysis import (
     COMPARISON_RIDGE_LIMIT,
     DEFAULT_NEIGHBOURHOODS,
     RIDGE_MINIMUM,
     TYPE_LABELS,
     Filters,
-    age_table,
     distance_table,
     distribution_quartiles,
     filter_transactions,
@@ -27,7 +28,6 @@ from bh_itbi.analysis import (
     tax_base_table,
 )
 from bh_itbi.figures import (
-    age_figure,
     clusters_figure,
     currency,
     distance_figure,
@@ -114,6 +114,10 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
     app.clientside_callback(
         ClientsideFunction(namespace="comparison", function_name="update"),
         Input("comparison-data", "data"),
+    )
+    app.clientside_callback(
+        ClientsideFunction(namespace="ageChart", function_name="update"),
+        Input("age-data", "data"),
     )
 
     # Maps contain up to 8,000 hover records. Bound their retained memory rather
@@ -313,7 +317,9 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
     @app.callback(
         Output("tax-figure", "figure"),
         Output("heaping-figure", "figure"),
-        Output("age-figure", "figure"),
+        Output("age-data", "data"),
+        Output("age-subtitle", "children"),
+        Output("age-note", "children"),
         Output("distance-figure", "figure"),
         Output("heaping-caption", "children"),
         Output("diagnostic-scope", "children"),
@@ -326,6 +332,7 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             raise PreventUpdate
         filters = Filters.from_controls(property_type, years, neighbourhoods)
         rows = filter_transactions(frame, filters)
+        age = age_premiums(rows)
         heaping = heaping_table(rows)
         total, share = heaping_summary(heaping)
         caption = (
@@ -338,7 +345,9 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         return (
             tax_base_figure(tax_base_table(rows), filters),
             heaping_figure(heaping),
-            age_figure(age_table(rows)),
+            age_chart_data(age),
+            age_subtitle(filters, adjusted="adjusted" in age.table),
+            age_note(age),
             distance_figure(distance_table(rows)),
             caption,
             scope_text(filters),

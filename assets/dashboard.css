@@ -201,6 +201,21 @@ h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 
 .comparison-axis { color: var(--ink-2); font-size: 11px; text-align: center; }
 .comparison-empty { display: grid; min-height: 360px; place-items: center; text-align: center; color: var(--muted); font-size: 13px; }
 .comparison-tooltip { position: absolute; z-index: 1; padding: 4px 7px; max-width: 100%; border: 1px solid var(--rule); background: #fff; color: var(--ink); font-size: 12px; line-height: 1.35; pointer-events: none; }
+
+#age-plot { position: relative; }
+.age-svg { display: block; font-size: 12px; fill: var(--ink); }
+.age-grid { stroke: var(--rule-faint); stroke-width: 1; }
+.age-zero { stroke: var(--ink); stroke-width: .8; stroke-opacity: .6; }
+.age-adjusted { fill: var(--teal); font-weight: 700; }
+.age-observed { stroke: var(--surface); stroke-width: 3; stroke-linejoin: round; paint-order: stroke; }
+.age-separator, .age-subtraction { stroke: var(--surface); stroke-width: 1.6; }
+.age-marker { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.age-reference { fill: var(--ink); }
+.age-ci { stroke: var(--teal); stroke-width: 1.2; }
+.age-ci-label, .age-tick { fill: var(--muted); font-size: 11px; }
+.age-legend { display: flex; flex-wrap: wrap; gap: 4px 20px; list-style: none; padding: 0; margin: 14px 0 0; color: var(--ink-2); font-size: 11px; }
+.age-legend > li { display: flex; align-items: center; gap: 7px; }
+.age-legend > li > span { width: 9px; height: 9px; }
 #distance-figure .scatterlayer .js-line { stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- Section intros ---------- */

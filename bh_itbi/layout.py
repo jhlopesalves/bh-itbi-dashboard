@@ -301,20 +301,16 @@ def diagnostics_panel():
                     ),
                     card(
                         "Valor real por idade da construção",
-                        "Apartamentos · recorte ∩ 2023–2025 · mediana e P25–P75, "
-                        "após excluir "
-                        "valores acima do P99 do recorte.",
+                        html.Span(id="age-subtitle"),
                         [
-                            graph("age-figure"),
-                            html.P(
-                                "Até 2 anos inclui imóveis na planta. Mínimo de "
-                                "15 por faixa após o "
-                                "corte. São diferenças observadas, sem controle "
-                                "por localização ou "
-                                "área.",
-                                className="card-footnote",
+                            dcc.Store(id="age-data"),
+                            html.Div(
+                                html.P("Carregando dados…", className="comparison-empty"),
+                                id="age-plot",
                             ),
+                            html.P(id="age-note", className="card-footnote"),
                         ],
+                        class_name="age-card",
                     ),
                     card(
                         "Valor real por distância à Praça Sete",

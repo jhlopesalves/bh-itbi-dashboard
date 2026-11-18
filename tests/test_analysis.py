@@ -9,7 +9,6 @@ import pytest
 
 from bh_itbi.analysis import (
     Filters,
-    age_table,
     city_quarterly_table,
     distribution_quartiles,
     filter_transactions,
@@ -186,16 +185,6 @@ def test_distribution_retains_all_values_including_extreme_tail(source_factory):
     fig = distribution_figure(frame, "price_per_m2_brl_real")
     assert sum(sum(trace.y) for trace in fig.data) == len(frame)
     assert fig.layout.xaxis.type == "log"
-
-
-def test_age_analysis_uses_pooled_p99_before_band_summary(source_factory):
-    frame = prepare_transactions(source_factory(31))
-    frame["year"] = 2023
-    frame["price_per_m2_brl_real"] = [1000] * 15 + [3000] * 15 + [1_000_000]
-    frame["building_age_band"] = ["26_plus"] * 15 + ["new"] * 16
-    table = age_table(frame).set_index("building_age_band")
-    assert table["n"].sum() == 30
-    assert table.loc["new", "median"] == 3000
 
 
 def test_model_population_has_its_own_fixed_dates_and_neighbourhood_minimum(source_factory):

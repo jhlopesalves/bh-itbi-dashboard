@@ -42,17 +42,22 @@ COMPOSITION_TERMS = {
 QUARTER_TERM = "C(quarter_label)"
 
 
-def model_population(frame: pd.DataFrame) -> pd.DataFrame:
-    """Complete-case residential sample, neighbourhoods with >= 100 records."""
+def hedonic_complete_cases(frame: pd.DataFrame) -> pd.DataFrame:
+    """Apply the common hedonic eligibility rules to prepared transactions."""
     data = diagnostic_rows(frame)
     data = data.loc[
-        data["year"].between(2016, 2025)
-        & data["price_per_m2_brl_real"].notna()
+        data["price_per_m2_brl_real"].notna()
         & data["building_age_band"].notna()
         & data["neighbourhood"].notna()
-    ].copy()
+    ]
     if not data["price_per_m2_brl_real"].gt(0).all():
         raise ValueError("Valores reais não positivos impedem o logaritmo do modelo.")
+    return data
+
+
+def model_population(frame: pd.DataFrame) -> pd.DataFrame:
+    """Complete-case residential sample, neighbourhoods with >= 100 records."""
+    data = hedonic_complete_cases(frame.loc[frame["year"].between(2016, 2025)])
     sizes = data["neighbourhood"].value_counts()
     data = data.loc[data["neighbourhood"].isin(sizes.index[sizes >= 100])].copy()
     # Remove unused levels so the formula matches the notebook's string columns.

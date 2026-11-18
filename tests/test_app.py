@@ -101,3 +101,25 @@ def test_diagnostics_callback_handles_insufficient_samples(app):
         in response["tax-figure"]["figure"]["layout"]["annotations"][0]["text"]
     )
     assert "Sem amostra" in response["heaping-caption"]["children"]
+    assert not response["age-data"]["data"]["rows"]
+    assert "fora do período" in response["age-subtitle"]["children"]
+
+
+def test_age_callback_handles_few_neighbourhoods_and_small_bands(source_factory):
+    source = source_factory(44)
+    source["year"] = 2024
+    source["transaction_date"] = source["transaction_date"].str.replace("2016", "2024")
+    source["building_age_band"] = ["26_plus"] * 15 + ["new"] * 15 + ["3_10"] * 14
+    app = create_app(frame=prepare_transactions(source))
+    response = post_callback(
+        app, "age-data.data", ["apartment", [2024, 2024], [], "diagnostics"]
+    )
+    chart = response["age-data"]["data"]
+    assert not chart["fills"]
+    assert len(chart["rows"]) == 2
+    assert all(not row["segments"] and row["interval"] is None for row in chart["rows"])
+    assert chart["rows"][-1]["reference"]
+    assert "Apartamentos, 2024" in response["age-subtitle"]["children"]
+    note = response["age-note"]["children"]
+    assert "Ajuste indisponível: a seleção tem menos de 20 bairros." in note
+    assert "3 a 10 anos (n = 14)" in note

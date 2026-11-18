@@ -299,22 +299,6 @@ def heaping_summary(table: pd.DataFrame) -> tuple[int, float]:
     return total, share
 
 
-def age_table(frame: pd.DataFrame) -> pd.DataFrame:
-    """Recent apartments, pooled P99 exclusion, then quartiles within age band."""
-    data = frame.loc[
-        frame["built_area_m2"].gt(0)
-        & frame["property_type"].eq("apartment")
-        & frame["year"].between(2023, 2025)
-        & frame["building_age_band"].isin(AGE_LABELS)
-        & frame["price_per_m2_brl_real"].notna(),
-        ["building_age_band", "price_per_m2_brl_real"],
-    ]
-    cap = data["price_per_m2_brl_real"].quantile(0.99)
-    return quantile_table(
-        data.loc[data["price_per_m2_brl_real"] <= cap], ["building_age_band"], minimum=15
-    )
-
-
 def distance_table(frame: pd.DataFrame) -> pd.DataFrame:
     """Straight-line, street-face-centroid distances; 1 km bins, n >= 50."""
     data = frame.loc[

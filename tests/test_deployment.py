@@ -182,8 +182,13 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
             "diagnostics",
         ],
     )
-    for identifier in ("tax-figure", "heaping-figure", "age-figure", "distance-figure"):
+    for identifier in ("tax-figure", "heaping-figure", "distance-figure"):
         assert result[identifier]["figure"]["data"]
+    age = result["age-data"]["data"]
+    assert len(age["rows"]) == 4
+    assert all(row["segments"][-1]["end"] == row["observed"] for row in age["rows"][:-1])
+    assert age["rows"][-1]["reference"]
+    assert age["rows"][-1]["observed"] == 0.0
     cluster_colours = {"1": "#6c4fae", "2": "#3d7f4a", "3": "#d77a9a", "4": "#e09a3e"}
     for group in ("all", *cluster_colours):
         result = post_callback(app, "hedonic-figure.figure", [group])

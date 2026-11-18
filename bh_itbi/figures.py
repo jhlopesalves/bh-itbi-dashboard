@@ -9,7 +9,6 @@ import pandas as pd
 import plotly.graph_objects as go
 
 from bh_itbi.analysis import (
-    AGE_LABELS,
     DEFAULT_NEIGHBOURHOODS,
     DISTANCE_PERIODS,
     TYPE_LABELS,
@@ -620,52 +619,6 @@ def heaping_figure(table: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def age_figure(table: pd.DataFrame) -> go.Figure:
-    """Show the prepared age-band IQRs; no additional tail screen occurs here."""
-    rows = table.loc[table["median"].notna()]
-    if rows.empty:
-        return empty_figure(
-            "São necessários 15 apartamentos por faixa de idade<br>no recorte de 2023–2025."
-        )
-    rows = (
-        rows.set_index("building_age_band").reindex(list(AGE_LABELS)).dropna(subset=["median"])
-    )
-    fig = go.Figure(
-        go.Scatter(
-            x=rows["median"],
-            y=[AGE_LABELS[age] for age in rows.index],
-            mode="markers",
-            marker={"color": TEAL, "size": 10},
-            error_x={
-                "type": "data",
-                "symmetric": False,
-                "array": rows["p75"] - rows["median"],
-                "arrayminus": rows["median"] - rows["p25"],
-                "color": TEAL_TINT,
-                "thickness": 5,
-                "width": 0,
-            },
-            customdata=[
-                [number(r.n), currency(r.p25), currency(r.p75)] for r in rows.itertuples()
-            ],
-            hovertemplate="<b>%{y}</b><br>Mediana: R$ %{x:,.0f}/m²"
-            "<br>P25–P75: %{customdata[1]} a %{customdata[2]}"
-            "<br>Transações: %{customdata[0]}<extra></extra>",
-        )
-    )
-    themed(fig)
-    fig.update_layout(margin={"l": 150, "t": 20}, showlegend=False)
-    fig.update_xaxes(
-        title_text="R$/m² · IPCA",
-        tickformat=",.0f",
-        rangemode="tozero",
-        showgrid=True,
-        gridcolor=GRID,
-    )
-    fig.update_yaxes(showgrid=False, autorange="reversed")
-    return fig
-
-
 def distance_figure(table: pd.DataFrame) -> go.Figure:
     """Draw the period medians with gaps for bands below the count threshold."""
     if not table.empty:
@@ -735,9 +688,9 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def composition_tint(hue: str) -> str:
+def composition_tint(hue: str, *, strength: float = 0.62) -> str:
     channels = (
-        round(0.62 * int(hue[i : i + 2], 16) + 0.38 * int(SURFACE[i : i + 2], 16))
+        round(strength * int(hue[i : i + 2], 16) + (1 - strength) * int(SURFACE[i : i + 2], 16))
         for i in (1, 3, 5)
     )
     return "#" + "".join(f"{value:02x}" for value in channels)
