@@ -41,7 +41,7 @@ def create_app(
     <meta name="description" content="Panorama analítico do mercado residencial de
     Belo Horizonte a partir dos registros do ITBI: distribuição espacial, séries
     temporais, diagnósticos e índices.">
-    <meta name="theme-color" content="#F7F4EE">
+    <meta name="theme-color" content="#FAFAF8">
     <title>{%title%}</title>
     {%favicon%}
     {%css%}

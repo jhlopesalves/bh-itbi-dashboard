@@ -3,7 +3,7 @@
 from dash import dcc, html
 
 from bh_itbi.data import IPCA_BASE, REPO_ID, REVISION, YEARS
-from bh_itbi.figures import DISTRIBUTION_LABELS, TEAL, empty_figure, number
+from bh_itbi.figures import CLUSTER_COLORS, DISTRIBUTION_LABELS, TEAL, empty_figure, number
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC, QUERY_OPTIONS, default_controls
 
 GRAPH_CONFIG = {
@@ -424,8 +424,21 @@ def models_panel(models):
                             options=[
                                 {"label": "Todos os grupos", "value": "all"},
                                 *[
-                                    {"label": f"Grupo {i}", "value": str(i)}
-                                    for i in range(1, 5)
+                                    {
+                                        "label": html.Span(
+                                            [
+                                                html.Span(
+                                                    className="cluster-option-swatch",
+                                                    style={"backgroundColor": colour},
+                                                    **{"aria-hidden": "true"},
+                                                ),
+                                                f"Grupo {group}",
+                                            ],
+                                            className="cluster-option",
+                                        ),
+                                        "value": str(group),
+                                    }
+                                    for group, colour in CLUSTER_COLORS.items()
                                 ],
                             ],
                             value="all",

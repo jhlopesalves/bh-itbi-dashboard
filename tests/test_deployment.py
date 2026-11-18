@@ -176,10 +176,17 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     )
     for identifier in ("tax-figure", "heaping-figure", "age-figure", "distance-figure"):
         assert result[identifier]["figure"]["data"]
-    for group in ("all", "1", "2", "3", "4"):
+    cluster_colours = {"1": "#6c4fae", "2": "#3d7f4a", "3": "#d77a9a", "4": "#e09a3e"}
+    for group in ("all", *cluster_colours):
         result = post_callback(app, "hedonic-figure.figure", [group])
         assert len(result["hedonic-figure"]["figure"]["data"]) == 4
-        assert result["clusters-figure"]["figure"]["data"]
+        traces = result["clusters-figure"]["figure"]["data"]
+        expected = cluster_colours if group == "all" else {group: cluster_colours[group]}
+        assert {trace["legendgroup"] for trace in traces} == set(expected)
+        for trace in traces:
+            assert trace["line"]["color"] == expected[trace["legendgroup"]]
+            if not trace.get("showlegend", True):
+                assert trace["opacity"] == 0.25
         assert result["cluster-members"]["children"]
     fitted = models.load_models()
     assert fitted["metadata"]["hedonic"]["n"] == 202204

@@ -26,14 +26,15 @@ CLAY = "#c0603a"
 BLUE = "#3e6daa"
 GOLD = "#a88620"
 PLUM = "#8f579f"
-SURFACE = "#fdfbf7"
-GRID = "#ebe7df"
-AXIS = "#cfc9be"
+SURFACE = "#fdfdfc"
+GRID = "#e6eae6"
+AXIS = "#c9d1cb"
 TEAL_TINT = "#b9d3d1"
 NEUTRAL_BAR = "#d6d0c5"
 FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
 TYPE_COLORS = {"apartment": TEAL, "house": CLAY}
 PALETTE = [TEAL, CLAY, BLUE, GOLD, PLUM, "#5f8f3a", "#b85079", "#5b78c0"]
+CLUSTER_COLORS = {1: "#6c4fae", 2: "#3d7f4a", 3: "#d77a9a", 4: "#e09a3e"}
 # Matplotlib's "jet", as in Géron's California housing map (translucent,
 # size-encoded circles coloured by price).
 PRICE_SCALE = [
@@ -51,6 +52,13 @@ DISTRIBUTION_LABELS = {
     "price_per_m2_brl": "Valor declarado nominal (R$/m²)",
     "value_declared_brl": "Valor declarado nominal (R$)",
 }
+# In draw order, from the earliest period at the back to the latest in front.
+DISTANCE_PERIOD_STYLES = {
+    "2016–2018": ("#e8a33d", 1.6, 3.0),
+    "2019–2021": ("#c94f7c", 2.0, 3.5),
+    "2022–2025": ("#5e2a6e", 2.8, 4.0),
+}
+DISTANCE_PRICE_STEP = 500
 
 
 def number(value: float, decimals: int = 0) -> str:
@@ -84,15 +92,20 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
         separators=",.",
         colorway=PALETTE,
         height=height,
-        margin={"l": 65, "r": 22, "t": 18, "b": 100},
+        margin={"l": 65, "r": 22, "t": 18, "b": 8},
         legend={
             "orientation": "h",
+            # Align with the card and let Plotly reserve space for wrapped
+            # rows outside the axes.
+            "xref": "container",
+            "yref": "container",
             "x": 0,
-            "y": -0.15,
-            "yanchor": "top",
+            "y": 0,
+            "yanchor": "bottom",
+            # Pack entries in trace order, retaining legendgroup click behaviour.
+            "traceorder": "normal",
             "font": {"size": 11, "color": INK_SOFT},
             "title": {"text": ""},
-            "maxheight": 60,
         },
         hoverlabel={
             "bgcolor": "#ffffff",
@@ -281,7 +294,7 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
                 "sizemode": "area",
                 "sizeref": points["built_area_m2"].max() / 16**2,
                 "sizemin": 2.5,
-                "opacity": 0.45,
+                "opacity": 0.70,
                 "color": points["price_per_m2_brl"],
                 "colorscale": PRICE_SCALE,
                 "showscale": True,
@@ -354,7 +367,11 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
                 line={"color": TYPE_COLORS[property_type], "dash": "dot", "width": 1.5},
             )
     themed(fig, height=330)
-    fig.update_layout(barmode="overlay", bargap=0, margin={"l": 50, "r": 18, "t": 12, "b": 88})
+    fig.update_layout(
+        barmode="overlay",
+        bargap=0,
+        margin={"l": 50, "r": 18, "t": 12},
+    )
     ticks = [
         multiplier * 10.0**exponent
         for exponent in range(int(np.floor(np.log10(low))), int(np.ceil(np.log10(high))) + 1)
@@ -416,7 +433,7 @@ def neighbourhood_comparison_figure(table: pd.DataFrame) -> go.Figure:
         )
     )
     themed(fig, height=max(360, len(rows) * 30 + 90))
-    fig.update_layout(margin={"l": 105, "r": 25, "t": 12, "b": 50})
+    fig.update_layout(margin={"l": 105, "r": 25, "t": 12})
     fig.update_xaxes(
         title_text="R$/m² · IPCA",
         tickformat=",.0f",
@@ -486,9 +503,8 @@ def neighbourhood_trajectories_figure(
         range=[f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"],
     )
     fig.update_yaxes(title_text="R$/m² · IPCA", rangemode="tozero")
-    fig.update_layout(legend={"entrywidth": 100, "entrywidthmode": "pixels"})
-    if len(names) > 8:
-        fig.update_layout(height=450, margin={"b": 150})
+    # Show up to six rows before scrolling, preserving room for the trajectories.
+    fig.update_layout(legend={"maxheight": 124})
     return fig
 
 
@@ -558,7 +574,7 @@ def heaping_figure(table: pd.DataFrame) -> go.Figure:
             )
         )
     themed(fig)
-    fig.update_layout(barmode="overlay", margin={"l": 50, "r": 18, "t": 12, "b": 90})
+    fig.update_layout(barmode="overlay", margin={"l": 50, "r": 18, "t": 12})
     fig.update_xaxes(title_text="Valor declarado nominal (R$)", tickformat=",.0f", nticks=5)
     fig.update_yaxes(title_text="Transações", rangemode="tozero")
     return fig
@@ -598,7 +614,7 @@ def age_figure(table: pd.DataFrame) -> go.Figure:
         )
     )
     themed(fig)
-    fig.update_layout(margin={"l": 150, "r": 22, "t": 20, "b": 55}, showlegend=False)
+    fig.update_layout(margin={"l": 150, "t": 20}, showlegend=False)
     fig.update_xaxes(
         title_text="R$/m² · IPCA",
         tickformat=",.0f",
@@ -611,43 +627,71 @@ def age_figure(table: pd.DataFrame) -> go.Figure:
 
 
 def distance_figure(table: pd.DataFrame) -> go.Figure:
-    """Leave gaps for 1 km bands lacking the required number of observations."""
+    """Draw the period medians with gaps for bands below the count threshold."""
+    if not table.empty:
+        unknown = set(table["period"].dropna()) - DISTANCE_PERIOD_STYLES.keys()
+        if unknown:
+            raise ValueError(f"Períodos de distância sem estilo: {', '.join(sorted(unknown))}.")
     if table.empty or table["median"].isna().all():
         return empty_figure(
             "São necessários 50 apartamentos por faixa de 1 km<br>e período, com "
             "localização de face."
         )
     fig = go.Figure()
-    for i, period in enumerate(DISTANCE_PERIODS):
+    plotted = []
+    for period in DISTANCE_PERIODS:
+        colour, width, radius = DISTANCE_PERIOD_STYLES[period]
         rows = (
             table.loc[table["period"].eq(period)]
             .set_index("band_km")
             .reindex(np.arange(0.5, 14, 1))
         )
-        if rows["median"].isna().all():
+        medians = rows["median"].dropna()
+        if medians.empty:
             continue
+        plotted.extend(medians)
+        swatch = f'<span style="color:{colour};font-size:14px">■</span>'
         fig.add_trace(
             go.Scatter(
                 x=rows.index,
-                y=rows["median"],
+                y=rows["median"].tolist(),
                 mode="lines+markers",
                 name=period,
-                line={"color": ["#a7b3b1", "#4f9393", "#1d5a5e"][i], "width": 2.2},
-                marker={"size": 5},
+                line={"color": colour, "width": width},
+                marker={
+                    "color": colour,
+                    "size": 2 * radius,
+                    "line": {"color": SURFACE, "width": 1.4},
+                },
+                meta=f"{swatch}&nbsp;&nbsp;{period}",
                 connectgaps=False,
                 customdata=[
                     [number(t - 0.5), number(t + 0.5), number(n)]
                     for t, n in zip(rows.index, rows["n"], strict=True)
                 ],
                 hovertemplate="%{customdata[0]}–%{customdata[1]} km<br>Mediana: R$ %{y:,.0f}/m²"
-                "<br>Transações: %{customdata[2]}<extra>%{fullData.name}</extra>",
+                "<br>Transações: %{customdata[2]}<br>%{meta}<extra></extra>",
             )
         )
-    themed(fig)
+    low, high = min(plotted), max(plotted)
+    pad = 0.05 * (high - low)
+    step = DISTANCE_PRICE_STEP
+    floor = step * np.floor((low - pad) / step)
+    ceiling = step * np.ceil((high + pad) / step)
+    if floor == ceiling:
+        floor, ceiling = floor - step, ceiling + step
+    themed(fig).update_layout(showlegend=True)
     fig.update_xaxes(
         title_text="Distância em linha reta da Praça Sete (km)", range=[0, 14], dtick=2
     )
-    fig.update_yaxes(title_text="R$/m² · IPCA", rangemode="tozero")
+    fig.update_yaxes(
+        title_text="R$/m² · IPCA",
+        range=[floor, ceiling],
+        tick0=0,
+        dtick=step,
+        showgrid=True,
+        separatethousands=True,
+    )
     return fig
 
 
@@ -707,10 +751,10 @@ def clusters_figure(models: dict, group: int | None = None) -> go.Figure:
     """Group selection changes visibility, preserving the offline fitted groups."""
     members, centres = models["members"], models["centres"]
     fig = go.Figure()
-    groups = [group] if group else [1, 2, 3, 4]
+    groups = [group] if group else CLUSTER_COLORS
     for group_id in groups:
         rows = members.loc[members["group"].eq(group_id)]
-        color = PALETTE[group_id - 1]
+        color = CLUSTER_COLORS[group_id]
         for name, trajectory in rows.groupby("neighbourhood", observed=True):
             trajectory = trajectory.sort_values("year")
             fig.add_trace(
