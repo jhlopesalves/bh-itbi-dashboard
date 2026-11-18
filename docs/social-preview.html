@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prévia social — Painel do Mercado Residencial de Belo Horizonte</title>
+<!--
+  Editable source for images/social-preview.png. Render at 1280 × 640, scale 1.
+  The SVG viewport crops both complete chart cards from the 2× panorama.png
+  capture, including their labels, legends and map attribution.
+
+  From the repository root (requires Chrome and the system Noto fonts):
+  google-chrome --headless --no-sandbox --disable-gpu --hide-scrollbars \
+    --force-device-scale-factor=1 --window-size=1280,640 \
+    --screenshot="$PWD/docs/images/social-preview.png" \
+    "file://$PWD/docs/social-preview.html"
+  cp docs/images/social-preview.png assets/social-preview.png
+-->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; }
+  body { background: #fafaf8; color: #22313a; }
+  main {
+    display: grid;
+    grid-template-columns: 312px 840px;
+    gap: 48px;
+    align-items: center;
+    height: 100%;
+    padding: 40px;
+  }
+  .heading::before {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 2px;
+    margin-bottom: 25px;
+    background: #1d6f73;
+  }
+  h1 {
+    margin: 0;
+    font-family: "Noto Serif", Georgia, serif;
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -.025em;
+  }
+  h1 span { display: block; }
+  p {
+    margin: 26px 0 0;
+    font-family: "Noto Sans", sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    color: #1d6f73;
+    white-space: nowrap;
+  }
+  svg { display: block; width: 840px; height: auto; }
+</style>
+<main>
+  <header class="heading">
+    <h1><span>Painel do</span> <span>Mercado</span> <span>Residencial de</span> <span>Belo Horizonte</span></h1>
+    <p>Registros do ITBI · 2016–2025</p>
+  </header>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="94 1310 2276 1506"
+       role="img" aria-label="Mapa do valor nominal por metro quadrado e distribuição do valor real por metro quadrado de apartamentos e casas de 2016 a 2025.">
+    <image href="images/panorama.png" width="2464" height="2856" />
+  </svg>
+</main>
+</html>

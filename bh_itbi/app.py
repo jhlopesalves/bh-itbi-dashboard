@@ -4,7 +4,7 @@ import pandas as pd
 from dash import Dash
 
 from bh_itbi.callbacks import register_callbacks
-from bh_itbi.config import ROOT
+from bh_itbi.config import END_YEAR, ROOT, SITE_URL, START_YEAR
 from bh_itbi.data import DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
 from bh_itbi.models import load_models
@@ -37,6 +37,7 @@ def create_app(
         update_title=APP_UPDATE_TITLE,
         serve_locally=True,
     )
+    period = f"{START_YEAR}–{END_YEAR}"
     app.index_string = f"""<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -45,6 +46,22 @@ def create_app(
     Belo Horizonte a partir dos registros do ITBI: distribuição espacial, séries
     temporais, diagnósticos e índices.">
     <meta name="theme-color" content="{PAPER.upper()}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:title" content="Painel do Mercado Residencial de Belo Horizonte">
+    <meta property="og:description"
+          content="ITBI em Belo Horizonte: análise espacial e temporal ({period}).">
+    <meta property="og:url" content="{SITE_URL}/">
+    <meta property="og:image" content="{SITE_URL}/assets/social-preview.png">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="640">
+    <meta property="og:image:alt"
+          content="Mapa e distribuição dos valores declarados ao ITBI em Belo Horizonte.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Painel do Mercado Residencial de Belo Horizonte">
+    <meta name="twitter:description"
+          content="Análise espacial e temporal do ITBI em Belo Horizonte ({period}).">
+    <meta name="twitter:image" content="{SITE_URL}/assets/social-preview.png">
     <title>{{%title%}}</title>
     {{%favicon%}}
     {{%css%}}

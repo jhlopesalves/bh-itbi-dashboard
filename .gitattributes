@@ -1,0 +1,5 @@
+# The Colab notebook documents the analysis; the Dash app is implemented in Python.
+notebooks/*.ipynb linguist-documentation
+
+# Bundled third-party locale data is not application source code.
+assets/00-plotly-locale-pt-br.js linguist-vendored
