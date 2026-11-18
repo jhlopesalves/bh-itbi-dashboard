@@ -10,7 +10,9 @@ from dash import ClientsideFunction, Input, Output, State, ctx, html, no_update
 from dash.exceptions import PreventUpdate
 
 from bh_itbi.analysis import (
+    COMPARISON_RIDGE_LIMIT,
     DEFAULT_NEIGHBOURHOODS,
+    RIDGE_MINIMUM,
     TYPE_LABELS,
     Filters,
     age_table,
@@ -20,7 +22,7 @@ from bh_itbi.analysis import (
     heaping_summary,
     heaping_table,
     map_points,
-    quantile_table,
+    neighbourhood_price_distributions,
     summary,
     tax_base_table,
 )
@@ -33,12 +35,13 @@ from bh_itbi.figures import (
     heaping_figure,
     hedonic_figure,
     map_figure,
-    neighbourhood_comparison_figure,
+    neighbourhood_comparison_data,
     neighbourhood_trajectories_figure,
     number,
     tax_base_figure,
     temporal_figure,
 )
+from bh_itbi.layout import COMPARISON_INTERVAL_SUBTITLE, COMPARISON_SUBTITLE
 from bh_itbi.urls import decode_query, default_controls
 
 
@@ -108,6 +111,10 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         Input("url-ready", "data"),
         State("url-config", "data"),
     )
+    app.clientside_callback(
+        ClientsideFunction(namespace="comparison", function_name="update"),
+        Input("comparison-data", "data"),
+    )
 
     # Maps contain up to 8,000 hover records. Bound their retained memory rather
     # than keeping sixteen full sets of Plotly figures for arbitrary selections.
@@ -123,8 +130,39 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
         values = summary(selected)
         comparison_names = filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS
         comparison = selected.loc[selected["neighbourhood"].isin(comparison_names)]
-        comparison_stats = quantile_table(comparison, ["neighbourhood"], minimum=15)
-        comparison_fig = neighbourhood_comparison_figure(comparison_stats)
+        comparison_grid, comparison_rows = neighbourhood_price_distributions(comparison)
+        comparison_data = neighbourhood_comparison_data(comparison_grid, comparison_rows, city)
+        comparison_subtitle = (
+            COMPARISON_INTERVAL_SUBTITLE
+            if comparison_rows and not any(row.density is not None for row in comparison_rows)
+            else COMPARISON_SUBTITLE
+        )
+        excluded = len(comparison_names) - len(comparison_rows)
+        comparison_note = (
+            "A mediana da cidade inclui todos os bairros para o tipo de imóvel "
+            "e o período selecionados."
+        )
+        if not filters.neighbourhoods:
+            comparison_note += " Sem seleção, exibem-se cinco bairros de referência."
+        if excluded == 1:
+            comparison_note += " 1 bairro com menos de 15 transações não exibido."
+        elif excluded:
+            comparison_note += (
+                f" {number(excluded)} bairros com menos de 15 transações não exibidos."
+            )
+        if len(comparison_rows) <= COMPARISON_RIDGE_LIMIT and any(
+            row.n >= RIDGE_MINIMUM and row.density is None for row in comparison_rows
+        ):
+            comparison_note += (
+                " Curvas indisponíveis na escala comum de densidade "
+                "são exibidas como intervalos."
+            )
+        if comparison_subtitle == COMPARISON_SUBTITLE and any(
+            row.density is None for row in comparison_rows
+        ):
+            comparison_note += (
+                " Nos resumos, o ponto marca a mediana e a faixa clara cobre P10–P90."
+            )
         map_caption = (
             f"{number(map_stats['shown'])} pontos de {number(map_stats['screened'])} "
             "registros entre P2 e P98, após exigir localização de face e área positiva. "
@@ -161,10 +199,11 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             temporal_figure(selected, city, filters),
             distribution_figure(selected, distribution_metric),
             distribution_stats,
-            comparison_fig,
+            comparison_data,
             neighbourhood_trajectories_figure(comparison, city, filters),
             caption,
-            {"height": int(comparison_fig.layout.height), "width": "100%"},
+            comparison_note,
+            comparison_subtitle,
         )
 
     @app.callback(
@@ -180,10 +219,11 @@ def register_callbacks(app, frame: pd.DataFrame, models: dict | None) -> None:
             Output("trend-figure", "figure"),
             Output("distribution-figure", "figure"),
             Output("distribution-summary", "children"),
-            Output("comparison-figure", "figure"),
+            Output("comparison-data", "data"),
             Output("neighbourhood-figure", "figure"),
             Output("neighbourhood-caption", "children"),
-            Output("comparison-figure", "style"),
+            Output("comparison-note", "children"),
+            Output("comparison-subtitle", "children"),
         ],
         *selection_inputs,
     )

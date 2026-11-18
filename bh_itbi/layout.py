@@ -15,6 +15,12 @@ from bh_itbi.figures import (
 from bh_itbi.models import COMPOSITION_TERMS
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC, QUERY_OPTIONS, default_controls
 
+COMPARISON_SUBTITLE = (
+    "Distribuição do preço por m² em cada bairro. Faixa escura: P25–P75; "
+    "linha clara: mediana. Escala de densidade comum a todos os bairros."
+)
+COMPARISON_INTERVAL_SUBTITLE = "Ponto: mediana. Faixa escura: P25–P75. Faixa clara: P10–P90."
+
 GRAPH_CONFIG = {
     "displaylogo": False,
     "locale": "pt-BR",
@@ -223,9 +229,15 @@ def overview_panel():
                     ),
                     card(
                         "Comparação entre bairros",
-                        "Ponto: mediana real. Segmento: intervalo interquartil (P25–P75). "
-                        "Mínimo de 15 transações por bairro.",
-                        html.Div(graph("comparison-figure"), className="comparison-scroll"),
+                        html.Span(COMPARISON_SUBTITLE, id="comparison-subtitle"),
+                        [
+                            dcc.Store(id="comparison-data"),
+                            html.Div(
+                                html.Div(id="comparison-plot"),
+                                className="comparison-scroll",
+                            ),
+                            html.P(id="comparison-note", className="card-footnote"),
+                        ],
                     ),
                 ],
                 className="analysis-grid",

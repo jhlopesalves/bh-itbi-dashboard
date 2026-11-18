@@ -164,6 +164,14 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     population = frame.loc[frame["year"].between(2016, 2025)]
     assert result["kpi-count"]["children"] == f"{len(population):,}".replace(",", ".")
     assert result["geo-map"]["figure"]["data"][0]["type"] == "scattermap"
+    comparison = result["comparison-data"]["data"]
+    price = "price_per_m2_brl_real"
+    assert comparison["city_median"] == population[price].median()
+    assert len(comparison["rows"]) == 5
+    for row in comparison["rows"]:
+        selected = population.loc[population["neighbourhood"].eq(row["name"].upper()), price]
+        assert row["quantiles"][2] == selected.median()
+        assert row["n"] == selected.count()
     result = post_callback(
         app,
         "tax-figure.figure",

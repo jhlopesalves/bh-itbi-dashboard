@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -12,9 +14,11 @@ from bh_itbi.analysis import (
     DISTANCE_PERIODS,
     TYPE_LABELS,
     Filters,
+    NeighbourhoodDistribution,
     city_quarterly_table,
     temporal_table,
 )
+from bh_itbi.data import IPCA_BASE
 from bh_itbi.models import COMPOSITION_TERMS
 
 # Editorial palette, mirrored in assets/dashboard.css. The categorical order was
@@ -419,50 +423,66 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
     return fig
 
 
-def neighbourhood_comparison_figure(table: pd.DataFrame) -> go.Figure:
-    """Draw within-period quartiles already screened for neighbourhood sample size."""
-    rows = table.loc[table["median"].notna()].sort_values("median")
-    if rows.empty:
-        return empty_figure("São necessárias 15 transações por bairro.<br>Amplie o recorte.")
-    fig = go.Figure()
-    for row in rows.itertuples():
-        name = str(row.neighbourhood).title()
-        fig.add_trace(
-            go.Scatter(
-                x=[row.p25, row.p75],
-                y=[name, name],
-                mode="lines",
-                line={"color": TEAL_TINT, "width": 6},
-                showlegend=False,
-                hoverinfo="skip",
-            )
+class ComparisonRow(TypedDict):
+    name: str
+    n: int
+    quantiles: tuple[float, float, float, float, float]
+    prices: list[float]
+    density: list[float]
+
+
+class ComparisonPlot(TypedDict):
+    rows: list[ComparisonRow]
+    city_median: float | None
+    axis_title: str
+
+
+def trim_log_density(grid: np.ndarray, density: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Trim the outer tails at 1.5% of peak, preserving any troughs between modes."""
+    threshold = 0.015 * density.max()
+    visible = np.flatnonzero(density > threshold)
+    first, last = visible[0], visible[-1]
+    log_prices = grid[first : last + 1]
+    heights = density[first : last + 1]
+    if first > 0:
+        left = np.interp(threshold, density[first - 1 : first + 1], grid[first - 1 : first + 1])
+        log_prices = np.r_[left, log_prices]
+        heights = np.r_[threshold, heights]
+    if last < len(grid) - 1:
+        right = np.interp(threshold, density[[last + 1, last]], grid[[last + 1, last]])
+        log_prices = np.r_[log_prices, right]
+        heights = np.r_[heights, threshold]
+    return np.exp(log_prices), heights
+
+
+def neighbourhood_comparison_data(
+    grid: np.ndarray, rows: list[NeighbourhoodDistribution], city: pd.DataFrame
+) -> ComparisonPlot:
+    """Send only the visible curves and summaries to the browser."""
+    visible: list[ComparisonRow] = []
+    for row in rows:
+        if row.density is None:
+            prices, density = [], []
+        else:
+            visible_prices, visible_density = trim_log_density(grid, row.density)
+            prices = visible_prices.tolist()
+            density = visible_density.tolist()
+        visible.append(
+            {
+                "name": row.neighbourhood.title(),
+                "n": row.n,
+                "quantiles": row.quantiles,
+                "prices": prices,
+                "density": density,
+            }
         )
-    fig.add_trace(
-        go.Scatter(
-            x=rows["median"],
-            y=rows["neighbourhood"].astype(str).str.title(),
-            mode="markers",
-            marker={"color": TEAL, "size": 9, "line": {"color": SURFACE, "width": 1.4}},
-            showlegend=False,
-            customdata=[
-                [number(r.n), currency(r.p25), currency(r.p75)] for r in rows.itertuples()
-            ],
-            hovertemplate="<b>%{y}</b><br>Mediana: R$ %{x:,.0f}/m²"
-            "<br>P25–P75: %{customdata[1]} a %{customdata[2]}"
-            "<br>Transações: %{customdata[0]}<extra></extra>",
-        )
-    )
-    themed(fig, height=max(360, len(rows) * 30 + 90))
-    fig.update_layout(margin={"l": 105, "r": 25, "t": 12})
-    fig.update_xaxes(
-        title_text="R$/m² · IPCA",
-        tickformat=",.0f",
-        rangemode="tozero",
-        showgrid=True,
-        gridcolor=GRID,
-    )
-    fig.update_yaxes(showgrid=False)
-    return fig
+    values = city["price_per_m2_brl_real"]
+    city_median = values.loc[values.gt(0) & values.lt(np.inf)].median()
+    return {
+        "rows": visible,
+        "city_median": float(city_median) if pd.notna(city_median) else None,
+        "axis_title": f"R$/m², valores reais (IPCA {IPCA_BASE}) · escala log",
+    }
 
 
 def neighbourhood_trajectories_figure(

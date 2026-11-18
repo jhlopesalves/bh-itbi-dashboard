@@ -22,6 +22,9 @@ DISTANCE_PERIODS = {
     "2019–2021": (2019, 2021),
     "2022–2025": (2022, 2025),
 }
+COMPARISON_MINIMUM = 15
+RIDGE_MINIMUM = 50
+COMPARISON_RIDGE_LIMIT = 8
 
 
 @dataclass(frozen=True)
@@ -79,6 +82,83 @@ def quantile_table(
     result["n"] = grouped.count()
     result.loc[result["n"] < minimum, ["p25", "median", "p75"]] = np.nan
     return result.reset_index()
+
+
+@dataclass(frozen=True)
+class NeighbourhoodDistribution:
+    """Exact price quantiles and, when estimable, a density on the shared log grid."""
+
+    neighbourhood: str
+    n: int
+    quantiles: tuple[float, float, float, float, float]
+    bandwidth: float | None
+    density: np.ndarray | None
+
+
+def silverman_bandwidth(log_prices: np.ndarray) -> float:
+    """Silverman's robust normal-reference bandwidth, in natural-log units."""
+    q25, q75 = np.quantile(log_prices, [0.25, 0.75])
+    spread = min(log_prices.std(ddof=1), (q75 - q25) / 1.34)
+    return float(0.9 * spread * log_prices.size ** (-1 / 5))
+
+
+def log_price_density(log_prices: np.ndarray, grid: np.ndarray, bandwidth: float) -> np.ndarray:
+    """Evaluate the Gaussian KDE exactly, bounding the temporary kernel matrix."""
+    density = np.zeros_like(grid)
+    for start in range(0, log_prices.size, 1024):
+        kernel = grid[:, None] - log_prices[None, start : start + 1024]
+        kernel /= bandwidth
+        np.square(kernel, out=kernel)
+        kernel *= -0.5
+        np.exp(kernel, out=kernel)
+        density += kernel.sum(axis=1)
+    return density / (log_prices.size * bandwidth * np.sqrt(2 * np.pi))
+
+
+def neighbourhood_price_distributions(
+    frame: pd.DataFrame,
+) -> tuple[np.ndarray, list[NeighbourhoodDistribution]]:
+    """Summarise positive real prices, sorted by descending median.
+
+    With up to eight eligible neighbourhoods, each non-degenerate sample of
+    at least 50 prices contributes to the shared 512-point grid.
+    """
+    price = "price_per_m2_brl_real"
+    values = frame.loc[frame[price].gt(0) & frame[price].lt(np.inf), ["neighbourhood", price]]
+    grouped = values.groupby("neighbourhood", observed=True)[price]
+    intervals_only = grouped.size().ge(COMPARISON_MINIMUM).sum() > COMPARISON_RIDGE_LIMIT
+    samples = []
+    lo, hi = np.inf, -np.inf
+    for neighbourhood, prices in grouped:
+        n = len(prices)
+        if n < COMPARISON_MINIMUM:
+            continue
+        p10, p25, median, p75, p90 = prices.quantile([0.10, 0.25, 0.50, 0.75, 0.90])
+        log_prices = None
+        bandwidth = None
+        if not intervals_only and n >= RIDGE_MINIMUM:
+            log_prices = np.log(prices.to_numpy())
+            bandwidth = silverman_bandwidth(log_prices)
+            if bandwidth > 0:
+                lo = min(lo, log_prices.min() - 3 * bandwidth)
+                hi = max(hi, log_prices.max() + 3 * bandwidth)
+        samples.append(
+            (str(neighbourhood), n, (p10, p25, median, p75, p90), bandwidth, log_prices)
+        )
+
+    grid = np.linspace(lo, hi, 512) if lo < hi else np.empty(0)
+    rows = []
+    for neighbourhood, n, quantiles, bandwidth, log_prices in samples:
+        density = None
+        if bandwidth and log_prices is not None:
+            estimate = log_price_density(log_prices, grid, bandwidth)
+            # A broad shared grid can under-resolve a highly concentrated KDE.
+            # Retain the exact interval if the sampled curve loses material mass.
+            if abs(np.trapezoid(estimate, grid) - 1) < 1e-3:
+                density = estimate
+        rows.append(NeighbourhoodDistribution(neighbourhood, n, quantiles, bandwidth, density))
+    rows.sort(key=lambda row: (-row.quantiles[2], row.neighbourhood))
+    return grid, rows
 
 
 def temporal_table(
