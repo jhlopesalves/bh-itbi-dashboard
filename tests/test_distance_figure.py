@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from bh_itbi.config import DISTANCE_PAD_FRACTION
 from bh_itbi.figures import distance_figure
 
 
@@ -33,6 +34,7 @@ def test_distance_styles_follow_periods_when_the_first_period_is_absent() -> Non
     assert np.isnan(rose.y[1])
     assert figure.layout.yaxis.range == (3000, 5000)
     assert figure.layout.yaxis.dtick == 500
+    assert figure.layout.meta == {"pad_fraction": DISTANCE_PAD_FRACTION}
 
 
 def test_distance_figure_has_a_nonzero_span_and_legend_with_one_point() -> None:
@@ -43,5 +45,5 @@ def test_distance_figure_has_a_nonzero_span_and_legend_with_one_point() -> None:
     assert figure.layout.yaxis.range == (4000, 5000)
     assert figure.layout.showlegend is True
     table["period"] = "unrecognised"
-    with pytest.raises(ValueError, match="unrecognised"):
+    with pytest.raises(ValueError, match="Missing styles for distance periods: unrecognised"):
         distance_figure(table)

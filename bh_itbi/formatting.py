@@ -7,6 +7,8 @@ from datetime import date
 import numpy as np
 import pandas as pd
 
+from bh_itbi.config import SMALL_COMPOSITION_LOG_POINTS
+
 MONTHS = (
     "jan",
     "fev",
@@ -22,6 +24,14 @@ MONTHS = (
     "dez",
 )
 _PT_BR_SEPARATORS = str.maketrans(",.", ".,")
+_THOUSAND = 1_000
+_MILLION = 1_000_000
+_SMALL_COUNTS = {
+    4: "quatro",
+    5: "cinco",
+    7: "sete",
+    10: "dez",
+}
 
 
 def number(value: float, decimals: int = 0) -> str:
@@ -34,17 +44,43 @@ def number(value: float, decimals: int = 0) -> str:
 def composition_number(value: float) -> str:
     """Display signed log × 100, keeping small non-zero values legible."""
     scaled = value * 100
-    decimals = 4 if 0 < abs(scaled) < 0.05 else 1
+    precise = 0 < abs(scaled) < SMALL_COMPOSITION_LOG_POINTS
+    decimals = 4 if precise else 1
     magnitude = number(abs(scaled), decimals)
-    if decimals == 4:
+    if precise:
         magnitude = magnitude.rstrip("0").rstrip(",")
     sign = "−" if scaled < 0 else "+" if scaled > 0 else ""
     return sign + magnitude
 
 
 def currency(value: float) -> str:
-    """Format a nominal or real BRL amount with a non-breaking en-dash fallback."""
+    """Format a nominal or real BRL amount, using an em dash for missing values."""
     return "—" if pd.isna(value) else f"R$ {number(value)}"
+
+
+def compact_number(value: float) -> str:
+    """Abbreviate large values in thousands or millions for axis ticks."""
+    if value >= _MILLION:
+        return f"{number(value / _MILLION)} mi"
+    if value >= _THOUSAND:
+        return f"{number(value / _THOUSAND)} mil"
+    return number(value)
+
+
+def number_word(value: int) -> str:
+    """Spell out the small fixed counts used in prose."""
+    return _SMALL_COUNTS.get(value, number(value))
+
+
+def scaled_currency(value: int) -> str:
+    """Render whole thousands and millions in prose without abbreviating units."""
+    if value == _MILLION:
+        return "R$ 1 milhão"
+    if value >= _MILLION and value % _MILLION == 0:
+        return f"R$ {number(value // _MILLION)} milhões"
+    if value >= _THOUSAND and value % _THOUSAND == 0:
+        return f"R$ {number(value // _THOUSAND)} mil"
+    return currency(value)
 
 
 def month_label(value: pd.Timestamp | date | str) -> str:

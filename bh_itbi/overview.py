@@ -9,22 +9,25 @@ import pandas as pd
 
 from bh_itbi.config import (
     COMPARISON_MINIMUM,
+    COMPARISON_PROBABILITIES,
     COMPARISON_RIDGE_LIMIT,
     DEFAULT_NEIGHBOURHOODS,
     DISTRIBUTION_MINIMUM,
+    KDE_BANDWIDTH_EXTENT,
     KDE_GRID_SIZE,
     KDE_MASS_TOLERANCE,
     MAP_SAMPLE_SEED,
     MAP_SAMPLE_SIZE,
     MAP_TRIM_QUANTILES,
     NEIGHBOURHOOD_QUARTER_MINIMUM,
+    QUARTILE_PROBABILITIES,
+    RESIDENTIAL_TYPES,
     RIDGE_MINIMUM,
     SUMMARY_MINIMUM,
     TEMPORAL_MINIMUM,
 )
-from bh_itbi.filters import Filters
+from bh_itbi.filters import Filters, month_range, positive_area, quarter_range
 from bh_itbi.stats import log_price_density, quantile_table, silverman_bandwidth
-from bh_itbi.text import TYPE_LABELS
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,28 @@ class NeighbourhoodDistribution:
     quantiles: tuple[float, float, float, float, float]
     bandwidth: float | None
     density: np.ndarray | None
+
+
+@dataclass(frozen=True)
+class MapStats:
+    """Candidate, P2–P98 screened and sampled counts for the point map."""
+
+    candidates: int
+    screened: int
+    shown: int
+    lower: float
+    upper: float
+
+
+@dataclass(frozen=True)
+class Summary:
+    """Eligible record counts, headline medians and face-geocoded coverage."""
+
+    n: int
+    nominal: float
+    real: float
+    real_n: int
+    geocoded: int
 
 
 def neighbourhood_price_distributions(
@@ -65,7 +90,7 @@ def neighbourhood_price_distributions(
         if n < COMPARISON_MINIMUM:
             continue
         p10, p25, median, p75, p90 = (
-            float(q) for q in prices.quantile([0.10, 0.25, 0.50, 0.75, 0.90])
+            float(q) for q in prices.quantile(COMPARISON_PROBABILITIES)
         )
         log_prices = None
         bandwidth = None
@@ -73,8 +98,8 @@ def neighbourhood_price_distributions(
             log_prices = np.log(prices.to_numpy())
             bandwidth = silverman_bandwidth(log_prices)
             if bandwidth > 0:
-                lo = min(lo, float(log_prices.min()) - 3 * bandwidth)
-                hi = max(hi, float(log_prices.max()) + 3 * bandwidth)
+                lo = min(lo, float(log_prices.min()) - KDE_BANDWIDTH_EXTENT * bandwidth)
+                hi = max(hi, float(log_prices.max()) + KDE_BANDWIDTH_EXTENT * bandwidth)
         samples.append(
             (str(neighbourhood), n, (p10, p25, median, p75, p90), bandwidth, log_prices)
         )
@@ -104,15 +129,15 @@ def temporal_table(
         else ("month", "property_type", TEMPORAL_MINIMUM)
     )
     result = quantile_table(frame, [period, group], minimum=minimum)
-    periods = pd.date_range(
-        f"{filters.start_year}-01-01",
-        f"{filters.end_year}-12-01",
-        freq="QS" if neighbourhood else "MS",
+    periods = (
+        quarter_range(filters.start_year, filters.end_year)
+        if neighbourhood
+        else month_range(filters.start_year, filters.end_year)
     )
     members = (
         list(filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS)
         if neighbourhood
-        else list(TYPE_LABELS)
+        else list(RESIDENTIAL_TYPES)
         if filters.property_type == "all"
         else [filters.property_type]
     )
@@ -122,9 +147,7 @@ def temporal_table(
 
 def city_quarterly_table(frame: pd.DataFrame, filters: Filters) -> pd.DataFrame:
     """Pooled city quarterly quartiles across the active period (minimum n = 30)."""
-    periods = pd.date_range(
-        f"{filters.start_year}-01-01", f"{filters.end_year}-10-01", freq="QS"
-    )
+    periods = quarter_range(filters.start_year, filters.end_year)
     return (
         quantile_table(frame, ["quarter"], minimum=TEMPORAL_MINIMUM)
         .set_index("quarter")
@@ -141,10 +164,10 @@ def distribution_quartiles(
     values = frame.loc[frame[column].gt(0), column]
     if len(values) < minimum:
         return None
-    return values.quantile([0.25, 0.5, 0.75])
+    return values.quantile(QUARTILE_PROBABILITIES)
 
 
-def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, MapStats]:
     """Apply the positive-area and face-centroid screen, P2–P98 trim and seeded sample.
 
     This sample is *only* for drawing. All summaries and analytical figures use
@@ -160,30 +183,31 @@ def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         "lon",
         "price_per_m2_brl",
     ]
-    candidates = frame.loc[frame["face_geocoded"] & frame["built_area_m2"].gt(0), columns]
+    candidates = frame.loc[frame["face_geocoded"] & positive_area(frame), columns]
     limits = candidates["price_per_m2_brl"].quantile(list(MAP_TRIM_QUANTILES))
-    screened = candidates.loc[candidates["price_per_m2_brl"].between(*limits)]
+    lower, upper = (float(limit) for limit in limits)
+    screened = candidates.loc[candidates["price_per_m2_brl"].between(lower, upper)]
     points = screened.sample(
         n=min(MAP_SAMPLE_SIZE, len(screened)), random_state=MAP_SAMPLE_SEED
     )
-    return points, {
-        "candidates": len(candidates),
-        "screened": len(screened),
-        "shown": len(points),
-        "lower": limits.iloc[0],
-        "upper": limits.iloc[1],
-    }
+    return points, MapStats(
+        candidates=len(candidates),
+        screened=len(screened),
+        shown=len(points),
+        lower=lower,
+        upper=upper,
+    )
 
 
-def summary(frame: pd.DataFrame, minimum: int = SUMMARY_MINIMUM) -> dict:
+def summary(frame: pd.DataFrame, minimum: int = SUMMARY_MINIMUM) -> Summary:
     """Count all eligible records but suppress small-sample headline medians."""
     count = len(frame)
     nominal = frame["price_per_m2_brl"].dropna()
     real = frame["price_per_m2_brl_real"].dropna()
-    return {
-        "n": count,
-        "nominal": nominal.median() if len(nominal) >= minimum else np.nan,
-        "real": real.median() if len(real) >= minimum else np.nan,
-        "real_n": len(real),
-        "geocoded": int(frame["face_geocoded"].sum()),
-    }
+    return Summary(
+        n=count,
+        nominal=float(nominal.median()) if len(nominal) >= minimum else float(np.nan),
+        real=float(real.median()) if len(real) >= minimum else float(np.nan),
+        real_n=len(real),
+        geocoded=int(frame["face_geocoded"].sum()),
+    )

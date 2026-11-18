@@ -4,6 +4,7 @@ import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 
+import huggingface_hub
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,17 +12,16 @@ from test_app import post_callback
 
 from bh_itbi import data, models
 from bh_itbi.app import create_app
+from bh_itbi.config import MODEL_VERSION
 
 
 @pytest.fixture
 def prepared_cache(tmp_path, monkeypatch, source_factory):
     """Exercise real source validation and publication without a network request."""
-    import huggingface_hub
-
     source = tmp_path / "source.parquet"
     source_factory().to_parquet(source, index=False)
     monkeypatch.setattr(data, "CACHE_DIR", tmp_path / "cache")
-    monkeypatch.setattr(models, "MODEL_DIR", data.CACHE_DIR / f"models-{models.MODEL_VERSION}")
+    monkeypatch.setattr(models, "MODEL_DIR", data.CACHE_DIR / f"models-{MODEL_VERSION}")
     monkeypatch.setattr(data, "SOURCE_SHA256", data.file_sha256(source))
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", lambda **kwargs: source)
     data.prepare_cache()
@@ -87,7 +87,7 @@ def test_production_rejects_invalid_data_without_preparing(
 
 
 def test_production_rejects_missing_models_instead_of_omitting_panels(prepared_cache):
-    with pytest.raises(data.DataError, match="Modelos preparados"):
+    with pytest.raises(data.DataError, match="Prepared models are missing or incompatible"):
         create_app(require_prepared=True)
 
 
@@ -96,7 +96,7 @@ def test_model_manifest_checks_every_required_table(tmp_path, failure):
     metadata = {
         "revision": data.REVISION,
         "source_sha256": data.SOURCE_SHA256,
-        "model_version": models.MODEL_VERSION,
+        "model_version": MODEL_VERSION,
         "tables_sha256": {},
     }
     for name in ("hedonic", "members", "centres"):
@@ -189,6 +189,11 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     assert all(row["segments"][-1]["end"] == row["observed"] for row in age["rows"][:-1])
     assert age["rows"][-1]["reference"]
     assert age["rows"][-1]["observed"] == 0.0
+
+    assert_real_models(app)
+
+
+def assert_real_models(app):
     cluster_colours = {"1": "#6c4fae", "2": "#3d7f4a", "3": "#d77a9a", "4": "#e09a3e"}
     for group in ("all", *cluster_colours):
         result = post_callback(app, "hedonic-figure.figure", [group])
@@ -204,15 +209,16 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
                 assert trace["opacity"] == 0.25
         assert result["cluster-members"]["children"]
     fitted = models.load_models()
-    assert fitted["metadata"]["hedonic"]["n"] == 202204
-    assert fitted["metadata"]["clusters"]["n_neighbourhoods"] == 94
-    assert fitted["hedonic"]["n"].sum() == 202204
-    hedonic = fitted["hedonic"]
-    indices = ["indice_hedonico", "lower", "upper", "media_geometrica_bruta"]
+    assert fitted is not None
+    assert fitted.metadata["hedonic"]["n"] == 202204
+    assert fitted.metadata["clusters"]["n_neighbourhoods"] == 94
+    assert fitted.hedonic["n"].sum() == 202204
+    hedonic = fitted.hedonic
+    indices = ["hedonic_index", "lower", "upper", "raw_geometric_mean"]
     assert np.isfinite(hedonic[indices]).all().all()
-    assert hedonic["erro_identidade"].abs().max() < 1e-8
+    assert hedonic["identity_error"].abs().max() < 1e-8
     contributions = hedonic[list(models.COMPOSITION_TERMS)]
-    gap = np.log(hedonic["media_geometrica_bruta"] / hedonic["indice_hedonico"])
+    gap = np.log(hedonic["raw_geometric_mean"] / hedonic["hedonic_index"])
     np.testing.assert_allclose(gap, contributions.sum(axis=1), atol=1e-8, rtol=0)
     assert hedonic.iloc[0]["quarter"] == "2016Q1"
     assert hedonic.iloc[0][indices].eq(100).all()

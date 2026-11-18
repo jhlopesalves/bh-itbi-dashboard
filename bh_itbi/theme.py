@@ -8,17 +8,11 @@ from bh_itbi.config import DEFAULT_NEIGHBOURHOODS, DISTANCE_PERIODS
 
 # Surface and ink tokens mirrored in assets/dashboard.css :root.
 PAPER = "#fafaf8"
-PAPER_SOFT = "#f0f0ee"
 SURFACE = "#fdfdfc"
 INK = "#22313a"
 INK_SOFT = "#24343d"
 MUTED = "#667784"
 TEAL = "#1d6f73"
-TEAL_SOFT = "#2a7a7b"
-RULE = "#d5dbd6"
-RULE_COOL = "#d8dcd6"
-RULE_FAINT = "#e3e8e4"
-RULE_INTERACTIVE = "#9eaba3"
 
 # Categorical and chart tokens.
 CLAY = "#c0603a"
@@ -35,6 +29,7 @@ AXIS = "#c9d1cb"
 NEUTRAL_BAR = "#d6d0c5"
 HOVER_BG = "#ffffff"
 MODEBAR_ICON = "#b3ada3"
+TRANSPARENT = "rgba(0,0,0,0)"
 
 CLUSTER_VIOLET = "#6c4fae"
 CLUSTER_FOREST = "#3d7f4a"
@@ -53,10 +48,6 @@ PRICE_RED = "#ff0000"
 PRICE_MAROON = "#7f0000"
 
 FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
-SERIF_FONT = (
-    '"Source Serif 4", "Iowan Old Style", Charter, "Noto Serif", '
-    '"Palatino Linotype", Georgia, serif'
-)
 
 TYPE_COLORS: dict[str, str] = {"apartment": TEAL, "house": CLAY}
 PALETTE: list[str] = [TEAL, CLAY, BLUE, GOLD, PLUM, GREEN, ROSE, INDIGO]
@@ -91,10 +82,10 @@ DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
 )
 # Distinct hues for the four observed hedonic composition terms.
 COMPOSITION_HUES: dict[str, str] = {
-    "Bairro": CLAY,
-    "Área": BLUE,
-    "Faixa de idade": GOLD,
-    "Tipo": SLATE,
+    "neighbourhood": CLAY,
+    "area": BLUE,
+    "age_band": GOLD,
+    "property_type": SLATE,
 }
 
 
@@ -116,9 +107,9 @@ def composition_tint(hue: str, *, strength: float = 0.62) -> str:
 AGE_FILLS: dict[str, str] = {
     group: composition_tint(hue, strength=0.75)
     for group, hue in {
-        "Bairro": COMPOSITION_HUES["Bairro"],
-        "Área": COMPOSITION_HUES["Área"],
-        "Trimestre": SLATE,
+        "neighbourhood": COMPOSITION_HUES["neighbourhood"],
+        "area": COMPOSITION_HUES["area"],
+        "quarter": SLATE,
     }.items()
 }
 
@@ -127,8 +118,8 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
     """Apply the publication theme; HTML owns chart titles and explanatory copy."""
     fig.update_layout(
         template="plotly_white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor=TRANSPARENT,
+        plot_bgcolor=TRANSPARENT,
         font={"family": FONT, "size": 12, "color": INK},
         separators=",.",
         colorway=PALETTE,
@@ -154,7 +145,7 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
         hovermode="closest",
         modebar={
             "orientation": "h",
-            "bgcolor": "rgba(0,0,0,0)",
+            "bgcolor": TRANSPARENT,
             "color": MODEBAR_ICON,
             "activecolor": TEAL,
         },
@@ -179,9 +170,7 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
     return fig
 
 
-def empty_figure(
-    message: str = "Sem transações elegíveis neste recorte.", height: int = 360
-) -> go.Figure:
+def empty_figure(message: str, height: int = 360) -> go.Figure:
     """Return a themed blank figure displaying a centred empty-state message."""
     fig = themed(go.Figure(), height=height)
     fig.add_annotation(

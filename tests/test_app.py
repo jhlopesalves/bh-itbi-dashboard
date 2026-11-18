@@ -49,6 +49,14 @@ def test_application_routes_and_portuguese_document(app):
     assert client.get("/_dash-dependencies").status_code == 200
 
 
+def test_shared_chart_asset_loads_before_the_renderers(app) -> None:
+    page = app.server.test_client().get("/").get_data(as_text=True)
+    locale = page.index("/assets/00-plotly-locale-pt-br.js")
+    helpers = page.index("/assets/01-chart-helpers.js")
+    assert locale < helpers < page.index("/assets/comparison.js")
+    assert helpers < page.index("/assets/age-chart.js")
+
+
 def test_connected_callback_and_empty_neighbourhood_selection(app):
     defaults = ["apartment", [2016, 2016], [], "price_per_m2_brl_real", "white-bg"]
     response = post_callback(app, "geo-map.figure", defaults)

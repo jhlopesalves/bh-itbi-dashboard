@@ -44,4 +44,4 @@ def test_composition_is_invariant_to_neighbourhood_reference() -> None:
     assert original.loc[2, groups].abs().gt(0.01).all()
     np.testing.assert_allclose(original[groups], recoded[groups], atol=1e-10, rtol=0)
     assert original.loc[0, groups].eq(0).all()
-    assert original.loc[0, ["indice_hedonico", "media_geometrica_bruta"]].eq(100).all()
+    assert original.loc[0, ["hedonic_index", "raw_geometric_mean"]].eq(100).all()

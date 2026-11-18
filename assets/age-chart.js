@@ -1,40 +1,10 @@
 /* The plot uses log coordinates with pixel-sized marks and measured labels. */
 (() => {
-  const measure = document.createElement("canvas").getContext("2d");
-  const tickFormat = new Intl.NumberFormat("pt-BR", {maximumFractionDigits: 6});
+  const {bindTooltip, formatNumber, line, measureText, setFont, svg, text, wrap} = window.bhCharts;
+  // Mirrors the age interval's confidence level in config.py.
+  const confidencePercent = 95;
   const labelSize = 12;
   const gap = 9;
-
-  function svg(parent, tag, attrs, text) {
-    const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
-    if (text !== undefined) node.textContent = text;
-    parent.append(node);
-    return node;
-  }
-
-  function line(parent, x1, y1, x2, y2, cls) {
-    return svg(parent, "line", {x1, y1, x2, y2, class: cls});
-  }
-
-  function text(parent, x, y, value, cls, anchor = "start") {
-    return svg(parent, "text", {x, y, class: cls, "text-anchor": anchor}, value);
-  }
-
-  function wrap(label, available) {
-    const lines = [];
-    let row = "";
-    for (const word of label.split(" ")) {
-      const next = row ? row + " " + word : word;
-      if (row && measure.measureText(next).width > available) {
-        lines.push(row);
-        row = word;
-      } else {
-        row = next;
-      }
-    }
-    return [...lines, row];
-  }
 
   function visibleEdges(row) {
     return row.segments.filter(part => !part.hidden && part.start !== part.end)
@@ -43,14 +13,15 @@
 
   function chartScale(data, width, left, font) {
     const extent = [0];
-    const setbacks = [[0, measure.measureText("referência").width + gap]];
+    const reference = data.rows.find(row => row.reference);
+    const setbacks = [[0, measureText(reference.observed_label) + gap]];
     let topInterval = true;
     let leftGutter = 0;
     let rightGutter = 0;
     for (const row of data.rows) {
       extent.push(row.observed, ...row.segments.flatMap(part => [part.start, part.end]));
       if (!row.reference && (width >= 460 || !row.interval)) {
-        const room = measure.measureText(row.observed_label).width + gap;
+        const room = measureText(row.observed_label) + gap;
         if (visibleEdges(row).some(value => value > row.observed)) {
           leftGutter = Math.max(leftGutter, room);
         } else {
@@ -59,9 +30,9 @@
       }
       if (row.interval) {
         extent.push(...row.interval);
-        measure.font = `700 ${labelSize}px ${font}`;
-        setbacks.push([0, measure.measureText(row.adjusted_label).width]);
-        measure.font = `${labelSize}px ${font}`;
+        setFont(`700 ${labelSize}px ${font}`);
+        setbacks.push([0, measureText(row.adjusted_label)]);
+        setFont(`${labelSize}px ${font}`);
         if (topInterval) setbacks.push([row.interval[1], 38]);
         topInterval = false;
       }
@@ -89,8 +60,8 @@
       const percent = i * step;
       const pos = x(Math.log1p(percent / 100));
       const sign = i < 0 ? "−" : i > 0 ? "+" : "";
-      const label = sign + tickFormat.format(Math.abs(percent)) + "%";
-      const half = measure.measureText(label).width / 2;
+      const label = sign + formatNumber(Math.abs(percent), 6, "halfExpand") + "%";
+      const half = measureText(label) / 2;
       if (pos - half >= left - gap && pos + half <= width) ticks.push({i, pos, label, half});
     }
     // A distant percentage interval compresses in log coordinates. Give zero
@@ -126,13 +97,13 @@
     const centre = y + 13;
     line(group, lower, centre, upper, centre, "age-ci");
     for (const bound of [lower, upper]) line(group, bound, centre - 2.5, bound, centre + 2.5, "age-ci");
-    if (topInterval) text(group, upper + 5, centre + 5.5, "IC 95%", "age-ci-label");
+    if (topInterval) text(group, upper + 5, centre + 5.5, `IC ${confidencePercent}%`, "age-ci-label");
   }
 
   function labelObserved(group, row, x, y, left, width) {
     const marker = x(row.observed);
     const label = row.observed_label;
-    const size = measure.measureText(label).width;
+    const size = measureText(label);
     // If a subtraction folds back into the bar, the right-hand label may
     // intersect the preceding segments. The left-hand label clears the stack.
     const edges = visibleEdges(row).map(x);
@@ -148,49 +119,16 @@
     }
   }
 
-  function bindTooltip(group, fields, tooltip, host) {
-    group.setAttribute("aria-label", fields.join(". "));
-    function show(clientX, clientY) {
-      const parent = host.getBoundingClientRect();
-      tooltip.hidden = false;
-      const maxX = parent.width - tooltip.offsetWidth;
-      tooltip.style.left = `${Math.max(0, Math.min(clientX - parent.left + 10, maxX))}px`;
-      const y = clientY - parent.top;
-      const below = y + 12;
-      tooltip.style.top = `${below + tooltip.offsetHeight <= parent.height
-        ? below : Math.max(0, y - tooltip.offsetHeight - 10)}px`;
-    }
-    function fill() {
-      tooltip.replaceChildren(...fields.map((field, i) => {
-        const node = document.createElement(i ? "div" : "strong");
-        node.textContent = field;
-        return node;
-      }));
-    }
-    const enter = event => { fill(); show(event.clientX, event.clientY); };
-    const hide = () => { tooltip.hidden = true; };
-    group.addEventListener("pointerenter", enter);
-    group.addEventListener("pointermove", event => show(event.clientX, event.clientY));
-    group.addEventListener("pointerleave", hide);
-    group.addEventListener("click", enter);
-    group.addEventListener("focus", () => {
-      const box = group.getBoundingClientRect();
-      fill();
-      show(box.left + box.width / 2, box.top + box.height / 2);
-    });
-    group.addEventListener("blur", hide);
-  }
-
-  function appendLegend(host, fills) {
+  function appendLegend(host, fills, labels) {
     if (!Object.keys(fills).length) return;
     const list = document.createElement("ul");
     list.className = "age-legend";
     list.setAttribute("aria-label", "Composição");
-    for (const [label, fill] of Object.entries(fills)) {
+    for (const [group, fill] of Object.entries(fills)) {
       const item = document.createElement("li");
       const swatch = document.createElement("span");
       swatch.style.backgroundColor = fill;
-      item.append(swatch, label);
+      item.append(swatch, labels[group]);
       list.append(item);
     }
     host.append(list);
@@ -208,8 +146,8 @@
       return;
     }
     const font = getComputedStyle(host).fontFamily;
-    measure.font = `${labelSize}px ${font}`;
-    const widest = Math.max(...data.rows.map(row => measure.measureText(row.label).width));
+    setFont(`${labelSize}px ${font}`);
+    const widest = Math.max(...data.rows.map(row => measureText(row.label)));
     const labelWidth = Math.min(widest + 2, width * 0.29);
     const left = labelWidth + gap;
     const scale = chartScale(data, width, left, font);
@@ -230,7 +168,7 @@
     tooltip.className = "comparison-tooltip";
     tooltip.setAttribute("aria-hidden", "true");
     tooltip.hidden = true;
-    const fills = {...data.fills, Ajustado: data.teal};
+    const fills = {...data.fills, adjusted: data.teal};
     let topInterval = true;
     for (const [i, row] of data.rows.entries()) {
       const y = first + i * rowHeight;
@@ -250,7 +188,7 @@
       labelObserved(group, row, x, y, left, width);
       bindTooltip(group, row.tooltip, tooltip, host);
     }
-    appendLegend(host, data.fills);
+    appendLegend(host, data.fills, data.labels);
     host.append(tooltip);
   }
 

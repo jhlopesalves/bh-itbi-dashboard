@@ -1,5 +1,7 @@
 """Age premiums for the selected recent apartments, in natural log points."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -7,6 +9,7 @@ import pandas as pd
 from numpy.typing import NDArray
 
 from bh_itbi.config import (
+    AGE_BANDS,
     AGE_INTERVAL,
     AGE_MIN_NEIGHBOURHOODS,
     AGE_MINIMUM,
@@ -15,14 +18,13 @@ from bh_itbi.config import (
     IDENTITY_TOLERANCE,
 )
 from bh_itbi.models import hedonic_complete_cases
-from bh_itbi.text import (
-    AGE_LABELS,
+from bh_itbi.text.diagnostics import (
     FEW_NEIGHBOURHOODS,
     MISSING_REFERENCE,
     UNIDENTIFIED_ADJUSTMENT,
 )
 
-AGE_GROUPS = ("Bairro", "Área", "Trimestre")
+AGE_GROUPS = ("neighbourhood", "area", "quarter")
 __all__ = [
     "AGE_GROUPS",
     "AGE_INTERVAL",
@@ -50,7 +52,7 @@ class AgePremiums:
 
 
 def within_neighbourhood(
-    y: NDArray[np.float64], x: NDArray[np.float64], neighbourhood: pd.Categorical
+    y: NDArray[np.float64], x: NDArray[np.float64], neighbourhood: pd.Categorical[str]
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]] | None:
     """Return slopes, CR1 standard errors and fitted neighbourhood intercepts.
 
@@ -85,16 +87,59 @@ def within_neighbourhood(
     return beta, se, intercepts
 
 
+def _add_age_adjustment(
+    table: pd.DataFrame, data: pd.DataFrame, y: NDArray[np.float64], bands: list[str]
+) -> bool:
+    """Append adjusted estimates and composition in place if the model is identified."""
+    band = data["building_age_band"]
+    contrasts = [key for key in bands if key != AGE_REFERENCE]
+    ages = band.to_numpy()[:, None] == np.asarray(contrasts)
+    area = np.log(data["built_area_m2"].to_numpy())
+    quarter = data["quarter"].to_numpy()
+    quarters = quarter[:, None] == np.unique(quarter)[1:]
+    x = np.column_stack((ages, area, quarters))
+    neighbourhood = pd.Categorical(data["neighbourhood"]).remove_unused_categories()
+    fit = within_neighbourhood(y, x, neighbourhood)
+    if fit is None:
+        return False
+    beta, se, intercepts = fit
+
+    area_index = len(contrasts)
+    components = (
+        pd.DataFrame(
+            {
+                "neighbourhood": intercepts[neighbourhood.codes],
+                "area": area * beta[area_index],
+                "quarter": quarters @ beta[area_index + 1 :],
+            }
+        )
+        .groupby(band.to_numpy())
+        .mean()
+    )
+    table[list(AGE_GROUPS)] = components - components.loc[AGE_REFERENCE]
+    adjusted = pd.Series(beta[:area_index], index=contrasts).reindex(bands, fill_value=0)
+    margin = pd.Series(AGE_INTERVAL * se[:area_index], index=contrasts).reindex(
+        bands, fill_value=0
+    )
+    table["adjusted"] = adjusted
+    table["lower"] = adjusted - margin
+    table["upper"] = adjusted + margin
+    table["identity_error"] = table["observed"] - adjusted - table[list(AGE_GROUPS)].sum(axis=1)
+    if not table["identity_error"].abs().lt(IDENTITY_TOLERANCE).all():
+        raise ValueError("The age decomposition fails the accounting identity.")
+    return True
+
+
 def age_premiums(frame: pd.DataFrame) -> AgePremiums:
     """Compare geometric means, then decompose the adjusted selection if identified."""
     recent = frame.loc[
         frame["property_type"].eq("apartment")
         & frame["year"].between(*AGE_YEARS)
-        & frame["building_age_band"].isin(AGE_LABELS)
+        & frame["building_age_band"].isin(AGE_BANDS)
     ]
     data = hedonic_complete_cases(recent)
     band = data["building_age_band"]
-    counts = band.value_counts().reindex(AGE_LABELS, fill_value=0)
+    counts = band.value_counts().reindex(AGE_BANDS, fill_value=0)
     bands = counts.index[counts >= AGE_MINIMUM].tolist()
     excluded = {str(key): int(n) for key, n in counts.items() if n < AGE_MINIMUM}
     data = data.loc[band.isin(bands)]
@@ -119,39 +164,6 @@ def age_premiums(frame: pd.DataFrame) -> AgePremiums:
     if len(bands) == 1:
         return AgePremiums(table, excluded, groups)
 
-    contrasts = [key for key in bands if key != AGE_REFERENCE]
-    ages = band.to_numpy()[:, None] == np.asarray(contrasts)
-    area = np.log(data["built_area_m2"].to_numpy())
-    quarter = data["quarter"].to_numpy()
-    quarters = quarter[:, None] == np.unique(quarter)[1:]
-    x = np.column_stack((ages, area, quarters))
-    neighbourhood = pd.Categorical(data["neighbourhood"]).remove_unused_categories()
-    fit = within_neighbourhood(y, x, neighbourhood)
-    if fit is None:
+    if not _add_age_adjustment(table, data, y, bands):
         return AgePremiums(table, excluded, groups, UNIDENTIFIED_ADJUSTMENT)
-    beta, se, intercepts = fit
-
-    area_index = len(contrasts)
-    components = (
-        pd.DataFrame(
-            {
-                "Bairro": intercepts[neighbourhood.codes],
-                "Área": area * beta[area_index],
-                "Trimestre": quarters @ beta[area_index + 1 :],
-            }
-        )
-        .groupby(band.to_numpy())
-        .mean()
-    )
-    table[list(AGE_GROUPS)] = components - components.loc[AGE_REFERENCE]
-    adjusted = pd.Series(beta[:area_index], index=contrasts).reindex(bands, fill_value=0)
-    margin = pd.Series(AGE_INTERVAL * se[:area_index], index=contrasts).reindex(
-        bands, fill_value=0
-    )
-    table["adjusted"] = adjusted
-    table["lower"] = adjusted - margin
-    table["upper"] = adjusted + margin
-    table["identity_error"] = table["observed"] - adjusted - table[list(AGE_GROUPS)].sum(axis=1)
-    if not table["identity_error"].abs().lt(IDENTITY_TOLERANCE).all():
-        raise ValueError("A decomposição por idade não satisfaz a identidade contábil.")
     return AgePremiums(table, excluded, groups)

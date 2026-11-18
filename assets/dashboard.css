@@ -1,5 +1,4 @@
-/* Typography, spacing and colour have one owner. Plot geometry lives in Python
-   (bh_itbi/figures.py mirrors the colour tokens below). */
+/* The Python chart theme mirrors the shared colour tokens below. */
 :root {
   color-scheme: light;
   /* Paper and surfaces */
@@ -12,10 +11,8 @@
   --muted: #667784;
   /* Accent: used sparingly, never as an ambient tone */
   --teal: #1d6f73;
-  --teal-2: #2a7a7b;
   /* Rules */
   --rule: #d5dbd6;
-  --rule-cool: #d8dcd6;
   --rule-faint: #e3e8e4;
   --rule-interactive: #9eaba3;
   --sans: Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif;

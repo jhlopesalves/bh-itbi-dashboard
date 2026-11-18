@@ -20,12 +20,14 @@ from bh_itbi.config import (
     START_YEAR,
     TAX_BASE_MINIMUM,
 )
+from bh_itbi.filters import positive_area
 from bh_itbi.stats import quantile_table
-from bh_itbi.text import AGE_LABELS
+from bh_itbi.text.shared import (
+    AGE_LABELS,
+)
 
 __all__ = [
     "AGE_LABELS",
-    "diagnostic_rows",
     "distance_table",
     "heaping_summary",
     "heaping_table",
@@ -33,15 +35,10 @@ __all__ = [
 ]
 
 
-def diagnostic_rows(frame: pd.DataFrame) -> pd.DataFrame:
-    """Apply the positive-built-area screen without altering main overview KPIs."""
-    return frame.loc[frame["built_area_m2"] > 0]
-
-
 def tax_base_table(frame: pd.DataFrame) -> pd.DataFrame:
     """A share's denominator includes only positive, recorded tax bases."""
     data = frame.loc[
-        frame["built_area_m2"].gt(0) & frame["value_tax_base_brl"].gt(0),
+        positive_area(frame) & frame["value_tax_base_brl"].gt(0),
         ["quarter", "property_type", "value_declared_brl", "value_tax_base_brl"],
     ]
     data["below"] = data["value_declared_brl"] < data["value_tax_base_brl"]
@@ -59,7 +56,7 @@ def heaping_table(frame: pd.DataFrame) -> pd.DataFrame:
     multiple.
     """
     data = frame.loc[
-        frame["built_area_m2"].gt(0)
+        positive_area(frame)
         & frame["year"].between(*HEAPING_YEARS)
         & frame["value_declared_brl"].between(HEAPING_MIN_VALUE, HEAPING_MAX_VALUE),
         ["value_declared_brl"],
@@ -90,7 +87,7 @@ def heaping_summary(table: pd.DataFrame) -> tuple[int, float]:
 def distance_table(frame: pd.DataFrame) -> pd.DataFrame:
     """Straight-line, street-face-centroid distances; 1 km bins, n >= 50."""
     data = frame.loc[
-        frame["built_area_m2"].gt(0)
+        positive_area(frame)
         & frame["property_type"].eq("apartment")
         & frame["year"].between(START_YEAR, END_YEAR)
         & frame["distance_km"].lt(DISTANCE_MAX_KM)

@@ -60,12 +60,15 @@
   }
 
   function fitVisiblePeriods(graph) {
-    // Legend toggles use the same 5% padding and tick step as the server figure.
+    // Keep this y-axis range calculation synchronised with distance_figure
+    // in bh_itbi/figures/diagnostics.py; step and padding come from the figure.
     const values = visiblePeriods(graph).flatMap(trace => trace.y.filter(Number.isFinite));
     if (!values.length) return;
     const low = Math.min(...values);
     const high = Math.max(...values);
-    const pad = 0.05 * (high - low);
+    const padFraction = graph.layout.meta?.pad_fraction;
+    if (!Number.isFinite(padFraction)) return;
+    const pad = padFraction * (high - low);
     const step = graph.layout.yaxis.dtick;
     const floor = step * Math.floor((low - pad) / step);
     const ceiling = step * Math.ceil((high + pad) / step);

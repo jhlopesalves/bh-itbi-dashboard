@@ -5,21 +5,21 @@ from __future__ import annotations
 import re
 
 from bh_itbi import theme
-from bh_itbi.config import ROOT
+from bh_itbi.config import (
+    AGE_CONFIDENCE_LEVEL,
+    COMPARISON_MINIMUM,
+    COMPARISON_RIDGE_LIMIT,
+    RIDGE_MINIMUM,
+    ROOT,
+)
 
 SHARED_CSS_VARIABLES: dict[str, str] = {
     "--paper": theme.PAPER,
-    "--paper-2": theme.PAPER_SOFT,
     "--surface": theme.SURFACE,
     "--ink": theme.INK,
     "--ink-2": theme.INK_SOFT,
     "--muted": theme.MUTED,
     "--teal": theme.TEAL,
-    "--teal-2": theme.TEAL_SOFT,
-    "--rule": theme.RULE,
-    "--rule-cool": theme.RULE_COOL,
-    "--rule-faint": theme.RULE_FAINT,
-    "--rule-interactive": theme.RULE_INTERACTIVE,
 }
 
 
@@ -50,10 +50,27 @@ def test_python_palette_matches_css_custom_properties() -> None:
 def test_single_named_colour_tokens_and_rgb_mixing() -> None:
     assert not hasattr(theme, "TEAL_TINT")
     assert theme.COMPOSITION_HUES == {
-        "Bairro": theme.CLAY,
-        "Área": theme.BLUE,
-        "Faixa de idade": theme.GOLD,
-        "Tipo": theme.SLATE,
+        "neighbourhood": theme.CLAY,
+        "area": theme.BLUE,
+        "age_band": theme.GOLD,
+        "property_type": theme.SLATE,
     }
     assert theme.hex_to_rgb(theme.TEAL) == (29, 111, 115)
     assert theme.composition_tint(theme.SURFACE, strength=0.62) == theme.SURFACE
+
+
+def test_browser_chart_cutoffs_match_configuration() -> None:
+    expected = {
+        "comparison.js": {
+            "comparisonMinimum": COMPARISON_MINIMUM,
+            "ridgeMinimum": RIDGE_MINIMUM,
+            "ridgeLimit": COMPARISON_RIDGE_LIMIT,
+        },
+        "age-chart.js": {"confidencePercent": round(100 * AGE_CONFIDENCE_LEVEL)},
+    }
+    for name, settings in expected.items():
+        asset = (ROOT / "assets" / name).read_text(encoding="utf-8")
+        values = dict(re.findall(r"\bconst (\w+) = (\d+);", asset))
+        assert {key: values.get(key) for key in settings} == {
+            key: str(value) for key, value in settings.items()
+        }, name

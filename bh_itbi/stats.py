@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from bh_itbi.config import KDE_BATCH_SIZE, KDE_TRIM_FRACTION
+from bh_itbi.config import KDE_BATCH_SIZE, KDE_TRIM_FRACTION, QUARTILE_PROBABILITIES
 
 
 def quantile_table(
@@ -23,8 +23,9 @@ def quantile_table(
     data = frame[[*groups, column]]
     data = data.loc[data[column].notna()]
     grouped = data.groupby(groups, observed=True)[column]
-    result = grouped.quantile([0.25, 0.5, 0.75]).unstack()
-    result = result.reindex(columns=[0.25, 0.5, 0.75])
+    probabilities = np.array(QUARTILE_PROBABILITIES)
+    result = grouped.quantile(probabilities).unstack()
+    result = result.reindex(columns=probabilities)
     result.columns = ["p25", "median", "p75"]
     result["n"] = grouped.count()
     result.loc[result["n"] < minimum, ["p25", "median", "p75"]] = np.nan
@@ -33,7 +34,8 @@ def quantile_table(
 
 def silverman_bandwidth(log_prices: np.ndarray) -> float:
     """Silverman's robust normal-reference bandwidth, in natural-log units."""
-    q25, q75 = np.quantile(log_prices, [0.25, 0.75])
+    lower_quartile, _, upper_quartile = QUARTILE_PROBABILITIES
+    q25, q75 = np.quantile(log_prices, [lower_quartile, upper_quartile])
     spread = min(float(log_prices.std(ddof=1)), float((q75 - q25) / 1.34))
     return float(0.9 * spread * log_prices.size ** (-1 / 5))
 

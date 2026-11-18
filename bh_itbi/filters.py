@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 
 import pandas as pd
 
-from bh_itbi.config import END_YEAR, START_YEAR, YEARS
+from bh_itbi.config import END_YEAR, RESIDENTIAL_TYPES, START_YEAR, YEARS
 
 
 @dataclass(frozen=True)
@@ -29,10 +29,10 @@ class Filters:
         """Validate Dash control values and normalise selected neighbourhood names."""
         year_values = list(years) if years is not None else [YEARS[0], YEARS[-1]]
         start, end = (int(year) for year in year_values)
-        if property_type not in {"apartment", "house", "all"}:
-            raise ValueError("Tipo de imóvel inválido.")
+        if property_type is None or property_type not in (*RESIDENTIAL_TYPES, "all"):
+            raise ValueError("Invalid property type.")
         if start not in YEARS or end not in YEARS or start > end:
-            raise ValueError("Período inválido.")
+            raise ValueError("Invalid year range.")
         return cls(property_type, start, end, tuple(sorted(set(neighbourhoods or []))))
 
     def city_reference(self) -> Filters:
@@ -48,3 +48,23 @@ def filter_transactions(frame: pd.DataFrame, filters: Filters) -> pd.DataFrame:
     if filters.neighbourhoods:
         mask &= frame["neighbourhood"].isin(filters.neighbourhoods)
     return frame.loc[mask]
+
+
+def positive_area(frame: pd.DataFrame) -> pd.Series:
+    """Select rows with a strictly positive recorded built area."""
+    return frame["built_area_m2"].gt(0)
+
+
+def positive_area_rows(frame: pd.DataFrame) -> pd.DataFrame:
+    """Apply the positive-built-area screen to an eligible population."""
+    return frame.loc[positive_area(frame)]
+
+
+def month_range(start_year: int, end_year: int) -> pd.DatetimeIndex:
+    """Return every calendar month start in the inclusive year interval."""
+    return pd.date_range(f"{start_year}-01-01", f"{end_year}-12-01", freq="MS")
+
+
+def quarter_range(start_year: int, end_year: int) -> pd.DatetimeIndex:
+    """Return every calendar quarter start in the inclusive year interval."""
+    return pd.date_range(f"{start_year}-01-01", f"{end_year}-10-01", freq="QS")

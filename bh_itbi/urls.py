@@ -44,9 +44,12 @@ def decode_query(
         return values[0] if len(values) == 1 else None
 
     def year(name: str, default: int) -> int:
+        raw = scalar(name)
+        if raw is None:
+            return default
         try:
-            value = int(scalar(name))
-        except TypeError, ValueError:
+            value = int(raw)
+        except ValueError:
             return default
         return value if value in YEARS else default
 
@@ -54,9 +57,9 @@ def decode_query(
     years = [start, end] if start <= end else defaults[1]
     names = {name.strip().upper() for name in query.get("bairros", [])}
     return (
-        QUERY_OPTIONS["tipo"].get(scalar("tipo"), defaults[0]),
+        QUERY_OPTIONS["tipo"].get(scalar("tipo") or "", defaults[0]),
         years,
         sorted(names & available_neighbourhoods),
-        QUERY_OPTIONS["medida"].get(scalar("medida"), defaults[3]),
-        QUERY_OPTIONS["mapa"].get(scalar("mapa"), defaults[4]),
+        QUERY_OPTIONS["medida"].get(scalar("medida") or "", defaults[3]),
+        QUERY_OPTIONS["mapa"].get(scalar("mapa") or "", defaults[4]),
     )

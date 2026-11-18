@@ -95,9 +95,9 @@ def test_age_composition_is_invariant_to_neighbourhood_reference(
         components = (
             pd.DataFrame(
                 {
-                    "Bairro": neighbourhoods @ beta[quarter_end:],
-                    "Área": area * beta[2],
-                    "Trimestre": quarters @ beta[3:quarter_end],
+                    "neighbourhood": neighbourhoods @ beta[quarter_end:],
+                    "area": area * beta[2],
+                    "quarter": quarters @ beta[3:quarter_end],
                 }
             )
             .groupby(band)

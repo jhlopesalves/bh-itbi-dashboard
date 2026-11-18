@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bh_itbi.callbacks import clicked_neighbourhood
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
 from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
 from bh_itbi.figures import distribution_figure, temporal_figure
@@ -22,6 +21,7 @@ from bh_itbi.overview import (
     temporal_table,
 )
 from bh_itbi.stats import quantile_table
+from bh_itbi.views.overview import clicked_neighbourhood
 
 
 def test_notebook_eligibility_keeps_inclusive_bounds_and_real_tail(source_factory):
@@ -92,12 +92,12 @@ def test_city_reference_removes_neighbourhood_filter(source_factory):
 def test_map_screen_and_seeded_sample_do_not_change_summary_population(source_factory):
     frame = prepare_transactions(source_factory(9000))
     points, stats = map_points(frame)
-    assert stats["candidates"] == 9000
-    assert stats["shown"] == 8000
+    assert stats.candidates == 9000
+    assert stats.shown == 8000
     assert len(points) == 8000
-    assert points["price_per_m2_brl"].between(stats["lower"], stats["upper"]).all()
+    assert points["price_per_m2_brl"].between(stats.lower, stats.upper).all()
     pd.testing.assert_frame_equal(points, map_points(frame)[0])
-    assert summary(frame)["n"] == 9000
+    assert summary(frame).n == 9000
 
 
 def test_quantiles_count_non_missing_values_before_suppression():
@@ -135,9 +135,9 @@ def test_price_summary_does_not_drop_records_missing_real_values(source_factory)
     frame = prepare_transactions(source_factory(5))
     frame.loc[0, "price_per_m2_brl_real"] = np.nan
     result = summary(frame)
-    assert result["n"] == 5 and result["real_n"] == 4
-    assert np.isfinite(result["nominal"])
-    assert pd.isna(result["real"])
+    assert result.n == 5 and result.real_n == 4
+    assert np.isfinite(result.nominal)
+    assert pd.isna(result.real)
 
 
 def test_tax_share_denominator_and_quarter_minimum(source_factory):

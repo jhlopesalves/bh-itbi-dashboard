@@ -1,52 +1,26 @@
 /* Each neighbourhood is painted as one SVG group so foreground fills occlude
    the lines and fills of the rows behind them. */
 (() => {
-  const currency = new Intl.NumberFormat("pt-BR", {maximumFractionDigits: 0, roundingMode: "halfEven"});
+  const {bindTooltip, formatNumber, line, measureText, setFont, svg, text, wrap} = window.bhCharts;
+  // These browser presentation cut-offs mirror config.py and are checked in test_theme.py.
+  const comparisonMinimum = 15;
+  const ridgeMinimum = 50;
+  const ridgeLimit = 8;
   const ticks = [1000, 1500, 2000, 3000, 4000, 6000, 8000, 12000, 16000, 24000, 32000];
-  const measure = document.createElement("canvas").getContext("2d");
-
-  function svg(parent, tag, attrs = {}, text) {
-    const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
-    if (text !== undefined) node.textContent = text;
-    parent.append(node);
-    return node;
-  }
-
-  function line(parent, x1, y1, x2, y2, className, attrs = {}) {
-    return svg(parent, "line", {x1, y1, x2, y2, class: className, ...attrs});
-  }
-
-  function wrap(text, limit) {
-    const lines = [""];
-    for (const word of text.split(" ")) {
-      const last = lines.at(-1);
-      if (last && measure.measureText(`${last} ${word}`).width > limit) lines.push("");
-      for (const character of (lines.at(-1) ? " " : "") + word) {
-        if (measure.measureText(lines.at(-1) + character).width > limit) lines.push("");
-        lines[lines.length - 1] += character;
-      }
-    }
-    return lines;
-  }
-
   const labelStep = 13;
 
   function rowLabels(group, position, row, baseline) {
     const {left, right, showMedian} = position;
-    row.nameLines.forEach((text, i) => {
+    row.nameLines.forEach((value, i) => {
       const y = baseline - 4 - labelStep * (row.nameLines.length - 1 - i);
-      svg(group, "text", {
-        x: left - 9, y, "text-anchor": "end", class: "comparison-row-name",
-      }, text);
+      text(group, left - 9, y, value, "comparison-row-name", "end");
     });
-    row.countLines.forEach((text, i) => svg(group, "text", {
-      x: left - 9, y: baseline + 9 + labelStep * i, "text-anchor": "end", class: "comparison-muted",
-    }, text));
+    row.countLines.forEach((value, i) => {
+      text(group, left - 9, baseline + 9 + labelStep * i, value, "comparison-muted", "end");
+    });
     if (showMedian) {
-      svg(group, "text", {x: right + 9, y: baseline - 4, class: "comparison-median-value"},
-        currency.format(row.quantiles[2]));
-      svg(group, "text", {x: right + 9, y: baseline + 9, class: "comparison-muted"}, "mediana");
+      text(group, right + 9, baseline - 4, formatNumber(row.quantiles[2]), "comparison-median-value");
+      text(group, right + 9, baseline + 9, "mediana", "comparison-muted");
     }
   }
 
@@ -55,15 +29,13 @@
     const {x, left, right, width} = position;
     const value = x(cityMedian);
     const inside = value >= left && value <= right;
-    const label = "mediana da cidade  " + currency.format(cityMedian);
-    const text = value < left ? "← " + label : value > right ? label + " →" : label;
-    const half = measure.measureText(text).width / 2 + 5;
+    const label = "mediana da cidade  " + formatNumber(cityMedian);
+    const display = value < left ? "← " + label : value > right ? label + " →" : label;
+    const half = measureText(display) / 2 + 5;
     const centre = Math.max(half, Math.min(width - half, Math.max(left, Math.min(right, value))));
     const reference = svg(svgNode, "g", {class: "comparison-city"});
     if (inside) line(reference, value, 23, value, end, "comparison-city-line");
-    svg(reference, "text", {
-      x: centre, y: 14, "text-anchor": "middle", class: "comparison-city-label",
-    }, text);
+    text(reference, centre, 14, display, "comparison-city-label", "middle");
   }
 
   function drawRidge(group, row, x, baseline, scale, index) {
@@ -105,70 +77,41 @@
   }
 
   function addTooltip(group, row, tooltip, host) {
-    const currencyLine = (label, value) => `${label}: R$ ${currency.format(value)}/m²`;
+    const currencyLine = (label, value) => `${label}: R$ ${formatNumber(value)}/m²`;
     const fields = [
-      row.name, `Transações: ${currency.format(row.n)}`,
+      row.name, `Transações: ${formatNumber(row.n)}`,
       ...["P10", "P25", "Mediana", "P75", "P90"].map(
         (label, i) => currencyLine(label, row.quantiles[i])
       ),
     ];
-    group.setAttribute("aria-label", fields.join(". "));
-
-    const show = (clientX, clientY) => {
-      const box = host.getBoundingClientRect();
-      tooltip.hidden = false;
-      tooltip.style.left = `${Math.max(0, Math.min(clientX - box.left + 10, box.width - tooltip.offsetWidth))}px`;
-      const y = clientY - box.top;
-      const below = y + 12;
-      tooltip.style.top = `${below + tooltip.offsetHeight > host.offsetHeight
-        ? Math.max(0, y - tooltip.offsetHeight - 10)
-        : below}px`;
-    };
-    const fill = () => {
-      tooltip.replaceChildren(...fields.map((field, i) => {
-        const node = document.createElement(i ? "div" : "strong");
-        node.textContent = field;
-        return node;
-      }));
-    };
-    const enter = event => { fill(); show(event.clientX, event.clientY); };
-    group.addEventListener("pointerenter", enter);
-    group.addEventListener("pointermove", event => show(event.clientX, event.clientY));
-    group.addEventListener("pointerleave", () => { tooltip.hidden = true; });
-    group.addEventListener("click", enter);
-    group.addEventListener("focus", () => {
-      const box = group.getBoundingClientRect();
-      fill();
-      show(box.left + box.width / 2, box.top + box.height / 2);
-    });
-    group.addEventListener("blur", () => { tooltip.hidden = true; });
+    bindTooltip(group, fields, tooltip, host, {useOffsetHeight: true});
   }
 
   function draw(host, data) {
     const width = host.clientWidth;
     if (!width) return;
     host.replaceChildren();
-    host.parentElement.classList.toggle("comparison-scroll-active", data.rows.length > 8);
+    host.parentElement.classList.toggle("comparison-scroll-active", data.rows.length > ridgeLimit);
     if (!data.rows.length) {
       const empty = document.createElement("p");
       empty.className = "comparison-empty";
-      empty.textContent = "São necessárias 15 transações por bairro. Amplie o recorte.";
+      empty.textContent = `São necessárias ${comparisonMinimum} transações por bairro. Amplie o recorte.`;
       host.append(empty);
       return;
     }
 
     const font = getComputedStyle(host).fontFamily;
-    measure.font = `12px ${font}`;
+    setFont(`12px ${font}`);
     const limit = Math.min(width * 0.36, 145);
     const rows = data.rows.map(row => ({
       ...row,
       nameLines: wrap(row.name, limit),
-      countLines: wrap(`n = ${currency.format(row.n)}${row.n < 50 ? " (n < 50: resumo)" : ""}`, limit),
+      countLines: wrap(`n = ${formatNumber(row.n)}${row.n < ridgeMinimum ? ` (n < ${ridgeMinimum}: resumo)` : ""}`, limit),
     }));
     const labelWidth = Math.max(...rows.flatMap(row =>
-      [...row.nameLines, ...row.countLines].map(label => measure.measureText(label).width)
+      [...row.nameLines, ...row.countLines].map(label => measureText(label))
     ));
-    measure.font = `11px ${font}`;
+    setFont(`11px ${font}`);
     const showMedian = width >= 420;
     const left = Math.ceil(labelWidth) + 11;
     const right = width - (showMedian ? 59 : 9);
@@ -198,10 +141,10 @@
       const px = x(value);
       if (px < left || px > right) continue;
       line(plot, px, 23, px, end, "comparison-grid-line");
-      const label = currency.format(value);
-      const half = measure.measureText(label).width / 2;
+      const label = formatNumber(value);
+      const half = measureText(label) / 2;
       if (px - half < tickEnd + 4) continue;
-      svg(plot, "text", {x: px, y: end + 17, "text-anchor": "middle", class: "comparison-muted"}, label);
+      text(plot, px, end + 17, label, "comparison-muted", "middle");
       tickEnd = px + half;
     }
     drawReference(plot, data.city_median, position, end);
