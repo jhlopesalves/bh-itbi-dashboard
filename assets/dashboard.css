@@ -142,7 +142,15 @@ label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .09em
   color: var(--teal);
   font-weight: 600;
 }
-.is-hidden { display: none !important; }
+#conteudo { position: relative; }
+/* Keep inactive plots measurable at their real width before Plotly draws them. */
+.view-panel.is-hidden {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0;
+  overflow: clip;
+  visibility: hidden;
+}
 
 /* ---------- Statistical summary ---------- */
 .section-line { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding-bottom: 9px; border-bottom: 1px solid var(--rule); }
@@ -166,7 +174,8 @@ label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .09em
 h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; letter-spacing: -.01em; color: var(--ink-2); }
 .chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 76ch; line-height: 1.55; }
 .card-footnote { color: var(--muted); font-size: 11px; line-height: 1.65; padding-top: 10px; margin-top: 11px; border-top: 1px solid var(--rule-faint); overflow-wrap: anywhere; }
-.plot { width: 100%; min-width: 0; }
+/* Keep the previous drawing inside its frame while a responsive resize settles. */
+.plot { width: 100%; min-width: 0; overflow: clip; }
 .js-plotly-plot, .plot-container, .svg-container { max-width: 100%; }
 .map-card .card-heading { min-height: 64px; }
 .map-style-field { min-width: 118px; max-width: 136px; flex-shrink: 0; }
