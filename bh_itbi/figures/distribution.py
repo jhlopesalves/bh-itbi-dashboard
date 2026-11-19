@@ -17,7 +17,7 @@ from bh_itbi.text.shared import (
     TRANSACTIONS_AXIS_TITLE,
     TYPE_LABELS,
 )
-from bh_itbi.theme import TYPE_COLORS, empty_figure, themed
+from bh_itbi.theme import TYPE_STYLES, empty_figure, themed
 
 
 def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
@@ -30,28 +30,31 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
         low, high = low * 0.9, high * 1.1
     edges = np.geomspace(low, high, DISTRIBUTION_BINS + 1)
     centres = np.sqrt(edges[:-1] * edges[1:])
+    widths = np.diff(edges) * 0.92
+    bins = [[currency(a), currency(b)] for a, b in pairwise(edges)]
     fig = go.Figure()
     for property_type, label in TYPE_LABELS.items():
         subset = values.loc[values["property_type"].eq(property_type), column]
         if subset.empty:
             continue
         counts, _ = np.histogram(subset, bins=edges)
+        colour = TYPE_STYLES[property_type]["line"]["color"]
         fig.add_trace(
             go.Bar(
                 x=centres,
                 y=counts,
-                width=np.diff(edges) * 0.92,
-                marker={"color": TYPE_COLORS[property_type], "line": {"width": 0}},
+                width=widths,
+                marker={"color": colour, "line": {"width": 0}},
                 opacity=0.75,
                 name=label,
-                customdata=[[currency(a), currency(b)] for a, b in pairwise(edges)],
+                customdata=bins,
                 hovertemplate=DISTRIBUTION_HOVER,
             )
         )
         if len(subset) >= DISTRIBUTION_MINIMUM:
             fig.add_vline(
                 x=subset.median(),
-                line={"color": TYPE_COLORS[property_type], "dash": "dot", "width": 1.5},
+                line={"color": colour, "dash": "dot", "width": 1.5},
             )
     themed(fig, height=330)
     fig.update_layout(

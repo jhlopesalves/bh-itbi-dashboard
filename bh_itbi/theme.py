@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from html import escape
+from typing import TypedDict
+
 import plotly.graph_objects as go
 
 from bh_itbi.config import DEFAULT_NEIGHBOURHOODS, DISTANCE_PERIODS
@@ -19,9 +23,6 @@ CLAY = "#c0603a"
 BLUE = "#3e6daa"
 GOLD = "#a88620"
 PLUM = "#8f579f"
-GREEN = "#5f8f3a"
-ROSE = "#b85079"
-INDIGO = "#5b78c0"
 SLATE = "#8a929a"
 
 GRID = "#e6eae6"
@@ -49,8 +50,45 @@ PRICE_MAROON = "#7f0000"
 
 FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
 
-TYPE_COLORS: dict[str, str] = {"apartment": TEAL, "house": CLAY}
-PALETTE: list[str] = [TEAL, CLAY, BLUE, GOLD, PLUM, GREEN, ROSE, INDIGO]
+
+class LineStyle(TypedDict):
+    """Stroke attributes used by Plotly lines and shapes."""
+
+    color: str
+    dash: str
+    width: float
+
+
+class PropertyStyle(TypedDict):
+    """A property type's line and matching marker and label shapes."""
+
+    line: LineStyle
+    symbol: str
+    swatch: str
+
+
+TYPE_STYLES: dict[str, PropertyStyle] = {
+    "apartment": {
+        "line": {"color": TEAL, "dash": "solid", "width": 2},
+        "symbol": "circle",
+        "swatch": "●",
+    },
+    "house": {
+        "line": {"color": CLAY, "dash": "solid", "width": 2},
+        "symbol": "diamond",
+        "swatch": "◆",
+    },
+}
+
+FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
+    "SAVASSI": "#4f8f4a",
+    "LOURDES": CLAY,
+    "BURITIS": BLUE,
+    "CASTELO": GOLD,
+    "CENTRO": PLUM,
+}
+EXTRA_NEIGHBOURHOOD_COLOURS = ("#a8326a", "#2a9bb5", "#7a4a2a")
+
 CLUSTER_COLORS: dict[int, str] = {
     1: CLUSTER_VIOLET,
     2: CLUSTER_FOREST,
@@ -67,7 +105,6 @@ PRICE_SCALE: list[list[float | str]] = [
     [0.875, PRICE_RED],
     [1.0, PRICE_MAROON],
 ]
-NEIGHBOURHOOD_COLORS: dict[str, str] = dict(zip(DEFAULT_NEIGHBOURHOODS, PALETTE, strict=False))
 # In draw order, from the earliest period at the back to the latest in front.
 DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
     zip(
@@ -95,8 +132,39 @@ def hex_to_rgb(colour: str) -> tuple[int, int, int]:
     return red, green, blue
 
 
+def rgba(colour: str, opacity: float) -> str:
+    """Apply opacity to a hex colour for Plotly and CSS."""
+    red, green, blue = hex_to_rgb(colour)
+    return f"rgba({red},{green},{blue},{opacity})"
+
+
+REFERENCE: LineStyle = {"color": rgba(INK, 0.45), "dash": "4px,3px", "width": 0.9}
+
+
+def neighbourhood_colours(names: Sequence[str]) -> dict[str, str]:
+    """Assign hues to distinct source names, using slate when the extra hues run out."""
+    selected = dict.fromkeys(names or DEFAULT_NEIGHBOURHOODS)
+    extras = sorted(selected.keys() - FIXED_NEIGHBOURHOOD_COLOURS.keys())
+    if len(extras) > len(EXTRA_NEIGHBOURHOOD_COLOURS):
+        return dict.fromkeys(selected, SLATE)
+    extra_colours = dict(zip(extras, EXTRA_NEIGHBOURHOOD_COLOURS[: len(extras)], strict=True))
+    colours = FIXED_NEIGHBOURHOOD_COLOURS | extra_colours
+    return {name: colours[name] for name in selected}
+
+
+def end_label_text(label: str, colour: str, *, swatch: str = "■") -> str:
+    """Pair escaped Plotly annotation text with a coloured glyph."""
+    mark = f'<span style="color:{colour};font-size:14px">{swatch}</span>'
+    return f"{mark}&nbsp;&nbsp;{escape(label, quote=False)}"
+
+
+def reference_label_text(label: str) -> str:
+    """Show the reference stroke next to its end label."""
+    return end_label_text(label, REFERENCE["color"], swatch="╍")
+
+
 def composition_tint(hue: str, *, strength: float = 0.62) -> str:
-    """Blend a composition hue with the card surface colour in RGB space."""
+    """Blend a chart hue with the card surface colour in RGB space."""
     channels = (
         round(strength * fg + (1 - strength) * bg)
         for fg, bg in zip(hex_to_rgb(hue), hex_to_rgb(SURFACE), strict=True)
@@ -122,7 +190,7 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
         plot_bgcolor=TRANSPARENT,
         font={"family": FONT, "size": 12, "color": INK},
         separators=",.",
-        colorway=PALETTE,
+        colorway=[INK],
         height=height,
         margin={"l": 65, "r": 22, "t": 18, "b": 8},
         legend={

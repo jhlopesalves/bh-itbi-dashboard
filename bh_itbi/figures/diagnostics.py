@@ -50,11 +50,13 @@ from bh_itbi.text.shared import (
 from bh_itbi.theme import (
     AGE_FILLS,
     DISTANCE_PERIOD_STYLES,
+    INK,
     NEUTRAL_BAR,
     SURFACE,
     TEAL,
-    TYPE_COLORS,
+    TYPE_STYLES,
     empty_figure,
+    end_label_text,
     themed,
 )
 
@@ -204,15 +206,21 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
         )
         if rows["share"].isna().all():
             continue
+        style = TYPE_STYLES[property_type]
         fig.add_trace(
             go.Scatter(
                 x=rows.index,
                 y=rows["share"],
                 mode="lines+markers",
-                marker={"size": 4},
+                marker={"size": 4, "symbol": style["symbol"]},
                 name=label,
                 connectgaps=False,
-                line={"color": TYPE_COLORS[property_type], "width": 2.6},
+                line=dict(style["line"]),
+                meta={
+                    "text": end_label_text(
+                        label, style["line"]["color"], swatch=style["swatch"]
+                    )
+                },
                 customdata=[
                     [quarter_label(t), number(n)]
                     for t, n in zip(rows.index, rows["n"], strict=True)
@@ -220,7 +228,7 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
                 hovertemplate=TAX_HOVER,
             )
         )
-    themed(fig)
+    themed(fig).update_layout(meta={"end_labels": True})
     fig.update_xaxes(tickformat="%Y", dtick="M24")
     fig.update_yaxes(range=[0, 1], tickformat=".0%", title_text=TAX_SHARE_AXIS_TITLE)
     return fig
@@ -233,7 +241,7 @@ def heaping_figure(table: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     for highlighted, label, color in [
         (False, HEAPING_OTHER_BINS_LABEL, NEUTRAL_BAR),
-        (True, HEAPING_ROUND_BINS_LABEL, TEAL),
+        (True, HEAPING_ROUND_BINS_LABEL, INK),
     ]:
         rows = table.loc[table["is_round_bin"].eq(highlighted)]
         fig.add_trace(
@@ -265,7 +273,6 @@ def _distance_traces(fig: go.Figure, table: pd.DataFrame) -> list[float]:
         if medians.empty:
             continue
         plotted.extend(float(m) for m in medians)
-        swatch = f'<span style="color:{colour};font-size:14px">■</span>'
         fig.add_trace(
             go.Scatter(
                 x=rows.index,
@@ -278,7 +285,7 @@ def _distance_traces(fig: go.Figure, table: pd.DataFrame) -> list[float]:
                     "size": 2 * radius,
                     "line": {"color": SURFACE, "width": 1.4},
                 },
-                meta=f"{swatch}&nbsp;&nbsp;{period}",
+                meta=end_label_text(period, colour),
                 connectgaps=False,
                 customdata=[
                     [number(t - half_band), number(t + half_band), number(n)]

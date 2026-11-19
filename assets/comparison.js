@@ -8,9 +8,18 @@
   const ridgeLimit = 8;
   const ticks = [1000, 1500, 2000, 3000, 4000, 6000, 8000, 12000, 16000, 24000, 32000];
   const labelStep = 13;
+  const swatchSize = 8;
+  const swatchGap = 4;
 
   function rowLabels(group, position, row, baseline) {
     const {left, right, showMedian} = position;
+    const firstLine = baseline - 4 - labelStep * (row.nameLines.length - 1);
+    svg(group, "rect", {
+      x: left - 9 - row.firstLineWidth - swatchGap - swatchSize,
+      y: firstLine - swatchSize,
+      width: swatchSize, height: swatchSize,
+      fill: row.colour, class: "comparison-swatch", "aria-hidden": "true",
+    });
     row.nameLines.forEach((value, i) => {
       const y = baseline - 4 - labelStep * (row.nameLines.length - 1 - i);
       text(group, left - 9, y, value, "comparison-row-name", "end");
@@ -31,11 +40,14 @@
     const inside = value >= left && value <= right;
     const label = "mediana da cidade  " + formatNumber(cityMedian);
     const display = value < left ? "← " + label : value > right ? label + " →" : label;
-    const half = measureText(display) / 2 + 5;
+    const swatchWidth = 14;
+    const half = (measureText(display) + swatchWidth + swatchGap) / 2 + 5;
     const centre = Math.max(half, Math.min(width - half, Math.max(left, Math.min(right, value))));
     const reference = svg(svgNode, "g", {class: "comparison-city"});
     if (inside) line(reference, value, 23, value, end, "comparison-city-line");
-    text(reference, centre, 14, display, "comparison-city-label", "middle");
+    const start = centre - half + 5;
+    text(reference, start + swatchWidth + swatchGap, 14, display, "comparison-city-label");
+    line(reference, start, 10, start + swatchWidth, 10, "comparison-city-line", {"aria-hidden": "true"});
   }
 
   function drawRidge(group, row, x, baseline, scale, index) {
@@ -48,11 +60,11 @@
     const defs = svg(group, "defs");
     const clip = svg(defs, "clipPath", {id: clipId});
     svg(clip, "path", {d: area});
-    svg(group, "path", {d: area, class: "comparison-ridge-fill"});
+    svg(group, "path", {d: area, fill: row.outer_fill, class: "comparison-ridge-fill"});
     const clipPath = `url(#${clipId})`;
     svg(group, "rect", {
       x: x(p25), y: 0, width: x(p75) - x(p25), height: baseline,
-      class: "comparison-iqr-fill", "clip-path": clipPath,
+      fill: row.iqr_fill, class: "comparison-iqr-fill", "clip-path": clipPath,
     });
     const after = prices.findIndex(price => price >= median);
     if (after >= 0 && median >= prices[0]) {
@@ -64,16 +76,18 @@
         "clip-path": clipPath, "pointer-events": "none",
       });
     }
-    svg(group, "path", {d: `M${curve}`, class: "comparison-ridge-outline"});
-    line(group, left, baseline, right, baseline, "comparison-baseline");
+    svg(group, "path", {d: `M${curve}`, stroke: row.colour, class: "comparison-ridge-outline"});
+    line(group, left, baseline, right, baseline, "comparison-baseline", {stroke: row.colour});
   }
 
   function drawInterval(group, row, x, baseline) {
     const [p10, p25, median, p75, p90] = row.quantiles.map(x);
     line(group, p10, baseline, p90, baseline, "comparison-interval-hit");
-    line(group, p10, baseline, p90, baseline, "comparison-interval-range");
-    line(group, p25, baseline, p75, baseline, "comparison-interval-iqr");
-    svg(group, "circle", {cx: median, cy: baseline, r: 4.5, class: "comparison-interval-median"});
+    line(group, p10, baseline, p90, baseline, "comparison-interval-range", {stroke: row.outer_fill});
+    line(group, p25, baseline, p75, baseline, "comparison-interval-iqr", {stroke: row.iqr_fill});
+    svg(group, "circle", {
+      cx: median, cy: baseline, r: 4.5, fill: row.colour, class: "comparison-interval-median",
+    });
   }
 
   function addTooltip(group, row, tooltip, host) {
@@ -103,13 +117,17 @@
     const font = getComputedStyle(host).fontFamily;
     setFont(`12px ${font}`);
     const limit = Math.min(width * 0.36, 145);
-    const rows = data.rows.map(row => ({
-      ...row,
-      nameLines: wrap(row.name, limit),
-      countLines: wrap(`n = ${formatNumber(row.n)}${row.n < ridgeMinimum ? ` (n < ${ridgeMinimum}: resumo)` : ""}`, limit),
-    }));
+    const swatchSpace = swatchSize + swatchGap;
+    const rows = data.rows.map(row => {
+      const nameLines = wrap(row.name, limit - swatchSpace);
+      return {
+        ...row, nameLines,
+        firstLineWidth: measureText(nameLines[0]),
+        countLines: wrap(`n = ${formatNumber(row.n)}${row.n < ridgeMinimum ? ` (n < ${ridgeMinimum}: resumo)` : ""}`, limit),
+      };
+    });
     const labelWidth = Math.max(...rows.flatMap(row =>
-      [...row.nameLines, ...row.countLines].map(label => measureText(label))
+      [row.firstLineWidth + swatchSpace, ...[...row.nameLines, ...row.countLines].map(measureText)]
     ));
     setFont(`11px ${font}`);
     const showMedian = width >= 420;

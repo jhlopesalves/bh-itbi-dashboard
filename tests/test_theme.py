@@ -20,6 +20,9 @@ SHARED_CSS_VARIABLES: dict[str, str] = {
     "--ink-2": theme.INK_SOFT,
     "--muted": theme.MUTED,
     "--teal": theme.TEAL,
+    "--reference-colour": theme.REFERENCE["color"],
+    "--reference-dash": theme.REFERENCE["dash"],
+    "--reference-width": f"{theme.REFERENCE['width']}px",
 }
 
 
@@ -57,6 +60,33 @@ def test_single_named_colour_tokens_and_rgb_mixing() -> None:
     }
     assert theme.hex_to_rgb(theme.TEAL) == (29, 111, 115)
     assert theme.composition_tint(theme.SURFACE, strength=0.62) == theme.SURFACE
+
+
+def test_reference_neighbourhoods_keep_their_colours() -> None:
+    expected = {
+        "SAVASSI": "#4f8f4a",
+        "LOURDES": "#c0603a",
+        "BURITIS": "#3e6daa",
+        "CASTELO": "#a88620",
+        "CENTRO": "#8f579f",
+    }
+    assert theme.neighbourhood_colours([]) == expected
+    for name, colour in expected.items():
+        assert theme.neighbourhood_colours([name]) == {name: colour}
+    assert theme.neighbourhood_colours(["SION", *reversed(expected)]) == expected | {
+        "SION": "#a8326a"
+    }
+
+
+def test_extra_neighbourhood_colours_follow_distinct_names_in_alphabetical_order() -> None:
+    colours = theme.neighbourhood_colours(["SION", "UNKNOWN", "SION", "ANCHIETA"])
+    assert colours == {"ANCHIETA": "#a8326a", "SION": "#2a9bb5", "UNKNOWN": "#7a4a2a"}
+    assert not set(colours.values()) & {theme.TEAL, *theme.neighbourhood_colours([]).values()}
+
+
+def test_four_extra_neighbourhoods_switch_the_whole_selection_to_slate() -> None:
+    names = ["SION", "ANCHIETA", "FUNCIONARIOS", "UNKNOWN", "SAVASSI", "CENTRO", "SION"]
+    assert theme.neighbourhood_colours(names) == dict.fromkeys(names, "#8a929a")
 
 
 def test_browser_chart_cutoffs_match_configuration() -> None:

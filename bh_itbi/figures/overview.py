@@ -11,7 +11,6 @@ import plotly.graph_objects as go
 
 from bh_itbi.config import (
     BAND_MINIMUM_POINTS,
-    DEFAULT_NEIGHBOURHOODS,
     LONG_TIME_AXIS_SPAN_YEARS,
     MAP_CENTRE,
     MAP_ZOOM,
@@ -44,12 +43,16 @@ from bh_itbi.text.shared import (
 from bh_itbi.theme import (
     INK,
     MUTED,
-    NEIGHBOURHOOD_COLORS,
-    PALETTE,
     PRICE_SCALE,
-    TYPE_COLORS,
+    REFERENCE,
+    TRANSPARENT,
+    TYPE_STYLES,
+    composition_tint,
     empty_figure,
-    hex_to_rgb,
+    end_label_text,
+    neighbourhood_colours,
+    reference_label_text,
+    rgba,
     themed,
 )
 
@@ -58,6 +61,9 @@ class ComparisonRow(TypedDict):
     """Preformatted quantiles and visible KDE curve points for one neighbourhood."""
 
     name: str
+    colour: str
+    outer_fill: str
+    iqr_fill: str
     n: int
     quantiles: tuple[float, float, float, float, float]
     prices: list[float]
@@ -72,20 +78,20 @@ class ComparisonPlot(TypedDict):
     axis_title: str
 
 
-def _band(fig: go.Figure, rows: pd.DataFrame, x: str, color: str, group: str) -> None:
+def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> None:
     """Draw each contiguous observed band separately; never fill across a gap."""
     valid = rows["p25"].notna() & rows["p75"].notna()
     segments = (~valid).cumsum()
-    red, green, blue = hex_to_rgb(color)
+    fill = rgba(TYPE_STYLES[group]["line"]["color"], 0.09)
     for _, segment in rows.loc[valid].groupby(segments[valid], sort=False):
         if len(segment) < BAND_MINIMUM_POINTS:
             continue
         fig.add_trace(
             go.Scatter(
-                x=segment[x],
+                x=segment["month"],
                 y=segment["p75"],
                 mode="lines",
-                line={"width": 0},
+                line={"color": INK, "width": 0},
                 showlegend=False,
                 hoverinfo="skip",
                 legendgroup=group,
@@ -93,12 +99,12 @@ def _band(fig: go.Figure, rows: pd.DataFrame, x: str, color: str, group: str) ->
         )
         fig.add_trace(
             go.Scatter(
-                x=segment[x],
+                x=segment["month"],
                 y=segment["p25"],
                 mode="lines",
-                line={"width": 0},
+                line={"color": INK, "width": 0},
                 fill="tonexty",
-                fillcolor=f"rgba({red},{green},{blue},0.12)",
+                fillcolor=fill,
                 showlegend=False,
                 hoverinfo="skip",
                 legendgroup=group,
@@ -117,6 +123,52 @@ def _apply_time_axis(fig: go.Figure, filters: Filters) -> None:
     fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE, rangemode="tozero")
 
 
+def _monthly_reference_trace(rows: pd.DataFrame, label: str) -> go.Scatter:
+    """Label each type's city median while preserving its legend and tooltip."""
+    return go.Scatter(
+        x=rows["month"],
+        y=rows["median"],
+        name=f"BH · {label}",
+        mode="lines",
+        line=dict(REFERENCE),
+        meta={"text": reference_label_text(f"BH · {label.lower()}"), "colour": MUTED},
+        connectgaps=False,
+        customdata=[
+            [month_label(month), number(n)]
+            for month, n in zip(rows["month"], rows["n"], strict=True)
+        ],
+        hovertemplate=TEMPORAL_REFERENCE_HOVER,
+    )
+
+
+def _monthly_median_trace(rows: pd.DataFrame, kind: str, label: str) -> go.Scatter:
+    """Draw a solid median with January markers that also identify its legend entry."""
+    style = TYPE_STYLES[kind]
+    colour = style["line"]["color"]
+    return go.Scatter(
+        x=rows["month"],
+        y=rows["median"],
+        name=label,
+        mode="lines+markers",
+        marker={
+            "color": [colour if month.month == 1 else TRANSPARENT for month in rows["month"]],
+            "size": 5.5,
+            "symbol": style["symbol"],
+        },
+        line=dict(style["line"]),
+        meta={"text": end_label_text(label, colour, swatch=style["swatch"])},
+        connectgaps=False,
+        legendgroup=kind,
+        customdata=[
+            [month_label(month), number(n), currency(p25), currency(p75)]
+            for month, n, p25, p75 in rows[["month", "n", "p25", "p75"]].itertuples(
+                index=False, name=None
+            )
+        ],
+        hovertemplate=TEMPORAL_HOVER,
+    )
+
+
 def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters) -> go.Figure:
     """Keep transaction dispersion distinct from the city-reference median."""
     monthly = temporal_table(selected, filters)
@@ -128,50 +180,19 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
     ):
         return empty_figure(TEMPORAL_EMPTY_MESSAGE)
     fig = go.Figure()
+    series = {kind: monthly.loc[monthly["property_type"].eq(kind)] for kind in TYPE_LABELS}
+    # Paint both bands before the medians so an overlapping fill cannot wash out a line.
+    for property_type, rows in series.items():
+        _band(fig, rows, property_type)
     for property_type, label in TYPE_LABELS.items():
-        rows = monthly.loc[monthly["property_type"] == property_type]
+        rows = series[property_type]
         if rows.empty:
             continue
-        color = TYPE_COLORS[property_type]
-        _band(fig, rows, "month", color, property_type)
-        fig.add_trace(
-            go.Scatter(
-                x=rows["month"],
-                y=rows["median"],
-                name=label,
-                mode="lines+markers",
-                marker={"size": 3},
-                line={"color": color, "width": 2.6},
-                connectgaps=False,
-                legendgroup=property_type,
-                customdata=[
-                    [month_label(month), number(n), currency(p25), currency(p75)]
-                    for month, n, p25, p75 in rows[["month", "n", "p25", "p75"]].itertuples(
-                        index=False, name=None
-                    )
-                ],
-                hovertemplate=TEMPORAL_HOVER,
-            )
-        )
+        fig.add_trace(_monthly_median_trace(rows, property_type, label))
         if reference is not None:
             ref = reference.loc[reference["property_type"] == property_type]
-            fig.add_trace(
-                go.Scatter(
-                    x=ref["month"],
-                    y=ref["median"],
-                    name=f"BH · {label}",
-                    mode="lines",
-                    line={"color": color, "width": 1.5, "dash": "dot"},
-                    opacity=0.75,
-                    connectgaps=False,
-                    customdata=[
-                        [month_label(month), number(n)]
-                        for month, n in zip(ref["month"], ref["n"], strict=True)
-                    ],
-                    hovertemplate=TEMPORAL_REFERENCE_HOVER,
-                )
-            )
-    themed(fig)
+            fig.add_trace(_monthly_reference_trace(ref, label))
+    themed(fig).update_layout(meta={"end_labels": True})
     _apply_time_axis(fig, filters)
     return fig
 
@@ -238,9 +259,13 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
 
 
 def neighbourhood_comparison_data(
-    grid: np.ndarray, rows: Sequence[NeighbourhoodDistribution], city: pd.DataFrame
+    grid: np.ndarray,
+    rows: Sequence[NeighbourhoodDistribution],
+    city: pd.DataFrame,
+    names: Sequence[str],
 ) -> ComparisonPlot:
     """Send only the visible curves and summaries to the browser."""
+    colours = neighbourhood_colours(names)
     visible: list[ComparisonRow] = []
     for row in rows:
         if row.density is None:
@@ -250,9 +275,13 @@ def neighbourhood_comparison_data(
             visible_prices, visible_density = trim_log_density(grid, row.density)
             prices = visible_prices.tolist()
             density = visible_density.tolist()
+        colour = colours[row.neighbourhood]
         visible.append(
             {
                 "name": row.neighbourhood.title(),
+                "colour": colour,
+                "outer_fill": composition_tint(colour, strength=0.34),
+                "iqr_fill": composition_tint(colour, strength=0.68),
                 "n": row.n,
                 "quantiles": row.quantiles,
                 "prices": prices,
@@ -274,19 +303,17 @@ def neighbourhood_trajectories_figure(
     """Compare source neighbourhoods with a city median pooled from raw records."""
     quarterly = temporal_table(rows, filters, neighbourhood=True)
     fig = go.Figure()
-    names = list(filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS)
-    for i, name in enumerate(names):
+    for name, colour in neighbourhood_colours(filters.neighbourhoods).items():
         subset = quarterly.loc[quarterly["neighbourhood"].eq(name)]
+        label = name.title()
         fig.add_trace(
             go.Scatter(
                 x=subset["quarter"],
                 y=subset["median"],
                 mode="lines+markers",
-                name=name.title(),
-                line={
-                    "color": NEIGHBOURHOOD_COLORS.get(name, PALETTE[i % len(PALETTE)]),
-                    "width": 2,
-                },
+                name=label,
+                line={"color": colour, "width": 2},
+                meta={"text": end_label_text(label, colour)},
                 marker={"size": 4},
                 connectgaps=False,
                 customdata=[
@@ -305,7 +332,8 @@ def neighbourhood_trajectories_figure(
             y=ref["median"],
             name=CITY_NAME,
             mode="lines",
-            line={"color": MUTED, "width": 2, "dash": "dash"},
+            line=dict(REFERENCE),
+            meta={"text": reference_label_text(CITY_NAME), "colour": MUTED},
             connectgaps=False,
             customdata=[
                 [quarter_label(t), number(n)]
@@ -317,5 +345,5 @@ def neighbourhood_trajectories_figure(
     themed(fig, height=370)
     _apply_time_axis(fig, filters)
     # Show up to six rows before scrolling, preserving room for the trajectories.
-    fig.update_layout(legend={"maxheight": 124})
+    fig.update_layout(legend={"maxheight": 124}, meta={"end_labels": True})
     return fig

@@ -275,7 +275,7 @@ def _register_overview_callback(
             "distribution_figure": distribution_figure(view.selected, distribution_metric),
             "distribution_summary": distribution_summary(view.quartiles),
             "comparison_data": neighbourhood_comparison_data(
-                view.comparison_grid, view.comparison_rows, view.city
+                view.comparison_grid, view.comparison_rows, view.city, filters.neighbourhoods
             ),
             "neighbourhood_figure": neighbourhood_trajectories_figure(
                 view.comparison, view.city, filters

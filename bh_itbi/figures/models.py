@@ -29,6 +29,7 @@ from bh_itbi.theme import (
     COMPOSITION_HUES,
     INK,
     MUTED,
+    REFERENCE,
     SURFACE,
     TEAL,
     composition_tint,
@@ -203,8 +204,7 @@ def _hedonic_index_traces(fig: go.Figure, table: pd.DataFrame, groups: Sequence[
             x=table["date"].iloc[[0, -1]],
             y=[INDEX_BASE, INDEX_BASE],
             mode="lines",
-            line={"color": INK, "width": 0.7, "dash": "dash"},
-            opacity=0.45,
+            line=dict(REFERENCE),
             hoverinfo="skip",
             showlegend=False,
         )
@@ -349,7 +349,7 @@ def clusters_figure(models: PreparedModels, group: int | None = None) -> go.Figu
             )
         )
     themed(fig, height=410)
-    fig.add_hline(y=INDEX_BASE, line={"color": MUTED, "width": 1, "dash": "dot"})
+    fig.add_hline(y=INDEX_BASE, line=dict(REFERENCE))
     fig.update_xaxes(tickvals=list(YEAR_TICKS))
     fig.update_yaxes(title_text=CLUSTER_INDEX_AXIS_TITLE)
     return fig
