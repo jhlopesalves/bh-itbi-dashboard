@@ -8,7 +8,7 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 **[Acessar o painel interativo](https://bh-itbi-dashboard.onrender.com/)**
 
-![Panorama com filtros, indicadores, mapa do valor nominal por m², histograma do valor real por m² e comparações temporais e de distribuição por bairro.](docs/images/panorama.png)
+![Panorama com filtros, indicadores, mapa do valor nominal por m², histograma do valor real por m², séries mensais, distribuições por bairro e trajetórias trimestrais.](docs/images/panorama.png)
 
 *Panorama dos valores declarados de apartamentos e casas no recorte padrão, com mapa, distribuições, séries mensais e trajetórias por bairro.*
 
@@ -34,10 +34,6 @@ Acesse [http://127.0.0.1:8050/](http://127.0.0.1:8050/) no navegador.
 
 ## Dados
 
-Os dados abertos (CC BY 4.0) são da Prefeitura de Belo Horizonte. O painel é um projeto derivado e não oficial que usa a [base processada de Belo Horizonte no Hugging Face](https://huggingface.co/datasets/pracadata/brazil-itbi/blob/5908d77ed56fc9adb6dbafaf2cb38f34245bcd76/data/belo_horizonte_transactions.parquet).
+Os dados são provenientes dos registros oficiais de ITBI da Prefeitura de Belo Horizonte (CC BY 4.0), tratados e disponibilizados no conjunto de dados [pracadata/brazil-itbi](https://huggingface.co/datasets/pracadata/brazil-itbi), no Hugging Face.
 
-Revisão `5908d77ed56fc9adb6dbafaf2cb38f34245bcd76` · SHA-256 `386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86`.
-
-Os valores são declarados ao ITBI e não representam necessariamente preços de venda verificados.
-
-Código disponibilizado sob a [licença MIT](LICENSE); os dados mantêm suas condições próprias de atribuição.
+O código do projeto é disponibilizado sob a licença MIT.
