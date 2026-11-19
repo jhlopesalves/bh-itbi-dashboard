@@ -8,9 +8,9 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 **[Acessar o painel interativo](https://bh-itbi-dashboard.onrender.com/)**
 
-![Panorama do painel com filtros, botão para copiar o link, indicadores, mapa do valor nominal por metro quadrado e distribuição do valor real por metro quadrado.](docs/images/panorama.png)
+![Panorama com filtros, indicadores, mapa do valor nominal por m², histograma do valor real por m² e comparações temporais e de distribuição por bairro.](docs/images/panorama.png)
 
-*Panorama geográfico, indicadores e distribuição dos valores declarados de apartamentos e casas no recorte padrão.*
+*Panorama dos valores declarados de apartamentos e casas no recorte padrão, com mapa, distribuições, séries mensais e trajetórias por bairro.*
 
 ![Índice hedônico em verde-petróleo com intervalo de confiança de 95%, média geométrica bruta pontilhada e faixas de composição por bairro, área, idade e tipo.](docs/images/indice-hedonico.png)
 
@@ -34,7 +34,9 @@ Acesse [http://127.0.0.1:8050/](http://127.0.0.1:8050/) no navegador.
 
 ## Dados
 
-Fonte: Prefeitura de Belo Horizonte, dados abertos (CC BY 4.0), tratados e disponibilizados em [pracadata/brazil-itbi](https://huggingface.co/datasets/pracadata/brazil-itbi). Projeto derivado e não oficial.
+Os dados abertos (CC BY 4.0) são da Prefeitura de Belo Horizonte. O painel é um projeto derivado e não oficial que usa a [base processada de Belo Horizonte no Hugging Face](https://huggingface.co/datasets/pracadata/brazil-itbi/blob/5908d77ed56fc9adb6dbafaf2cb38f34245bcd76/data/belo_horizonte_transactions.parquet).
+
+Revisão `5908d77ed56fc9adb6dbafaf2cb38f34245bcd76` · SHA-256 `386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86`.
 
 Os valores são declarados ao ITBI e não representam necessariamente preços de venda verificados.
 
