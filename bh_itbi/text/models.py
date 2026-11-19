@@ -105,12 +105,17 @@ def clusters_subtitle(n_neighbourhoods: int) -> str:
     )
 
 
-def clusters_footnote(silhouette: float) -> str:
-    """Footnote for the k-means neighbourhood trajectory clusters card."""
+def clusters_footnote(silhouette: float | None) -> str:
+    """Describe the trajectory groups and their silhouette when defined."""
+    silhouette_note = (
+        "A silhueta é indefinida com um bairro por grupo. "
+        if silhouette is None
+        else f"Silhueta: {number(silhouette, 2)}; há sobreposição entre trajetórias. "
+    )
     return (
         "Linhas finas: bairros; linhas fortes: centros dos grupos. "
         "O número de grupos é uma escolha analítica, não um ótimo estimado. "
-        f"Silhueta: {number(silhouette, 2)}; há sobreposição entre trajetórias. "
+        f"{silhouette_note}"
         "Os grupos descrevem a forma da evolução, não o nível de preços "
         "ou regiões administrativas."
     )

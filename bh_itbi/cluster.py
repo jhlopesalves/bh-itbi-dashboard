@@ -1,6 +1,8 @@
 """Fit and order neighbourhood k-means trajectory groups on fixed annual data."""
 
-from typing import TypedDict
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, TypedDict
 
 import numpy as np
 import pandas as pd
@@ -8,7 +10,6 @@ import pandas as pd
 from bh_itbi.config import (
     CLUSTER_K,
     CLUSTER_K_RANGE,
-    CLUSTER_MIN_NEIGHBOURHOODS,
     CLUSTER_N_INIT,
     CLUSTER_RANDOM_STATE,
     CLUSTER_YEAR_MINIMUM,
@@ -19,6 +20,13 @@ from bh_itbi.config import (
 )
 from bh_itbi.filters import positive_area_rows
 
+if TYPE_CHECKING:
+    from sklearn.cluster import KMeans
+
+
+class ClusteringError(ValueError):
+    """The trajectory data or fit cannot support the configured cluster count."""
+
 
 class ClusterMetadata(TypedDict):
     """Hyperparameters, silhouette scores and group sizes for trajectory clustering."""
@@ -27,7 +35,7 @@ class ClusterMetadata(TypedDict):
     k: int
     n_init: int
     random_state: int
-    silhouettes: dict[str, float]
+    silhouettes: dict[str, float | None]
     members_per_group: dict[str, int]
 
 
@@ -51,33 +59,67 @@ def _annual_trajectories(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFram
     return trajectories, yearly
 
 
+def _fit_kmeans(trajectories: pd.DataFrame, k: int) -> KMeans:
+    """Fit every candidate with the same configured initialisation."""
+    # Keep the build-only scikit-learn stack out of the serving process.
+    from sklearn.cluster import KMeans  # noqa: PLC0415
+
+    return KMeans(
+        n_clusters=k,
+        # Scikit-learn accepts integer restarts; its hint only includes strings.
+        n_init=CLUSTER_N_INIT,  # pyright: ignore[reportArgumentType]
+        random_state=CLUSTER_RANDOM_STATE,
+    ).fit(trajectories)
+
+
+def _fit_clusters(
+    trajectories: pd.DataFrame,
+) -> tuple[KMeans, dict[str, float | None]]:
+    """Fit the required partition and report available candidate silhouettes."""
+    from sklearn.metrics import silhouette_score  # noqa: PLC0415
+
+    if not np.isfinite(trajectories.to_numpy(dtype=float)).all():
+        raise ClusteringError("Trajectory clustering requires finite normalised values.")
+    n_neighbourhoods = len(trajectories)
+    # Count distinct rows for feasibility while retaining all neighbourhoods in the fit.
+    n_distinct = len(trajectories.drop_duplicates())
+    if n_distinct < CLUSTER_K:
+        raise ClusteringError(
+            f"Cannot fit {CLUSTER_K} trajectory clusters with {n_neighbourhoods} "
+            f"eligible neighbourhoods and {n_distinct} distinct normalised trajectories."
+        )
+
+    fit = _fit_kmeans(trajectories, CLUSTER_K)
+    fitted_labels = fit.labels_
+    n_labels = 0 if fitted_labels is None else np.unique(fitted_labels).size
+    if n_labels != CLUSTER_K:
+        raise ClusteringError(
+            f"The trajectory fit produced {n_labels} distinct labels for "
+            f"{CLUSTER_K} requested clusters."
+        )
+
+    silhouettes: dict[str, float | None] = {str(k): None for k in CLUSTER_K_RANGE}
+    for k in CLUSTER_K_RANGE:
+        # A silhouette for k requires k nonempty groups and at least one non-singleton.
+        if k > n_distinct or not 1 < k < n_neighbourhoods:
+            continue
+        candidate = fit if k == CLUSTER_K else _fit_kmeans(trajectories, k)
+        candidate_labels = candidate.labels_
+        if candidate_labels is not None and np.unique(candidate_labels).size == k:
+            silhouettes[str(k)] = float(silhouette_score(trajectories, candidate_labels))
+    return fit, silhouettes
+
+
 def cluster_trajectories(
     frame: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, ClusterMetadata]:
-    """Fixed k=4 on all ten annual real-median indices, with seed 42/n_init 20."""
-    # Keep the build-only scikit-learn stack out of the serving process.
-    from sklearn.cluster import KMeans  # noqa: PLC0415
-    from sklearn.metrics import silhouette_score  # noqa: PLC0415
+    """Fit the fixed k=4 on complete annual trajectories and report candidate scores.
 
+    Raise ClusteringError if four nonempty groups cannot be fitted. Unavailable
+    silhouette scores are None, including for a valid fit with four singleton groups.
+    """
     trajectories, yearly = _annual_trajectories(frame)
-    if len(trajectories) < CLUSTER_MIN_NEIGHBOURHOODS:
-        raise ValueError(
-            f"Fewer than {CLUSTER_MIN_NEIGHBOURHOODS} neighbourhoods have enough annual "
-            f"coverage to evaluate k={CLUSTER_K_RANGE[0]}–{CLUSTER_K_RANGE[-1]}."
-        )
-    fits = {
-        k: KMeans(
-            n_clusters=k,
-            # Scikit-learn accepts integer restarts; its hint only includes strings.
-            n_init=CLUSTER_N_INIT,  # pyright: ignore[reportArgumentType]
-            random_state=CLUSTER_RANDOM_STATE,
-        ).fit(trajectories)
-        for k in CLUSTER_K_RANGE
-    }
-    silhouettes = {
-        str(k): float(silhouette_score(trajectories, fit.labels_)) for k, fit in fits.items()
-    }
-    fit = fits[CLUSTER_K]
+    fit, silhouettes = _fit_clusters(trajectories)
     labels = fit.labels_
     assert labels is not None
     order = np.argsort(-fit.cluster_centers_[:, -1])
