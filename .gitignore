@@ -11,6 +11,7 @@ wheels/
 
 # Reproducible local data and statistical outputs
 data/cache/
+tests/snapshots/
 .pytest_cache/
 .ruff_cache/
 *.log
