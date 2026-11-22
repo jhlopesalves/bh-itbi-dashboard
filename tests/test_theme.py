@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 
+import plotly.graph_objects as go
+
 from bh_itbi import theme
 from bh_itbi.config import (
     AGE_CONFIDENCE_LEVEL,
@@ -104,3 +106,25 @@ def test_browser_chart_cutoffs_match_configuration() -> None:
         assert {key: values.get(key) for key in settings} == {
             key: str(value) for key, value in settings.items()
         }, name
+
+
+def test_themed_configures_shared_interactive_bottom_legend() -> None:
+    fig = theme.themed(go.Figure())
+    legend = fig.layout.legend
+    assert fig.layout.showlegend is True
+    assert (legend.orientation, legend.traceorder) == ("h", "normal")
+    assert (legend.xref, legend.xanchor, legend.x) == ("container", "left", 0)
+    assert (legend.yref, legend.yanchor, legend.y) == ("container", "bottom", 0)
+    assert (legend.groupclick, legend.itemclick, legend.itemdoubleclick) == (
+        "togglegroup",
+        "toggle",
+        "toggleothers",
+    )
+    assert (legend.font.size, legend.font.color, legend.title.text) == (
+        11,
+        theme.INK_SOFT,
+        "",
+    )
+    assert theme.empty_figure("Sem dados").layout.showlegend is False
+    assert not hasattr(theme, "end_label_text")
+    assert not hasattr(theme, "reference_label_text")

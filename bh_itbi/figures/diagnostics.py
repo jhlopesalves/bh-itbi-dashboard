@@ -56,7 +56,6 @@ from bh_itbi.theme import (
     TEAL,
     TYPE_STYLES,
     empty_figure,
-    end_label_text,
     themed,
 )
 
@@ -216,11 +215,6 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
                 name=label,
                 connectgaps=False,
                 line=dict(style["line"]),
-                meta={
-                    "text": end_label_text(
-                        label, style["line"]["color"], swatch=style["swatch"]
-                    )
-                },
                 customdata=[
                     [quarter_label(t), number(n)]
                     for t, n in zip(rows.index, rows["n"], strict=True)
@@ -228,7 +222,7 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
                 hovertemplate=TAX_HOVER,
             )
         )
-    themed(fig).update_layout(meta={"end_labels": True})
+    themed(fig)
     fig.update_xaxes(tickformat="%Y", dtick="M24")
     fig.update_yaxes(range=[0, 1], tickformat=".0%", title_text=TAX_SHARE_AXIS_TITLE)
     return fig
@@ -285,7 +279,6 @@ def _distance_traces(fig: go.Figure, table: pd.DataFrame) -> list[float]:
                     "size": 2 * radius,
                     "line": {"color": SURFACE, "width": 1.4},
                 },
-                meta=end_label_text(period, colour),
                 connectgaps=False,
                 customdata=[
                     [number(t - half_band), number(t + half_band), number(n)]

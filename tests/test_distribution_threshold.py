@@ -22,6 +22,8 @@ def test_sparse_type_keeps_counts_but_does_not_gain_a_median_line(source_factory
     )
     assert fig.layout.shapes[0].line.color == TEAL
     assert fig.layout.shapes[0].line.dash == "dot"
+    assert fig.layout.shapes[0].legendgroup == "apartment"
+    assert [trace.legendgroup for trace in fig.data] == ["apartment", "house"]
 
 
 def test_histogram_legend_is_anchored_below_the_axes(source_factory):
@@ -30,10 +32,18 @@ def test_histogram_legend_is_anchored_below_the_axes(source_factory):
     fig = distribution_figure(prepare_transactions(source), "price_per_m2_brl_real")
 
     assert len(fig.data) == 2
+    assert fig.layout.showlegend is True
     assert fig.layout.xaxis.automargin
     assert fig.layout.margin.autoexpand is not False
     legend = fig.layout.legend
+    assert (legend.xref, legend.xanchor, legend.x) == ("container", "left", 0)
     assert (legend.yref, legend.yanchor, legend.y) == ("container", "bottom", 0)
+    assert (legend.groupclick, legend.itemclick, legend.itemdoubleclick) == (
+        "togglegroup",
+        "toggle",
+        "toggleothers",
+    )
+    assert [shape.legendgroup for shape in fig.layout.shapes] == ["apartment", "house"]
 
 
 def test_overlapping_bars_keep_geometric_bins_and_counts_for_each_type(source_factory):

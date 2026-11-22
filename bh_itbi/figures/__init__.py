@@ -15,7 +15,6 @@ from bh_itbi.figures.models import (
     band_traces,
     clusters_figure,
     hedonic_figure,
-    label_ribbon,
     ribbon_grid,
 )
 from bh_itbi.figures.overview import (
@@ -45,7 +44,6 @@ __all__ = [
     "distribution_figure",
     "heaping_figure",
     "hedonic_figure",
-    "label_ribbon",
     "map_figure",
     "neighbourhood_comparison_data",
     "neighbourhood_trajectories_figure",

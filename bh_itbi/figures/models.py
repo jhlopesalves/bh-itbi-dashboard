@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from bh_itbi.config import COMPOSITION_LABEL_THRESHOLD, INDEX_BASE, YEAR_TICKS
+from bh_itbi.config import INDEX_BASE, YEAR_TICKS
 from bh_itbi.formatting import composition_number, number, quarter_label
 from bh_itbi.models import COMPOSITION_TERMS, PreparedModels
 from bh_itbi.text.models import (
     CLUSTER_CENTRE_HOVER,
     CLUSTER_INDEX_AXIS_TITLE,
     CLUSTER_TRAJECTORY_HOVER,
-    HEDONIC_INDEX_LABEL,
     HEDONIC_INDEX_TRACE_NAME,
     HEDONIC_RAW_TRACE_NAME,
     cluster_group_heading,
@@ -60,7 +59,12 @@ def ribbon_grid(
 
 
 def band_traces(
-    dates: pd.DatetimeIndex, inner: np.ndarray, outer: np.ndarray, hue: str
+    dates: pd.DatetimeIndex,
+    inner: np.ndarray,
+    outer: np.ndarray,
+    hue: str,
+    *,
+    legendgroup: str | None = None,
 ) -> tuple[go.Scatter, go.Scatter] | None:
     """Close each active run at zero width and leave gaps in the separators."""
     active = inner != outer
@@ -88,6 +92,7 @@ def band_traces(
             line={"width": 0},
             fill="toself",
             fillcolor=composition_tint(hue),
+            legendgroup=legendgroup,
             hoverinfo="skip",
             showlegend=False,
         ),
@@ -96,76 +101,20 @@ def band_traces(
             y=edge_y,
             mode="lines",
             line={"color": SURFACE, "width": 1.6},
+            legendgroup=legendgroup,
             hoverinfo="skip",
             showlegend=False,
         ),
     )
 
 
-def label_ribbon(
-    fig: go.Figure,
-    final: pd.Series,
-    centres: Mapping[str, float],
-    axis_min: float,
-    axis_max: float,
-) -> None:
-    """Place right-edge labels in plot coordinates with room between them."""
-    axis_span = axis_max - axis_min
-    labels = [
-        (
-            (centre - axis_min) / axis_span,
-            f'<span style="color:{COMPOSITION_HUES[group]}">■</span> '
-            f"{COMPOSITION_LABELS[group]}&nbsp; {composition_number(final[group])}",
-            INK,
-        )
-        for group, centre in centres.items()
-        if abs(final[group]) >= COMPOSITION_LABEL_THRESHOLD
-    ]
-    labels.extend(
-        [
-            (
-                (np.log(final["hedonic_index"]) - axis_min) / axis_span + 0.04,
-                f"<b>{HEDONIC_INDEX_LABEL}&nbsp; {number(final['hedonic_index'])}</b>",
-                TEAL,
-            ),
-            (
-                (np.log(final["raw_geometric_mean"]) - axis_min) / axis_span - 0.04,
-                f"{HEDONIC_RAW_TRACE_NAME}&nbsp; {number(final['raw_geometric_mean'])}",
-                INK,
-            ),
-        ]
-    )
-    labels.sort(key=lambda label: label[0])
-    minimum_gap = 0.065
-    positions = [max(minimum_gap / 2, labels[0][0])]
-    for target, _, _ in labels[1:]:
-        positions.append(max(target, positions[-1] + minimum_gap))
-    positions[-1] = min(1 - minimum_gap / 2, positions[-1])
-    for i in range(len(positions) - 2, -1, -1):
-        positions[i] = min(positions[i], positions[i + 1] - minimum_gap)
-    for y, (_, label, colour) in zip(positions, labels, strict=True):
-        fig.add_annotation(
-            x=1,
-            xref="paper",
-            xanchor="left",
-            xshift=6,
-            y=y,
-            yref="paper",
-            yanchor="middle",
-            text=label,
-            font={"size": 11, "color": colour},
-            showarrow=False,
-        )
-
-
 def _composition_bands(
     fig: go.Figure, table: pd.DataFrame, groups: Sequence[str]
-) -> tuple[list[np.ndarray], dict[str, float]]:
-    """Stack signed contributions around the adjusted index and locate end labels."""
+) -> list[np.ndarray]:
+    """Stack signed contributions around the adjusted index and group each component."""
     dates, adjusted, contributions = ribbon_grid(table, groups)
     stacks = [adjusted.copy(), adjusted.copy()]
     separators: list[go.Scatter] = []
-    centres: dict[str, float] = {}
     for rank, group in enumerate(groups, start=2):
         hue = COMPOSITION_HUES[group]
         for stack, signed in zip(
@@ -174,12 +123,10 @@ def _composition_bands(
             strict=True,
         ):
             outer = stack + signed
-            if traces := band_traces(dates, stack, outer, hue):
+            if traces := band_traces(dates, stack, outer, hue, legendgroup=group):
                 band, edge = traces
                 fig.add_trace(band)
                 separators.append(edge)
-            if signed[-1]:
-                centres[group] = float((stack[-1] + outer[-1]) / 2)
             stack[:] = outer
         fig.add_trace(
             go.Scatter(
@@ -187,13 +134,14 @@ def _composition_bands(
                 y=[None],
                 mode="markers",
                 name=COMPOSITION_LABELS[group],
+                legendgroup=group,
                 legendrank=rank,
                 marker={"symbol": "square", "size": 8, "color": hue},
                 hoverinfo="skip",
             )
         )
     fig.add_traces(separators)
-    return stacks, centres
+    return stacks
 
 
 def _hedonic_index_traces(fig: go.Figure, table: pd.DataFrame, groups: Sequence[str]) -> None:
@@ -217,6 +165,7 @@ def _hedonic_index_traces(fig: go.Figure, table: pd.DataFrame, groups: Sequence[
                 mode="lines",
                 line={"color": TEAL, "width": 0.7},
                 opacity=0.7,
+                legendgroup="hedonic_index",
                 hoverinfo="skip",
                 showlegend=False,
             )
@@ -238,6 +187,7 @@ def _hedonic_index_traces(fig: go.Figure, table: pd.DataFrame, groups: Sequence[
             y=table["hedonic_index"],
             mode="lines",
             name=HEDONIC_INDEX_TRACE_NAME,
+            legendgroup="hedonic_index",
             legendrank=0,
             line={"color": TEAL, "width": 2.4},
             customdata=[
@@ -256,10 +206,8 @@ def _hedonic_index_traces(fig: go.Figure, table: pd.DataFrame, groups: Sequence[
     )
 
 
-def _hedonic_layout(
-    fig: go.Figure, table: pd.DataFrame, stacks: Sequence[np.ndarray]
-) -> tuple[float, float]:
-    """Set the log-axis extent and ticks, returning the bounds used by the labels."""
+def _hedonic_layout(fig: go.Figure, table: pd.DataFrame, stacks: Sequence[np.ndarray]) -> None:
+    """Set the log-axis extent and ticks for the hedonic index and composition bands."""
     low = min(
         float(stacks[0].min()), float(np.log(table["lower"].min())), float(np.log(INDEX_BASE))
     )
@@ -273,10 +221,9 @@ def _hedonic_layout(
     ticks = np.arange(np.ceil(floor / tick_step) * tick_step, ceiling, tick_step)
     themed(fig, height=420)
     fig.update_layout(
-        margin={"l": 35, "r": 127},
+        margin={"l": 35},
         hovermode="x",
         hoverdistance=-1,
-        legend={"itemclick": False, "itemdoubleclick": False},
     )
     fig.update_xaxes(
         tickformat="%Y",
@@ -295,7 +242,6 @@ def _hedonic_layout(
         tickformat=",.0f",
         showline=False,
     )
-    return axis_min, axis_max
 
 
 def hedonic_figure(table: pd.DataFrame) -> go.Figure:
@@ -303,10 +249,9 @@ def hedonic_figure(table: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     final = table.iloc[-1]
     groups = sorted(COMPOSITION_TERMS, key=lambda group: abs(final[group]), reverse=True)
-    stacks, centres = _composition_bands(fig, table, groups)
+    stacks = _composition_bands(fig, table, groups)
     _hedonic_index_traces(fig, table, groups)
-    axis_min, axis_max = _hedonic_layout(fig, table, stacks)
-    label_ribbon(fig, final, centres, axis_min, axis_max)
+    _hedonic_layout(fig, table, stacks)
     return fig
 
 

@@ -106,7 +106,7 @@ DISTANCE_FOOTNOTE = (
 )
 DISTANCE_HOVER = (
     "%{customdata[0]}–%{customdata[1]} km<br>Mediana: R$ %{y:,.0f}/m²"
-    "<br>Transações: %{customdata[2]}<br>%{meta}<extra></extra>"
+    "<br>Transações: %{customdata[2]}" + TRACE_NAME_EXTRA
 )
 
 

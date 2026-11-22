@@ -49,9 +49,7 @@ from bh_itbi.theme import (
     TYPE_STYLES,
     composition_tint,
     empty_figure,
-    end_label_text,
     neighbourhood_colours,
-    reference_label_text,
     rgba,
     themed,
 )
@@ -131,7 +129,6 @@ def _monthly_reference_trace(rows: pd.DataFrame, label: str) -> go.Scatter:
         name=f"BH · {label}",
         mode="lines",
         line=dict(REFERENCE),
-        meta={"text": reference_label_text(f"BH · {label.lower()}"), "colour": MUTED},
         connectgaps=False,
         customdata=[
             [month_label(month), number(n)]
@@ -156,7 +153,6 @@ def _monthly_median_trace(rows: pd.DataFrame, kind: str, label: str) -> go.Scatt
             "symbol": style["symbol"],
         },
         line=dict(style["line"]),
-        meta={"text": end_label_text(label, colour, swatch=style["swatch"])},
         connectgaps=False,
         legendgroup=kind,
         customdata=[
@@ -192,7 +188,7 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
         if reference is not None:
             ref = reference.loc[reference["property_type"] == property_type]
             fig.add_trace(_monthly_reference_trace(ref, label))
-    themed(fig).update_layout(meta={"end_labels": True})
+    themed(fig)
     _apply_time_axis(fig, filters)
     return fig
 
@@ -245,6 +241,7 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
     )
     themed(fig, height=540)
     fig.update_layout(
+        showlegend=False,
         map={
             "style": style,
             "center": {"lat": MAP_CENTRE[0], "lon": MAP_CENTRE[1]},
@@ -313,7 +310,6 @@ def neighbourhood_trajectories_figure(
                 mode="lines+markers",
                 name=label,
                 line={"color": colour, "width": 2},
-                meta={"text": end_label_text(label, colour)},
                 marker={"size": 4},
                 connectgaps=False,
                 customdata=[
@@ -333,7 +329,6 @@ def neighbourhood_trajectories_figure(
             name=CITY_NAME,
             mode="lines",
             line=dict(REFERENCE),
-            meta={"text": reference_label_text(CITY_NAME), "colour": MUTED},
             connectgaps=False,
             customdata=[
                 [quarter_label(t), number(n)]
@@ -345,5 +340,5 @@ def neighbourhood_trajectories_figure(
     themed(fig, height=370)
     _apply_time_axis(fig, filters)
     # Show up to six rows before scrolling, preserving room for the trajectories.
-    fig.update_layout(legend={"maxheight": 124}, meta={"end_labels": True})
+    fig.update_layout(legend={"maxheight": 124})
     return fig

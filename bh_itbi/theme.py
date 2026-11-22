@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from html import escape
 from typing import TypedDict
 
 import plotly.graph_objects as go
@@ -60,23 +59,20 @@ class LineStyle(TypedDict):
 
 
 class PropertyStyle(TypedDict):
-    """A property type's line and matching marker and label shapes."""
+    """A property type's line and matching marker shape."""
 
     line: LineStyle
     symbol: str
-    swatch: str
 
 
 TYPE_STYLES: dict[str, PropertyStyle] = {
     "apartment": {
         "line": {"color": TEAL, "dash": "solid", "width": 2},
         "symbol": "circle",
-        "swatch": "●",
     },
     "house": {
         "line": {"color": CLAY, "dash": "solid", "width": 2},
         "symbol": "diamond",
-        "swatch": "◆",
     },
 }
 
@@ -152,17 +148,6 @@ def neighbourhood_colours(names: Sequence[str]) -> dict[str, str]:
     return {name: colours[name] for name in selected}
 
 
-def end_label_text(label: str, colour: str, *, swatch: str = "■") -> str:
-    """Pair escaped Plotly annotation text with a coloured glyph."""
-    mark = f'<span style="color:{colour};font-size:14px">{swatch}</span>'
-    return f"{mark}&nbsp;&nbsp;{escape(label, quote=False)}"
-
-
-def reference_label_text(label: str) -> str:
-    """Show the reference stroke next to its end label."""
-    return end_label_text(label, REFERENCE["color"], swatch="╍")
-
-
 def composition_tint(hue: str, *, strength: float = 0.62) -> str:
     """Blend a chart hue with the card surface colour in RGB space."""
     channels = (
@@ -193,14 +178,19 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
         colorway=[INK],
         height=height,
         margin={"l": 65, "r": 22, "t": 18, "b": 8},
+        showlegend=True,
         legend={
             "orientation": "h",
             "xref": "container",
             "yref": "container",
             "x": 0,
+            "xanchor": "left",
             "y": 0,
             "yanchor": "bottom",
             "traceorder": "normal",
+            "groupclick": "togglegroup",
+            "itemclick": "toggle",
+            "itemdoubleclick": "toggleothers",
             "font": {"size": 11, "color": INK_SOFT},
             "title": {"text": ""},
         },
@@ -241,6 +231,7 @@ def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
 def empty_figure(message: str, height: int = 360) -> go.Figure:
     """Return a themed blank figure displaying a centred empty-state message."""
     fig = themed(go.Figure(), height=height)
+    fig.update_layout(showlegend=False)
     fig.add_annotation(
         x=0.5,
         y=0.5,

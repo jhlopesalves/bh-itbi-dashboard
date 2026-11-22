@@ -21,7 +21,6 @@ import math
 import os
 import re
 from collections.abc import Iterator
-from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -452,20 +451,77 @@ def test_neighbourhood_cards_share_colours_and_labels(
     outputs = view_snapshots[f"overview__{case}"]["overview"]
     comparison = outputs["comparison-data"]["data"]
     figure = outputs["neighbourhood-figure"]["figure"]
-    assert figure["layout"]["meta"]["end_labels"] is True
+    assert "meta" not in figure["layout"]
+    assert figure["layout"]["showlegend"] is True
     trajectories = {
         trace["name"]: trace for trace in figure["data"] if trace["name"] != CITY_NAME
     }
     assert trajectories
-    colours = neighbourhood_colours(VIEW_MATRIX[case][2])
+    colours = neighbourhood_colours(sorted(VIEW_MATRIX[case][2]))
+    assert [trace["name"] for trace in figure["data"]] == [
+        *(name.title() for name in colours),
+        CITY_NAME,
+    ]
     assert {name: trace["line"]["color"] for name, trace in trajectories.items()} == {
         name.title(): colour for name, colour in colours.items()
     }
-    for name, trace in trajectories.items():
-        assert f"color:{trace['line']['color']};" in trace["meta"]["text"]
-        assert trace["meta"]["text"].endswith(escape(name, quote=False))
+    for trace in figure["data"]:
+        assert "meta" not in trace
+    reference = figure["data"][-1]
+    assert reference["name"] == CITY_NAME
+    assert reference["line"] == REFERENCE
+    assert "legendgroup" not in reference
     for row in comparison["rows"]:
         assert row["name"] and row["colour"] == trajectories[row["name"]]["line"]["color"]
+
+
+def test_categorical_legends_group_series_and_omit_end_label_metadata(
+    view_snapshots: dict[str, Any],
+) -> None:
+    for output, figure in snapshot_outputs(view_snapshots):
+        if not output.endswith(".figure"):
+            continue
+        layout = figure["layout"]
+        assert "end_labels" not in (layout.get("meta") or {}), output
+        for trace in figure["data"]:
+            assert "meta" not in trace, (output, trace.get("name"))
+        if figure["data"] and not output.endswith("geo-map.figure"):
+            assert layout["showlegend"] is True, output
+            assert layout["legend"]["groupclick"] == "togglegroup", output
+
+    for case, (*_, neighbourhoods, _, _) in VIEW_MATRIX.items():
+        monthly = view_snapshots[f"overview__{case}"]["overview"]["trend-figure"]["figure"]
+        if not monthly["data"]:
+            continue
+        visible = [
+            trace for trace in monthly["data"] if trace.get("showlegend", True) is not False
+        ]
+        medians = [trace for trace in visible if trace.get("legendgroup") in TYPE_LABELS]
+        references = [trace for trace in visible if "legendgroup" not in trace]
+        bands = [trace for trace in monthly["data"] if trace.get("showlegend") is False]
+        assert len(medians) == len({trace["legendgroup"] for trace in medians})
+        assert {trace["legendgroup"] for trace in bands} <= {
+            trace["legendgroup"] for trace in medians
+        }
+        if bands:
+            last_band = max(i for i, t in enumerate(monthly["data"]) if t in bands)
+            first_median = min(i for i, t in enumerate(monthly["data"]) if t in medians)
+            assert last_band < first_median
+        assert bool(references) == bool(neighbourhoods)
+        for ref in references:
+            assert ref["name"].startswith("BH · ")
+            assert ref["line"] == REFERENCE
+
+    for group, payload in view_snapshots["tabs_models_and_selection"]["models"].items():
+        clusters = payload["clusters-figure"]["figure"]
+        visible = [
+            trace for trace in clusters["data"] if trace.get("showlegend", True) is not False
+        ]
+        expected_groups = {"1", "2", "3", "4"} if group == "all" else {group}
+        assert {trace["legendgroup"] for trace in visible} == expected_groups
+        assert len(visible) == len(expected_groups)
+        assert all(trace["mode"] == "lines+markers" for trace in visible)
+        assert "legendgroup" not in clusters["layout"]["shapes"][0]
 
 
 def _plotly_trace_colours(trace: dict[str, Any]) -> Iterator[str]:

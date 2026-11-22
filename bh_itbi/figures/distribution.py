@@ -47,6 +47,7 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
                 marker={"color": colour, "line": {"width": 0}},
                 opacity=0.75,
                 name=label,
+                legendgroup=property_type,
                 customdata=bins,
                 hovertemplate=DISTRIBUTION_HOVER,
             )
@@ -54,14 +55,11 @@ def distribution_figure(frame: pd.DataFrame, column: str) -> go.Figure:
         if len(subset) >= DISTRIBUTION_MINIMUM:
             fig.add_vline(
                 x=subset.median(),
+                legendgroup=property_type,
                 line={"color": colour, "dash": "dot", "width": 1.5},
             )
     themed(fig, height=330)
-    fig.update_layout(
-        barmode="overlay",
-        bargap=0,
-        margin={"l": 50, "r": 18, "t": 12},
-    )
+    fig.update_layout(barmode="overlay", bargap=0, margin={"l": 50, "r": 18, "t": 12})
     ticks = [
         multiplier * 10.0**exponent
         for exponent in range(int(np.floor(np.log10(low))), int(np.ceil(np.log10(high))) + 1)
