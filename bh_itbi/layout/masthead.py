@@ -29,6 +29,7 @@ def masthead(source_rows: int, eligible_rows: int) -> html.Header:
                         [
                             html.H1(text.APP_TITLE),
                             html.P(text.APP_SUBTITLE, className="subtitle"),
+                            html.P(text.MEASUREMENT_NOTE, className="measurement-note"),
                         ],
                         className="masthead-title",
                     ),

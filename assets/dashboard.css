@@ -172,7 +172,7 @@ label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .09em
 .spatial-grid > .chart-card, .analysis-grid > .chart-card, .diagnostics-grid > .chart-card { margin-bottom: 0; }
 .card-heading { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; }
 h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; letter-spacing: -.01em; color: var(--ink-2); }
-.chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 76ch; line-height: 1.55; }
+.chart-subtitle, .measurement-note { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 76ch; line-height: 1.55; }
 .card-footnote { color: var(--muted); font-size: 11px; line-height: 1.65; padding-top: 10px; margin-top: 11px; border-top: 1px solid var(--rule-faint); overflow-wrap: anywhere; }
 /* Keep the previous drawing inside its frame while a responsive resize settles. */
 .plot { width: 100%; min-width: 0; overflow: clip; }

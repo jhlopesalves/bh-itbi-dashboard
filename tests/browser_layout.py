@@ -412,8 +412,24 @@ def check_models_viewport(page: Page, width: int) -> None:
     wait_for_plot(page, "hedonic-figure", min_traces=2)
 
 
-def check_masthead_facts(page: Page) -> None:
-    """Verify that each source fact and count is visible at the active width."""
+def check_masthead(page: Page) -> None:
+    """Verify the measurement note and source facts at the active width."""
+    note = page.locator(".masthead-title .subtitle + .measurement-note")
+    expect(note).to_be_visible()
+    expect(note).to_have_text(
+        "Valores declarados em registros de ITBI; não representam necessariamente "
+        "preços de venda verificados."
+    )
+    assert note.evaluate(
+        """element => {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const title = element.parentElement.getBoundingClientRect();
+            return [...range.getClientRects()].every(
+                line => line.left >= title.left && line.right <= title.right + 1
+            );
+        }"""
+    ), "Measurement note overflows the masthead title"
     facts = page.locator(".masthead-facts")
     expect(facts.locator("dt")).to_have_text(
         [
@@ -445,7 +461,7 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         models = page.locator("#tab-models")
         expect(overview).to_have_attribute("aria-selected", "true")
         expect(page.get_by_role("tab")).to_have_count(3)
-        check_masthead_facts(page)
+        check_masthead(page)
         wait_for_plot(page, "distribution-figure", min_traces=2)
         check_models_viewport(page, width)
 

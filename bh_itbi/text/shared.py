@@ -45,6 +45,10 @@ TAB_LABELS: tuple[tuple[str, str], ...] = (
 APP_TITLE = "Painel do Mercado Residencial de Belo Horizonte"
 APP_UPDATE_TITLE = "Atualizando…"
 APP_SUBTITLE = "Panorama analítico do mercado residencial a partir dos registros do ITBI."
+MEASUREMENT_NOTE = (
+    "Valores declarados em registros de ITBI; não representam necessariamente "
+    "preços de venda verificados."
+)
 APP_META_DESCRIPTION = (
     "Panorama analítico do mercado residencial de Belo Horizonte a partir dos registros "
     "do ITBI: distribuição espacial, séries temporais, diagnósticos e índices."
