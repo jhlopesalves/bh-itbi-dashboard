@@ -142,9 +142,9 @@ def capture_diagnostics(app: Dash, controls: list[Any]) -> dict[str, Any]:
     return response
 
 
-def capture_models(app: Dash, group: str) -> dict[str, Any]:
+def capture_models(app: Dash, tab: str) -> dict[str, Any]:
     """Compare the interpolated ribbon dates at browser date precision."""
-    response = post_callback(app, "hedonic-figure.figure", [group])
+    response = post_callback(app, "hedonic-figure.figure", [tab])
     for trace in response["hedonic-figure"]["figure"]["data"]:
         coordinates = trace.get("x")
         if isinstance(coordinates, list):
@@ -251,7 +251,7 @@ def capture_suite(app: Dash) -> dict[str, Any]:
             "switch_view": {
                 tab: post_callback(app, "overview-panel.className", [tab]) for tab in tabs
             },
-            "models": {group: capture_models(app, group) for group in ("all", "1", "4")},
+            "models": {"models": capture_models(app, "models")},
             "restore_selection": {
                 "query": post_callback(
                     app,
@@ -512,16 +512,19 @@ def test_categorical_legends_group_series_and_omit_end_label_metadata(
             assert ref["name"].startswith("BH · ")
             assert ref["line"] == REFERENCE
 
-    for group, payload in view_snapshots["tabs_models_and_selection"]["models"].items():
-        clusters = payload["clusters-figure"]["figure"]
-        visible = [
-            trace for trace in clusters["data"] if trace.get("showlegend", True) is not False
-        ]
-        expected_groups = {"1", "2", "3", "4"} if group == "all" else {group}
-        assert {trace["legendgroup"] for trace in visible} == expected_groups
-        assert len(visible) == len(expected_groups)
-        assert all(trace["mode"] == "lines+markers" for trace in visible)
-        assert "legendgroup" not in clusters["layout"]["shapes"][0]
+    payload = view_snapshots["tabs_models_and_selection"]["models"]["models"]
+    trajectories = payload["trajectories-figure"]["figure"]
+    neighbourhoods, median = trajectories["data"][:-1], trajectories["data"][-1]
+    visible = [trace for trace in trajectories["data"] if trace.get("showlegend", True)]
+    assert [trace["name"] for trace in visible] == ["Bairros", "Mediana entre os bairros"]
+    assert {trace["legendgroup"] for trace in neighbourhoods} == {"neighbourhoods"}
+    assert all(trace["line"] == {"color": SLATE, "width": 1} for trace in neighbourhoods)
+    assert all(
+        trace["mode"] == "lines" and trace["opacity"] == 0.35 for trace in neighbourhoods
+    )
+    assert median["mode"] == "lines+markers"
+    assert median["line"]["color"] == INK
+    assert "legendgroup" not in trajectories["layout"]["shapes"][0]
 
 
 def _plotly_trace_colours(trace: dict[str, Any]) -> Iterator[str]:

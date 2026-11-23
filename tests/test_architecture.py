@@ -23,13 +23,17 @@ LAYER_RANK: dict[str, int] = {
     "bh_itbi.data": 3,
     "bh_itbi.filters": 4,
     "bh_itbi.stats": 4,
+    "bh_itbi.robust": 4,
     "bh_itbi.urls": 4,
     "bh_itbi.overview": 5,
     "bh_itbi.diagnostics": 5,
     "bh_itbi.cluster": 5,
     "bh_itbi.models": 5,
+    "bh_itbi.sensitivity": 5,
+    "bh_itbi.audit_checks": 5,
     "bh_itbi.age": 5,
     "bh_itbi.views": 6,
+    "bh_itbi.audit": 6,
     "bh_itbi.figures": 7,
     "bh_itbi.layout": 8,
     "bh_itbi.callbacks": 9,
@@ -156,3 +160,29 @@ def test_functions_fit_within_sixty_lines() -> None:
                         f"{path.relative_to(ROOT)}:{node.lineno} {node.name} ({length} lines)"
                     )
     assert not violations, "Functions over 60 lines:\n  " + "\n  ".join(violations)
+
+
+def test_serving_cannot_reach_the_audit_modules() -> None:
+    paths = [*sorted(PACKAGE_DIR.rglob("*.py")), ROOT / "wsgi.py"]
+    modules = {module_name_for_path(path): path for path in paths}
+    graph = {name: parse_internal_imports(path, set(modules)) for name, path in modules.items()}
+    audit = {"bh_itbi.robust", "bh_itbi.sensitivity", "bh_itbi.audit_checks", "bh_itbi.audit"}
+    serving_layers = {
+        "bh_itbi.app",
+        "bh_itbi.callbacks",
+        "bh_itbi.layout",
+        "bh_itbi.figures",
+        "bh_itbi.views",
+        "wsgi",
+    }
+    for module in modules:
+        if layer_key(module) not in serving_layers:
+            continue
+        visited: set[str] = set()
+        pending = [module]
+        while pending:
+            dependency = pending.pop()
+            if dependency not in visited:
+                visited.add(dependency)
+                pending.extend(graph.get(dependency, ()))
+        assert visited.isdisjoint(audit), (module, sorted(visited & audit))

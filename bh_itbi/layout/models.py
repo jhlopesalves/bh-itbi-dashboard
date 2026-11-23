@@ -1,26 +1,17 @@
-"""Models tab layout: hedonic index decomposition and k-means trajectory clusters."""
+"""Lay out the hedonic index decomposition and neighbourhood trajectories."""
 
 from __future__ import annotations
-
-from collections.abc import Sequence
 
 import pandas as pd
 from dash import html
 from dash.development.base_component import Component
 
 from bh_itbi.cluster import ClusterMetadata
-from bh_itbi.config import CLUSTER_K
+from bh_itbi.config import REPOSITORY_URL
 from bh_itbi.formatting import number
-from bh_itbi.layout.components import card, dropdown, graph, html_attributes
+from bh_itbi.layout.components import card, graph
 from bh_itbi.models import COMPOSITION_TERMS, HedonicMetadata, PreparedModels
 from bh_itbi.text import models as text
-from bh_itbi.theme import CLUSTER_COLORS
-from bh_itbi.views.models import ClusterGroupView
-
-
-def cluster_members(groups: Sequence[ClusterGroupView]) -> list[html.Div]:
-    """Render the heading and member names of each visible group."""
-    return [html.Div([html.H3(group.heading), html.P(group.members_text)]) for group in groups]
 
 
 def _models_intro() -> html.Div:
@@ -77,66 +68,25 @@ def _hedonic_card(final: pd.Series) -> html.Section:
     )
 
 
-def _cluster_selector() -> html.Div:
-    """Render the group selector with the trajectory colour swatches."""
-    return html.Div(
-        [
-            html.Label(
-                text.CLUSTER_GROUP_LABEL,
-                htmlFor="cluster-group",
-                className="sr-only",
-            ),
-            dropdown(
-                "cluster-group",
-                options=[
-                    {"label": text.CLUSTER_ALL_GROUPS_LABEL, "value": "all"},
-                    *[
-                        {
-                            "label": html.Span(
-                                [
-                                    html.Span(
-                                        className="cluster-option-swatch",
-                                        style={"backgroundColor": colour},
-                                        **html_attributes(aria_hidden="true"),
-                                    ),
-                                    text.cluster_group_name(group),
-                                ],
-                                className="cluster-option",
-                            ),
-                            "value": str(group),
-                        }
-                        for group, colour in CLUSTER_COLORS.items()
-                    ],
-                ],
-                value="all",
-                clearable=False,
-                searchable=False,
-            ),
-        ],
-        className="cluster-field",
-    )
-
-
-def _clusters_card(clusters: ClusterMetadata) -> html.Section:
-    """Render the trajectory figure and member disclosure."""
+def _annual_trajectories_card(clusters: ClusterMetadata) -> html.Section:
+    """Render the figure for the fixed neighbourhood coverage."""
     return card(
-        text.CLUSTERS_TITLE,
-        text.clusters_subtitle(clusters["n_neighbourhoods"]),
+        text.TRAJECTORIES_MODEL_TITLE,
+        text.trajectories_subtitle(clusters["n_neighbourhoods"]),
         [
-            graph("clusters-figure", height=410),
+            graph("trajectories-figure", height=410),
             html.P(
-                text.clusters_footnote(clusters["silhouettes"][str(CLUSTER_K)]),
+                [
+                    text.TRAJECTORIES_FOOTNOTE,
+                    " ",
+                    html.A(
+                        text.TRAJECTORIES_AUDIT_LINK_TEXT,
+                        href=f"{REPOSITORY_URL}/blob/main/docs/robustness/report.md",
+                    ),
+                ],
                 className="card-footnote",
             ),
-            html.Details(
-                [
-                    html.Summary(text.CLUSTERS_MEMBERS_SUMMARY),
-                    html.Div(id="cluster-members", className="members-list"),
-                ],
-                className="members-details",
-            ),
         ],
-        extra=_cluster_selector(),
     )
 
 
@@ -153,6 +103,6 @@ def models_panel(models: PreparedModels | None) -> html.Div:
             _models_intro(),
             _model_metrics(metadata["hedonic"]),
             _hedonic_card(final),
-            _clusters_card(metadata["clusters"]),
+            _annual_trajectories_card(metadata["clusters"]),
         ]
     return html.Div(content, id="models-panel", className="view-panel is-hidden")

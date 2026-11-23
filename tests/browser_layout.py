@@ -206,60 +206,36 @@ def check_overview_legends(page: Page, url: str) -> None:
 
 
 def check_models_legends(page: Page) -> None:
-    """Verify cluster groups and hedonic composition legend interactions."""
+    """Verify trajectory and hedonic composition legend interactions."""
     page.locator("#tab-models").click()
     wait_for_plot(page, "hedonic-figure", min_traces=10)
-    wait_for_plot(page, "clusters-figure", min_traces=8)
-    assert_no_plot_annotations(page, "hedonic-figure", "clusters-figure")
+    subtitle = page.locator(".chart-card:has(#trajectories-figure) .chart-subtitle")
+    coverage_text = re.compile(r"([\d.]+) bairros com ao menos")
+    expect(subtitle).to_contain_text(coverage_text)
+    coverage = coverage_text.search(subtitle.text_content() or "")
+    assert coverage is not None
+    count = int(coverage.group(1).replace(".", ""))
+    wait_for_plot(page, "trajectories-figure", min_traces=count + 1)
+    assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
+    legend = page.locator("#trajectories-figure .legend .traces")
+    expect(legend).to_have_count(2)
+    expect(page.get_by_role("link", name="Consultar a auditoria")).to_be_visible()
 
-    group1_label = (
-        page.locator("#clusters-figure .legend .legendtext").first.text_content() or ""
-    )
-    click_legend_item(page, "clusters-figure", group1_label)
-    page.wait_for_function(
-        """() => {
-            const plot = document.querySelector('#clusters-figure .js-plotly-plot');
-            const g1 = plot.data.filter(t => t.legendgroup === '1');
-            const rest = plot.data.filter(t => t.legendgroup !== '1');
-            return g1.length > 1 && g1.every(t => t.visible === 'legendonly') &&
-                rest.every(t => t.visible !== 'legendonly');
-        }"""
-    )
-    click_legend_item(page, "clusters-figure", group1_label)
-    page.wait_for_function(
-        """() => document.querySelector('#clusters-figure .js-plotly-plot')
-            .data.every(t => t.visible === true || t.visible === undefined)"""
-    )
-
-    page.locator("#cluster-group .dash-dropdown-trigger").click()
-    page.get_by_role("option", name="Grupo 1").click()
-    page.wait_for_function(
-        """() => {
-            const plot = document.querySelector('#clusters-figure .js-plotly-plot');
-            return plot.data.length > 1 && plot.data.every(t => t.legendgroup === '1');
-        }"""
-    )
-    expect(page.locator("#clusters-figure .legend .traces")).to_have_count(1)
-    click_legend_item(page, "clusters-figure", group1_label)
-    page.wait_for_function(
-        """() => document.querySelector('#clusters-figure .js-plotly-plot')
-            .data.every(t => t.visible === 'legendonly')"""
-    )
-    click_legend_item(page, "clusters-figure", group1_label)
-    page.wait_for_function(
-        """() => document.querySelector('#clusters-figure .js-plotly-plot')
-            .data.every(t => t.visible === true)"""
-    )
-    page.locator("#cluster-group .dash-dropdown-trigger").click()
-    page.get_by_role("option", name="Todos os grupos").click()
-    page.wait_for_function(
-        """() => {
-            const plot = document.querySelector('#clusters-figure .js-plotly-plot');
-            const groups = new Set(plot.data.map(t => t.legendgroup));
-            return groups.size === 4 &&
-                plot.data.every(t => t.visible !== 'legendonly' && t.visible !== false);
-        }"""
-    )
+    for label in ("Bairros", "Mediana entre os bairros"):
+        for hidden in (True, False):
+            click_legend_item(page, "trajectories-figure", label)
+            page.wait_for_function(
+                """([label, hidden, count]) => {
+                    const plot = document.querySelector('#trajectories-figure .js-plotly-plot');
+                    const selected = plot.data.filter(t => t.name === label);
+                    const others = plot.data.filter(t => t.name !== label);
+                    const isShown = t => t.visible !== 'legendonly' && t.visible !== false;
+                    return selected.length === (label === 'Bairros' ? count : 1) &&
+                        selected.every(t => hidden ? t.visible === 'legendonly' : isShown(t)) &&
+                        others.every(isShown);
+                }""",
+                arg=(label, hidden, count),
+            )
 
     click_legend_item(page, "hedonic-figure", "Índice hedônico · IC 95%")
     page.wait_for_function(
@@ -419,11 +395,11 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
             expect(models).to_be_focused()
         expect(models).to_have_attribute("aria-selected", "true")
         wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "clusters-figure", min_traces=2)
+        wait_for_plot(page, "trajectories-figure", min_traces=2)
         page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
         wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "clusters-figure", min_traces=2)
-        assert_no_plot_annotations(page, "hedonic-figure", "clusters-figure")
+        wait_for_plot(page, "trajectories-figure", min_traces=2)
+        assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
         page.set_viewport_size(viewport)
         wait_for_plot(page, "hedonic-figure", min_traces=2)
 

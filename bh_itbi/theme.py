@@ -31,11 +31,6 @@ HOVER_BG = "#ffffff"
 MODEBAR_ICON = "#b3ada3"
 TRANSPARENT = "rgba(0,0,0,0)"
 
-CLUSTER_VIOLET = "#6c4fae"
-CLUSTER_FOREST = "#3d7f4a"
-CLUSTER_ROSE = "#d77a9a"
-CLUSTER_AMBER = "#e09a3e"
-
 DISTANCE_AMBER = "#e8a33d"
 DISTANCE_ROSE = "#c94f7c"
 DISTANCE_PLUM = "#5e2a6e"
@@ -85,12 +80,6 @@ FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
 }
 EXTRA_NEIGHBOURHOOD_COLOURS = ("#a8326a", "#2a9bb5", "#7a4a2a")
 
-CLUSTER_COLORS: dict[int, str] = {
-    1: CLUSTER_VIOLET,
-    2: CLUSTER_FOREST,
-    3: CLUSTER_ROSE,
-    4: CLUSTER_AMBER,
-}
 # Matplotlib's "jet", as in Géron's California housing map (translucent,
 # size-encoded circles coloured by price).
 PRICE_SCALE: list[list[float | str]] = [
