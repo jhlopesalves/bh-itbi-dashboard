@@ -70,7 +70,8 @@ def test_connected_callback_and_empty_neighbourhood_selection(app):
     selection[2] = ["UNKNOWN"]
     response = post_callback(app, "geo-map.figure", selection)
     assert response["kpi-count"]["children"] == "0"
-    assert response["kpi-nominal"]["children"] == "—"
+    assert response["kpi-latest-real"]["children"] == "—"
+    assert "· 2016 ·" in response["kpi-latest-real-unit"]["children"]
     assert "annotations" in response["distribution-figure"]["figure"]["layout"]
 
 

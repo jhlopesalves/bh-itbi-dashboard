@@ -365,6 +365,9 @@ def check_selection(page: Page, url: str) -> None:
     expect(page.get_by_role("slider", name="Ano final")).to_have_attribute(
         "aria-valuenow", "2024"
     )
+    expect(page.locator("#kpi-latest-real")).to_be_visible()
+    latest_unit = page.locator("#kpi-latest-real-unit")
+    expect(latest_unit).to_contain_text("· 2024 ·", timeout=45_000)
     expect(page).to_have_url(url + "/" + search)
     history_size = page.evaluate("history.length")
     slider.focus()
@@ -376,6 +379,7 @@ def check_selection(page: Page, url: str) -> None:
     expect(page).to_have_url(re.compile(re.escape(url) + r"/$"))
     expect(page.locator("#property-type")).to_contain_text("Apartamentos e casas")
     expect(slider).to_have_attribute("aria-valuenow", "2016")
+    expect(latest_unit).to_contain_text("· 2025 ·", timeout=45_000)
     assert page.evaluate("history.length") == history_size
 
 

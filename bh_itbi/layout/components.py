@@ -89,7 +89,9 @@ def card(
     )
 
 
-def metric(label: str, identifier: str, unit: str, note: str | None = None) -> html.Div:
+def metric(
+    label: str, identifier: str, unit: str | Component, note: str | None = None
+) -> html.Div:
     """Render one headline KPI block in the overview statistical summary."""
     return html.Div(
         [

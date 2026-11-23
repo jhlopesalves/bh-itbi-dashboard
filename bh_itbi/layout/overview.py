@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from dash import dcc, html
 
+from bh_itbi.config import END_YEAR
 from bh_itbi.layout.components import boxed_note, card, dropdown, graph, html_attributes, metric
 from bh_itbi.text import overview as text
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC
@@ -41,7 +42,11 @@ def _kpi_strip() -> html.Div:
     return html.Div(
         [
             metric(text.KPI_COUNT_LABEL, "kpi-count", text.KPI_COUNT_UNIT),
-            metric(text.KPI_NOMINAL_LABEL, "kpi-nominal", text.KPI_NOMINAL_UNIT),
+            metric(
+                text.KPI_LATEST_LABEL,
+                "kpi-latest-real",
+                html.Span(text.kpi_latest_unit(END_YEAR), id="kpi-latest-real-unit"),
+            ),
             metric(text.KPI_REAL_LABEL, "kpi-real", text.KPI_REAL_UNIT),
             html.Div(
                 [

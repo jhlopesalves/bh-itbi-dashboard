@@ -68,7 +68,8 @@ class Summary:
     """Eligible record counts, headline medians and face-geocoded coverage."""
 
     n: int
-    nominal: float
+    latest_real: float
+    latest_year: int
     real: float
     real_n: int
     geocoded: int
@@ -230,14 +231,15 @@ def map_points(frame: pd.DataFrame, scales: MapScales) -> tuple[pd.DataFrame, Ma
     )
 
 
-def summary(frame: pd.DataFrame, minimum: int = SUMMARY_MINIMUM) -> Summary:
+def summary(frame: pd.DataFrame, end_year: int, minimum: int = SUMMARY_MINIMUM) -> Summary:
     """Count all eligible records but suppress small-sample headline medians."""
     count = len(frame)
-    nominal = frame["price_per_m2_brl"].dropna()
     real = frame["price_per_m2_brl_real"].dropna()
+    latest = frame.loc[frame["year"].eq(end_year), "price_per_m2_brl_real"].dropna()
     return Summary(
         n=count,
-        nominal=float(nominal.median()) if len(nominal) >= minimum else float(np.nan),
+        latest_real=float(latest.median()) if len(latest) >= minimum else float(np.nan),
+        latest_year=end_year,
         real=float(real.median()) if len(real) >= minimum else float(np.nan),
         real_n=len(real),
         geocoded=int(frame["face_geocoded"].sum()),

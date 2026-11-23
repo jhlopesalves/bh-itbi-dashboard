@@ -100,7 +100,7 @@ def test_map_screen_and_seeded_sample_do_not_change_summary_population(source_fa
     assert points["price_per_m2_brl_real"].between(stats.lower, stats.upper).all()
     assert (stats.lower, stats.upper) == (scales["price_lower"], scales["price_upper"])
     pd.testing.assert_frame_equal(points, map_points(frame, scales)[0])
-    assert summary(frame).n == 9000
+    assert summary(frame, 2016).n == 9000
 
 
 def test_map_reference_scales_use_full_eligible_geocoded_population(snapshot_frame):
@@ -164,10 +164,27 @@ def test_months_and_ribbons_do_not_bridge_absent_or_suppressed_periods(source_fa
 def test_price_summary_does_not_drop_records_missing_real_values(source_factory):
     frame = prepare_transactions(source_factory(5))
     frame.loc[0, "price_per_m2_brl_real"] = np.nan
-    result = summary(frame)
+    result = summary(frame, 2016)
     assert result.n == 5 and result.real_n == 4
-    assert np.isfinite(result.nominal)
     assert pd.isna(result.real)
+    assert pd.isna(result.latest_real)
+
+
+def test_latest_real_median_uses_only_selected_end_year(source_factory):
+    frame = prepare_transactions(source_factory(12))
+    frame.loc[:4, "year"] = 2025
+    frame.loc[:4, "price_per_m2_brl_real"] = [1000, 2000, 3000, 4000, 5000]
+    frame.loc[5:, "price_per_m2_brl_real"] = 9000
+    result = summary(frame, 2025)
+    assert result.latest_year == 2025
+    assert result.latest_real == 3000
+    assert result.real == 9000
+
+    frame.loc[0, "price_per_m2_brl_real"] = np.nan
+    assert pd.isna(summary(frame, 2025).latest_real)
+    missing = summary(frame, 2024)
+    assert missing.latest_year == 2024
+    assert pd.isna(missing.latest_real)
 
 
 def test_tax_share_denominator_and_quarter_minimum(source_factory):

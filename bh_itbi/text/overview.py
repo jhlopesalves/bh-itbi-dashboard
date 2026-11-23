@@ -53,8 +53,7 @@ COMPARISON_AXIS_TITLE = f"R$/m², valores reais (IPCA {cfg.IPCA_BASE}) · escala
 OVERVIEW_EYEBROW = "RESUMO ESTATÍSTICO DO RECORTE"
 KPI_COUNT_LABEL = "Transações elegíveis"
 KPI_COUNT_UNIT = "registros no recorte ativo"
-KPI_NOMINAL_LABEL = "Mediana nominal por m²"
-KPI_NOMINAL_UNIT = "R$/m² · valor declarado"
+KPI_LATEST_LABEL = "Mediana real no último ano"
 KPI_REAL_LABEL = "Mediana real por m²"
 KPI_REAL_UNIT = f"R$/m² · corrigida pelo IPCA de {cfg.IPCA_BASE}"
 KPI_COVERAGE_LABEL = "Geolocalização por face"
@@ -116,6 +115,11 @@ TRAJECTORIES_SUBTITLE = (
 def kpi_coverage_value(geocoded: int, total: int) -> str:
     """Format the face-geocoded percentage KPI or a dash when empty."""
     return f"{number(100 * geocoded / total, 1)}%" if total else "—"
+
+
+def kpi_latest_unit(latest_year: int) -> str:
+    """Display the selected end year and the real-price reference period."""
+    return f"R$/m² · {latest_year} · corrigida pelo IPCA de {cfg.IPCA_BASE}"
 
 
 def kpi_coverage_note(geocoded: int, total: int) -> str:
