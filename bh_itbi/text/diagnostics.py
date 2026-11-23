@@ -49,8 +49,12 @@ TAX_SUBTITLE = (
 )
 TAX_FOOTNOTE = (
     "A divergência entre valor declarado e base tributária é descritiva; "
-    "não demonstra subdeclaração ou evasão."
+    "não demonstra subdeclaração ou evasão. "
+    "Linhas verticais: marcos normativos sobre a base de cálculo do ITBI (decisão do STJ "
+    "no Tema 1113, início dos efeitos da Lei municipal 11.530/2023 e Decreto 18.735/2024). "
+    "A coincidência temporal não estabelece efeito dessas normas sobre a série."
 )
+TAX_MILESTONE_LABELS = ("Tema 1113 (STJ)", "Lei 11.530", "Dec. 18.735")
 TAX_HOVER = (
     "%{customdata[0]}<br>Abaixo da base: %{y:.1%}" + TRANSACTIONS_HOVER + TRACE_NAME_EXTRA
 )

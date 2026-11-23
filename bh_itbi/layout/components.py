@@ -89,7 +89,9 @@ def card(
     )
 
 
-def metric(label: str, identifier: str, unit: str, note: str | None = None) -> html.Div:
+def metric(
+    label: str, identifier: str, unit: str | Component, note: str | None = None
+) -> html.Div:
     """Render one headline KPI block in the overview statistical summary."""
     return html.Div(
         [
@@ -99,4 +101,12 @@ def metric(label: str, identifier: str, unit: str, note: str | None = None) -> h
             html.P(note, className="metric-note") if note else None,
         ],
         className="metric",
+    )
+
+
+def boxed_note(eyebrow: str, body: str | list[str | Component]) -> html.Div:
+    """Render a short qualification beneath a figure and its footnote."""
+    return html.Div(
+        [html.P(eyebrow, className="eyebrow"), html.P(body)],
+        className="boxed-note",
     )

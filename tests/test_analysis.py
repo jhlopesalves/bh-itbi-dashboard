@@ -9,14 +9,15 @@ import pytest
 
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
 from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
-from bh_itbi.figures import distribution_figure, temporal_figure
-from bh_itbi.filters import Filters, filter_transactions
+from bh_itbi.figures import distribution_figure, map_figure, tax_base_figure, temporal_figure
+from bh_itbi.filters import Filters, filter_transactions, positive_area
 from bh_itbi.formatting import number
 from bh_itbi.models import model_population
 from bh_itbi.overview import (
     city_quarterly_table,
     distribution_quartiles,
     map_points,
+    map_reference_scales,
     summary,
     temporal_table,
 )
@@ -95,9 +96,51 @@ def test_map_screen_and_seeded_sample_do_not_change_summary_population(source_fa
     assert stats.candidates == 9000
     assert stats.shown == 8000
     assert len(points) == 8000
-    assert points["price_per_m2_brl"].between(stats.lower, stats.upper).all()
+    assert points["price_per_m2_brl_real"].between(stats.lower, stats.upper).all()
     pd.testing.assert_frame_equal(points, map_points(frame)[0])
-    assert summary(frame).n == 9000
+    assert summary(frame, 2016).n == 9000
+
+
+def test_map_reference_scales_use_full_eligible_geocoded_population(snapshot_frame):
+    population = filter_transactions(snapshot_frame, Filters())
+    population = population.loc[population["face_geocoded"] & positive_area(population)]
+    prices = population["price_per_m2_brl_real"]
+    scales = map_reference_scales(snapshot_frame)
+    assert scales == map_reference_scales(snapshot_frame.sample(frac=1, random_state=7))
+    assert scales == {
+        "price_lower": prices.quantile(0.02),
+        "price_upper": prices.quantile(0.98),
+        "area_reference": population["built_area_m2"].quantile(0.98),
+    }
+
+
+def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
+    scales = map_reference_scales(snapshot_frame)
+    points, _ = map_points(filter_transactions(snapshot_frame, Filters()))
+    area = points["built_area_m2"]
+    reference = scales["area_reference"]
+    assert area.gt(reference).any()
+    marker = map_figure(points, "white-bg", scales).data[0].marker
+    np.testing.assert_array_equal(marker.size, area.clip(upper=reference))
+    np.testing.assert_array_equal(marker.color, points["price_per_m2_brl_real"])
+    assert marker.sizeref == reference / 16**2
+    assert marker.sizemode == "area"
+    assert marker.sizemin == 2.5
+
+
+def test_map_retains_selection_above_the_reference_colour_range(source_factory):
+    frame = prepare_transactions(source_factory(100))
+    scales = map_reference_scales(frame)
+    price = "price_per_m2_brl_real"
+    selected = frame.assign(**{price: frame[price] + scales["price_upper"]})
+    assert selected[price].gt(scales["price_upper"]).all()
+
+    points, stats = map_points(selected)
+    assert stats.shown == stats.screened == len(points)
+    assert stats.shown / stats.candidates >= 0.95
+    marker = map_figure(points, "white-bg", scales).data[0].marker
+    assert marker.cmax == scales["price_upper"]
+    np.testing.assert_array_equal(marker.color, points[price])
 
 
 def test_quantiles_count_non_missing_values_before_suppression():
@@ -134,10 +177,49 @@ def test_months_and_ribbons_do_not_bridge_absent_or_suppressed_periods(source_fa
 def test_price_summary_does_not_drop_records_missing_real_values(source_factory):
     frame = prepare_transactions(source_factory(5))
     frame.loc[0, "price_per_m2_brl_real"] = np.nan
-    result = summary(frame)
+    result = summary(frame, 2016)
     assert result.n == 5 and result.real_n == 4
-    assert np.isfinite(result.nominal)
     assert pd.isna(result.real)
+    assert pd.isna(result.latest_real)
+
+
+def test_latest_real_median_uses_only_selected_end_year(source_factory):
+    frame = prepare_transactions(source_factory(12))
+    frame.loc[:4, "year"] = 2025
+    frame.loc[:4, "price_per_m2_brl_real"] = [1000, 2000, 3000, 4000, 5000]
+    frame.loc[5:, "price_per_m2_brl_real"] = 9000
+    result = summary(frame, 2025)
+    assert result.latest_year == 2025
+    assert result.latest_real == 3000
+    assert result.real == 9000
+
+    frame.loc[0, "price_per_m2_brl_real"] = np.nan
+    assert pd.isna(summary(frame, 2025).latest_real)
+    missing = summary(frame, 2024)
+    assert missing.latest_year == 2024
+    assert pd.isna(missing.latest_real)
+
+
+@pytest.mark.parametrize(
+    ("start_year", "end_year", "expected"),
+    [
+        (2016, 2025, ("2022-02-24", "2023-12-26", "2024-06-18")),
+        (2023, 2023, ("2023-12-26",)),
+        (2024, 2025, ("2024-06-18",)),
+        (2016, 2018, ()),
+    ],
+)
+def test_tax_figure_marks_only_milestones_in_selected_range(
+    snapshot_frame, start_year, end_year, expected
+):
+    filters = Filters(start_year=start_year, end_year=end_year)
+    table = tax_base_table(filter_transactions(snapshot_frame, filters))
+    figure = tax_base_figure(table, filters)
+    axis = figure.layout.xaxis
+    assert axis.range == (f"{start_year}-01-01", f"{end_year}-12-31")
+    assert tuple(line.x0 for line in figure.layout.shapes) == expected
+    assert tuple(line.x1 for line in figure.layout.shapes) == expected
+    assert tuple(label.x for label in figure.layout.annotations) == expected
 
 
 def test_tax_share_denominator_and_quarter_minimum(source_factory):

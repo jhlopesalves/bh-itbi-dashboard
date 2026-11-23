@@ -28,7 +28,7 @@ CITY_TRAJECTORY_HOVER = (
 )
 MAP_HOVER = (
     "<b>%{customdata[1]}</b><br>%{customdata[2]}"
-    "<br>Valor declarado: R$ %{marker.color:,.0f}/m²"
+    "<br>Valor declarado real: R$ %{marker.color:,.0f}/m²"
     "<br>Área construída: %{customdata[3]} m²"
     "<br>%{customdata[4]}<extra></extra>"
 )
@@ -40,11 +40,11 @@ DISTRIBUTION_LABELS: dict[str, str] = {
 TEMPORAL_EMPTY_MESSAGE = (
     f"São necessárias {cfg.TEMPORAL_MINIMUM} transações por mês e tipo.<br>Amplie o recorte."
 )
-MAP_EMPTY_MESSAGE = "Sem registros com localização de face e área válida neste recorte."
+MAP_EMPTY_MESSAGE = "Sem registros neste recorte que atendam aos critérios do mapa."
 DISTRIBUTION_EMPTY_MESSAGE = (
     f"São necessários ao menos {cfg.DISTRIBUTION_MINIMUM} valores válidos."
 )
-MAP_COLORBAR_TITLE = "R$/m²<br>nominal"
+MAP_COLORBAR_TITLE = "R$/m²<br>real"
 LOG_CURRENCY_AXIS_TITLE = "R$ · escala logarítmica"
 DISTRIBUTION_HOVER = (
     "%{customdata[0]} a %{customdata[1]}<br>Transações: %{y:,.0f}" + TRACE_NAME_EXTRA
@@ -53,15 +53,15 @@ COMPARISON_AXIS_TITLE = f"R$/m², valores reais (IPCA {cfg.IPCA_BASE}) · escala
 OVERVIEW_EYEBROW = "RESUMO ESTATÍSTICO DO RECORTE"
 KPI_COUNT_LABEL = "Transações elegíveis"
 KPI_COUNT_UNIT = "registros no recorte ativo"
-KPI_NOMINAL_LABEL = "Mediana nominal por m²"
-KPI_NOMINAL_UNIT = "R$/m² · valor declarado"
+KPI_LATEST_LABEL = "Mediana real no último ano"
 KPI_REAL_LABEL = "Mediana real por m²"
 KPI_REAL_UNIT = f"R$/m² · corrigida pelo IPCA de {cfg.IPCA_BASE}"
 KPI_COVERAGE_LABEL = "Geolocalização por face"
 KPI_COVERAGE_UNIT = "dos registros com centroide de face de quadra"
 MAP_TITLE = "Distribuição espacial do valor declarado"
 MAP_SUBTITLE = (
-    "Cor: valor declarado nominal por m². Área do marcador: área construída. "
+    "Cor: valor declarado real por m² (IPCA), em escala fixa para todo o período. "
+    "Área do marcador: área construída, em escala fixa. "
     "Um clique filtra pelo bairro informado no registro."
 )
 MAP_STYLE_LABEL = "Fundo do mapa"
@@ -117,6 +117,11 @@ def kpi_coverage_value(geocoded: int, total: int) -> str:
     return f"{number(100 * geocoded / total, 1)}%" if total else "—"
 
 
+def kpi_latest_unit(latest_year: int) -> str:
+    """Display the selected end year and the real-price reference period."""
+    return f"R$/m² · {latest_year} · corrigida pelo IPCA de {cfg.IPCA_BASE}"
+
+
 def kpi_coverage_note(geocoded: int, total: int) -> str:
     """Format the geocoded record count subtitle."""
     return f"{number(geocoded)} de {number(total)} registros"
@@ -126,9 +131,12 @@ def map_caption(shown: int, screened: int) -> str:
     """Describe the trimmed and sampled point count drawn on the map."""
     return (
         f"{number(shown)} pontos de {number(screened)} "
-        f"registros entre P{cfg.MAP_LOWER_PERCENTILE} e P{cfg.MAP_UPPER_PERCENTILE}, "
-        "após exigir localização de face "
-        f"e área positiva. Amostra de até {number(cfg.MAP_SAMPLE_SIZE)} pontos; "
+        f"registros entre P{cfg.MAP_LOWER_PERCENTILE} e P{cfg.MAP_UPPER_PERCENTILE} "
+        "do valor real por m² do recorte, após exigir localização de face e área positiva. "
+        f"As cores usam uma escala fixa para {cfg.START_YEAR}–{cfg.END_YEAR} "
+        f"(P{cfg.MAP_LOWER_PERCENTILE}–P{cfg.MAP_UPPER_PERCENTILE} do período completo); "
+        "valores fora dela recebem a cor do extremo. "
+        f"Amostra de até {number(cfg.MAP_SAMPLE_SIZE)} pontos; "
         "os indicadores usam todo o recorte elegível."
     )
 

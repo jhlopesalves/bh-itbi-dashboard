@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from math import ceil, floor
 from typing import TypedDict
 
 import plotly.graph_objects as go
 
-from bh_itbi.config import DEFAULT_NEIGHBOURHOODS, DISTANCE_PERIODS
+from bh_itbi.config import (
+    DEFAULT_NEIGHBOURHOODS,
+    DISTANCE_PAD_FRACTION,
+    DISTANCE_PERIODS,
+    DISTANCE_PRICE_STEP,
+)
 
 # Surface and ink tokens mirrored in assets/dashboard.css :root.
 PAPER = "#fafaf8"
@@ -34,13 +40,6 @@ TRANSPARENT = "rgba(0,0,0,0)"
 DISTANCE_AMBER = "#e8a33d"
 DISTANCE_ROSE = "#c94f7c"
 DISTANCE_PLUM = "#5e2a6e"
-
-PRICE_NAVY = "#00007f"
-PRICE_BLUE = "#0000ff"
-PRICE_CYAN = "#00ffff"
-PRICE_YELLOW = "#ffff00"
-PRICE_RED = "#ff0000"
-PRICE_MAROON = "#7f0000"
 
 FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
 
@@ -73,23 +72,13 @@ TYPE_STYLES: dict[str, PropertyStyle] = {
 
 FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
     "SAVASSI": "#4f8f4a",
-    "LOURDES": CLAY,
-    "BURITIS": BLUE,
-    "CASTELO": GOLD,
+    "LOURDES": "#a8326a",
+    "BURITIS": "#2a9bb5",
+    "CASTELO": "#7a4a2a",
     "CENTRO": PLUM,
 }
-EXTRA_NEIGHBOURHOOD_COLOURS = ("#a8326a", "#2a9bb5", "#7a4a2a")
+EXTRA_NEIGHBOURHOOD_COLOURS = ("#5b3db8", "#7e2935", "#6b761d")
 
-# Matplotlib's "jet", as in Géron's California housing map (translucent,
-# size-encoded circles coloured by price).
-PRICE_SCALE: list[list[float | str]] = [
-    [0.0, PRICE_NAVY],
-    [0.125, PRICE_BLUE],
-    [0.375, PRICE_CYAN],
-    [0.625, PRICE_YELLOW],
-    [0.875, PRICE_RED],
-    [1.0, PRICE_MAROON],
-]
 # In draw order, from the earliest period at the back to the latest in front.
 DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
     zip(
@@ -154,6 +143,17 @@ AGE_FILLS: dict[str, str] = {
         "quarter": SLATE,
     }.items()
 }
+
+
+def padded_price_range(low: float, high: float) -> tuple[float, float]:
+    """Pad a price axis and round its bounds outwards to the reference step."""
+    pad = DISTANCE_PAD_FRACTION * (high - low)
+    step = DISTANCE_PRICE_STEP
+    lower = float(step * floor((low - pad) / step))
+    upper = float(step * ceil((high + pad) / step))
+    if lower == upper:
+        return lower - step, upper + step
+    return lower, upper
 
 
 def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:

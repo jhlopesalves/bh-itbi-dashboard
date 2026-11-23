@@ -13,6 +13,9 @@ import pandas as pd
 
 from bh_itbi.cluster import ClusterMetadata, cluster_trajectories
 from bh_itbi.config import (
+    AUDIT_EVIDENCE_DIR,
+    AUDIT_PROTOCOL_ID,
+    AUDIT_PROTOCOL_SHA256,
     CLUSTER_K,
     CLUSTER_K_RANGE,
     END_YEAR,
@@ -28,8 +31,10 @@ from bh_itbi.config import (
     REVISION,
     SOURCE_SHA256,
     START_YEAR,
+    AuditEndpoint,
 )
 from bh_itbi.data import (
+    DataError,
     atomic_json,
     atomic_parquet,
     file_sha256,
@@ -45,12 +50,14 @@ __all__ = [
     "COMPOSITION_TERMS",
     "FORMULA",
     "QUARTER_TERM",
+    "AuditEndpoint",
     "HedonicMetadata",
     "ModelMetadata",
     "PreparedModels",
     "fit_hedonic",
     "hedonic_complete_cases",
     "hedonic_composition",
+    "load_audit_endpoint",
     "load_models",
     "model_population",
     "prepare_models",
@@ -314,3 +321,49 @@ def load_models(directory: Path | None = None) -> PreparedModels | None:
         members=pd.read_parquet(files["members"], use_threads=False),
         centres=pd.read_parquet(files["centres"], use_threads=False),
     )
+
+
+def load_audit_endpoint(directory: Path = AUDIT_EVIDENCE_DIR) -> AuditEndpoint | None:
+    """Read the endpoint from committed evidence and reject incompatible provenance."""
+    manifest_path = directory / "manifest.json"
+    specifications_path = directory / "specifications.csv"
+    if not manifest_path.exists() or not specifications_path.exists():
+        return None
+
+    remedy = "Regenerate the audit evidence."
+    identity = {
+        "revision": REVISION,
+        "protocol_id": AUDIT_PROTOCOL_ID,
+        "protocol_sha256": AUDIT_PROTOCOL_SHA256,
+    }
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise DataError(f"Cannot read audit manifest in {directory}. {remedy}") from exc
+    for key, expected in identity.items():
+        if not isinstance(manifest, dict) or manifest.get(key) != expected:
+            raise DataError(f"Incompatible audit manifest ({key} mismatch). {remedy}")
+
+    index_column = f"index_{END_YEAR}Q4"
+    quarter = index_column.removeprefix("index_")
+    try:
+        rows = pd.read_csv(specifications_path, index_col="spec_id")
+        published, robust = rows.loc[["baseline", "huber_year"], index_column].to_numpy(
+            dtype=float
+        )
+        lower, upper = (
+            rows.loc[["huber_year"], [f"lower_{quarter}", f"upper_{quarter}"]]
+            .to_numpy(dtype=float)
+            .ravel()
+        )
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise DataError(f"Cannot read the {quarter} audit endpoint. {remedy}") from exc
+    if not np.isfinite([published, robust, lower, upper]).all():
+        raise DataError(f"The {quarter} audit endpoint has missing or invalid values. {remedy}")
+    return {
+        "quarter": quarter,
+        "published": float(published),
+        "robust": float(robust),
+        "robust_lower": float(lower),
+        "robust_upper": float(upper),
+    }

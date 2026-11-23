@@ -67,22 +67,22 @@ def test_single_named_colour_tokens_and_rgb_mixing() -> None:
 def test_reference_neighbourhoods_keep_their_colours() -> None:
     expected = {
         "SAVASSI": "#4f8f4a",
-        "LOURDES": "#c0603a",
-        "BURITIS": "#3e6daa",
-        "CASTELO": "#a88620",
+        "LOURDES": "#a8326a",
+        "BURITIS": "#2a9bb5",
+        "CASTELO": "#7a4a2a",
         "CENTRO": "#8f579f",
     }
     assert theme.neighbourhood_colours([]) == expected
     for name, colour in expected.items():
         assert theme.neighbourhood_colours([name]) == {name: colour}
     assert theme.neighbourhood_colours(["SION", *reversed(expected)]) == expected | {
-        "SION": "#a8326a"
+        "SION": "#5b3db8"
     }
 
 
 def test_extra_neighbourhood_colours_follow_distinct_names_in_alphabetical_order() -> None:
     colours = theme.neighbourhood_colours(["SION", "UNKNOWN", "SION", "ANCHIETA"])
-    assert colours == {"ANCHIETA": "#a8326a", "SION": "#2a9bb5", "UNKNOWN": "#7a4a2a"}
+    assert colours == {"ANCHIETA": "#5b3db8", "SION": "#7e2935", "UNKNOWN": "#6b761d"}
     assert not set(colours.values()) & {theme.TEAL, *theme.neighbourhood_colours([]).values()}
 
 

@@ -1,6 +1,7 @@
 """Analytical constants, thresholds, temporal windows and pinned data provenance."""
 
 from pathlib import Path
+from typing import TypedDict
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE_URL = "https://bh-itbi-dashboard.onrender.com"
@@ -21,6 +22,9 @@ MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
 
 AUDIT_VERSION = "v1"
 AUDIT_DIR = CACHE_DIR / f"audit-{AUDIT_VERSION}"
+AUDIT_EVIDENCE_DIR = ROOT / "docs" / "robustness"
+AUDIT_PROTOCOL_ID = "hedonic-sensitivity-v1"
+AUDIT_PROTOCOL_SHA256 = "f053d9ea55d47b3e16b95734ab8114c1fece0c706865f7d1460f352aaf1a9724"
 AUDIT_SEED = 20261122
 AUDIT_CLUSTER_DRAWS = 200
 AUDIT_MEDIAN_DRAWS = 1_000
@@ -68,6 +72,13 @@ RIDGE_MINIMUM = 50
 DISTANCE_MINIMUM = 50
 TAX_BASE_MINIMUM = 100
 HEDONIC_NEIGHBOURHOOD_MINIMUM = 100
+
+TAX_MILESTONE_DATES = (
+    "2022-02-24",  # STJ judgement in REsp 1.937.821/SP (Tema 1113).
+    # Law 11.530, Art. 4: DOM publication on 29 June plus 180 days, excluding publication day.
+    "2023-12-26",
+    "2024-06-18",  # DOM publication of Decree 18.735, amending the ITBI regulation.
+)
 
 COMPARISON_RIDGE_LIMIT = 8
 MAP_SAMPLE_SIZE = 8000
@@ -119,3 +130,13 @@ CLUSTER_K_RANGE = tuple(range(2, 7))
 CLUSTER_N_INIT = 20
 CLUSTER_RANDOM_STATE = 42
 INDEX_BASE = 100
+
+
+class AuditEndpoint(TypedDict):
+    """Published and robust index values shared by evidence loading and Portuguese copy."""
+
+    quarter: str
+    published: float
+    robust: float
+    robust_lower: float
+    robust_upper: float

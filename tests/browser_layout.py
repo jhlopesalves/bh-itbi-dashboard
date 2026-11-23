@@ -6,6 +6,7 @@ Pass --chromium for a system Chrome or Chromium executable.
 
 import argparse
 import re
+from itertools import combinations, pairwise
 from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import Browser, Page, expect, sync_playwright
@@ -54,6 +55,11 @@ def assert_no_plot_annotations(page: Page, *identifiers: str) -> None:
         list(identifiers),
     )
     assert all(count == 0 for count in counts.values()), counts
+    assert_plot_legend_layout(page, *identifiers)
+
+
+def assert_plot_legend_layout(page: Page, *identifiers: str) -> None:
+    """Check that legends fit inside their cards and outside the plotting area."""
     violations = page.evaluate(
         """(ids) => ids.flatMap(id => {
             const host = document.getElementById(id);
@@ -105,6 +111,19 @@ def click_legend_item(page: Page, identifier: str, label: str, *, double: bool =
         item.click()
     # Wait past Plotly's 300ms doubleClickDelay so single clicks fire and do not merge.
     page.wait_for_timeout(450)
+
+
+def check_map_colourbar(page: Page) -> None:
+    """Check the endpoint labels, round ticks and their rendered spacing."""
+    labels = page.locator("#geo-map .cbaxis text")
+    expect(labels).to_have_text(
+        ["≤ 850", *(f"{i}.000" for i in range(1, 10)), "≥ 9.325"], timeout=45_000
+    )
+    boxes = labels.evaluate_all("""nodes => nodes.map(node => {
+        const box = node.getBoundingClientRect();
+        return {top: box.top, bottom: box.bottom};
+    })""")
+    assert all(upper["bottom"] <= lower["top"] for lower, upper in pairwise(boxes)), boxes
 
 
 def check_overview_legends(page: Page, url: str) -> None:
@@ -205,6 +224,17 @@ def check_overview_legends(page: Page, url: str) -> None:
     expect(page).to_have_url(re.compile(re.escape(url) + r"/$"))
 
 
+def check_sensitivity_note(page: Page) -> None:
+    """Verify the committed endpoint and audit link below the hedonic chart."""
+    note = page.locator(".chart-card:has(#hedonic-figure) .boxed-note")
+    expect(note.get_by_text("SENSIBILIDADE", exact=True)).to_be_visible()
+    expect(note).to_contain_text("4º tri. 2025 é 105,4 (IC 95%: 102,6 a 108,4), contra 110,0")
+    expect(note.get_by_role("link", name="Consultar a auditoria")).to_have_attribute(
+        "href",
+        "https://github.com/jhlopesalves/bh-itbi-dashboard/blob/main/docs/robustness/report.md",
+    )
+
+
 def check_models_legends(page: Page) -> None:
     """Verify trajectory and hedonic composition legend interactions."""
     page.locator("#tab-models").click()
@@ -219,7 +249,11 @@ def check_models_legends(page: Page) -> None:
     assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
     legend = page.locator("#trajectories-figure .legend .traces")
     expect(legend).to_have_count(2)
-    expect(page.get_by_role("link", name="Consultar a auditoria")).to_be_visible()
+    expect(
+        page.locator(".chart-card:has(#trajectories-figure)").get_by_role(
+            "link", name="Consultar a auditoria"
+        )
+    ).to_be_visible()
 
     for label in ("Bairros", "Mediana entre os bairros"):
         for hidden in (True, False):
@@ -268,13 +302,40 @@ def check_models_legends(page: Page) -> None:
     check_diagnostics_legends(page)
 
 
+def check_tax_milestone_labels(page: Page) -> None:
+    """Measure the rendered labels and check the selected end-year tick bound."""
+    wait_for_plot(page, "tax-figure", min_traces=2)
+    labels = page.locator("#tax-figure .annotation-text")
+    expect(labels).to_have_text(["Tema 1113 (STJ)", "Lei 11.530", "Dec. 18.735"])
+    box = page.locator("#tax-figure").bounding_box()
+    assert box is not None
+    bounds = []
+    for label in labels.all():
+        rect = label.bounding_box()
+        assert rect is not None
+        assert box["x"] <= rect["x"] and rect["x"] + rect["width"] <= box["x"] + box["width"]
+        bounds.append(rect)
+    for first, second in combinations(bounds, 2):
+        horizontal = (
+            first["x"] < second["x"] + second["width"]
+            and second["x"] < first["x"] + first["width"]
+        )
+        vertical = (
+            first["y"] < second["y"] + second["height"]
+            and second["y"] < first["y"] + first["height"]
+        )
+        assert not (horizontal and vertical), (first, second)
+    assert "2026" not in page.locator("#tax-figure .xtick").all_text_contents()
+
+
 def check_diagnostics_legends(page: Page) -> None:
     """Verify tax-base, round-number histogram and distance-axis rescaling."""
     page.locator("#tab-diagnostics").click()
     wait_for_plot(page, "tax-figure", min_traces=2)
     wait_for_plot(page, "heaping-figure", min_traces=2)
     wait_for_plot(page, "distance-figure", min_traces=3)
-    assert_no_plot_annotations(page, "tax-figure", "heaping-figure", "distance-figure")
+    assert_no_plot_annotations(page, "heaping-figure", "distance-figure")
+    assert_plot_legend_layout(page, "tax-figure")
 
     click_legend_item(page, "tax-figure", "Apartamentos")
     page.wait_for_function(
@@ -350,6 +411,9 @@ def check_selection(page: Page, url: str) -> None:
     expect(page.get_by_role("slider", name="Ano final")).to_have_attribute(
         "aria-valuenow", "2024"
     )
+    expect(page.locator("#kpi-latest-real")).to_be_visible()
+    latest_unit = page.locator("#kpi-latest-real-unit")
+    expect(latest_unit).to_contain_text("· 2024 ·", timeout=45_000)
     expect(page).to_have_url(url + "/" + search)
     history_size = page.evaluate("history.length")
     slider.focus()
@@ -361,7 +425,89 @@ def check_selection(page: Page, url: str) -> None:
     expect(page).to_have_url(re.compile(re.escape(url) + r"/$"))
     expect(page.locator("#property-type")).to_contain_text("Apartamentos e casas")
     expect(slider).to_have_attribute("aria-valuenow", "2016")
+    expect(latest_unit).to_contain_text("· 2025 ·", timeout=45_000)
     assert page.evaluate("history.length") == history_size
+
+
+def check_models_viewport(page: Page, width: int) -> None:
+    """Activate the models tab and verify its first paint and resize."""
+    overview = page.locator("#tab-overview")
+    models = page.locator("#tab-models")
+    # Both models render while their tab is inactive. Wait for this so
+    # the check includes the first paint of an already-initialised chart.
+    page.wait_for_function(
+        """() => [...document.querySelectorAll('#models-panel .js-plotly-plot')]
+            .filter(plot => plot._fullData?.length > 1).length === 2""",
+        timeout=45_000,
+    )
+    if width < 600:
+        models.tap()
+    else:
+        overview.focus()
+        overview.press("End")
+        expect(models).to_be_focused()
+    expect(models).to_have_attribute("aria-selected", "true")
+    check_sensitivity_note(page)
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+    wait_for_plot(page, "trajectories-figure", min_traces=2)
+    page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+    wait_for_plot(page, "trajectories-figure", min_traces=2)
+    assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
+    page.set_viewport_size({"width": width, "height": 900})
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+
+
+def check_masthead(page: Page) -> None:
+    """Verify the measurement note and source facts at the active width."""
+    note = page.locator(".masthead-title .subtitle + .measurement-note")
+    expect(note).to_be_visible()
+    expect(note).to_have_text(
+        "Valores declarados em registros de ITBI; não representam necessariamente "
+        "preços de venda verificados."
+    )
+    assert note.evaluate(
+        """element => {
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const title = element.parentElement.getBoundingClientRect();
+            return [...range.getClientRects()].every(
+                line => line.left >= title.left && line.right <= title.right + 1
+            );
+        }"""
+    ), "Measurement note overflows the masthead title"
+    facts = page.locator(".masthead-facts")
+    expect(facts.locator("dt")).to_have_text(
+        [
+            "Período",
+            "Registros na fonte (todos os anos)",
+            "Elegíveis no período",
+            "Valores reais",
+        ]
+    )
+    expect(facts.locator("dd")).to_have_text(
+        ["2016–2025", "516.725", "205.436", "IPCA, setembro de 2026"]
+    )
+    for fact in facts.locator("dt, dd").all():
+        expect(fact).to_be_visible()
+
+
+def check_diagnostics_viewport(page: Page, width: int) -> None:
+    """Activate diagnostics via the tablist and verify chart layout."""
+    diagnostics = page.locator("#tab-diagnostics")
+    models = page.locator("#tab-models")
+    models.focus()
+    models.press("ArrowLeft")
+    expect(diagnostics).to_be_focused()
+    expect(diagnostics).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#age-plot svg")).to_be_visible(timeout=45_000)
+    wait_for_plot(page, "distance-figure")
+    wait_for_plot(page, "tax-figure", min_traces=2)
+    assert_no_plot_annotations(page, "heaping-figure", "distance-figure")
+    assert_plot_legend_layout(page, "tax-figure")
+    if width in (320, 1440):
+        check_tax_milestone_labels(page)
+    diagnostics.press("Home")
 
 
 def check_viewport(browser: Browser, url: str, width: int) -> None:
@@ -375,45 +521,16 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(url, wait_until="domcontentloaded")
         overview = page.locator("#tab-overview")
-        diagnostics = page.locator("#tab-diagnostics")
-        models = page.locator("#tab-models")
         expect(overview).to_have_attribute("aria-selected", "true")
         expect(page.get_by_role("tab")).to_have_count(3)
+        check_masthead(page)
         wait_for_plot(page, "distribution-figure", min_traces=2)
-        # Both models render while their tab is inactive. Wait for this so
-        # the check includes the first paint of an already-initialised chart.
-        page.wait_for_function(
-            """() => [...document.querySelectorAll('#models-panel .js-plotly-plot')]
-                .filter(plot => plot._fullData?.length > 1).length === 2""",
-            timeout=45_000,
-        )
-        if mobile:
-            models.tap()
-        else:
-            overview.focus()
-            overview.press("End")
-            expect(models).to_be_focused()
-        expect(models).to_have_attribute("aria-selected", "true")
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "trajectories-figure", min_traces=2)
-        page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "trajectories-figure", min_traces=2)
-        assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
-        page.set_viewport_size(viewport)
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
-
-        models.focus()
-        models.press("ArrowLeft")
-        expect(diagnostics).to_be_focused()
-        expect(diagnostics).to_have_attribute("aria-selected", "true")
-        expect(page.locator("#age-plot svg")).to_be_visible(timeout=45_000)
-        wait_for_plot(page, "distance-figure")
-        assert_no_plot_annotations(page, "tax-figure", "heaping-figure", "distance-figure")
-        diagnostics.press("Home")
+        check_models_viewport(page, width)
+        check_diagnostics_viewport(page, width)
         expect(overview).to_be_focused()
         expect(overview).to_have_attribute("aria-selected", "true")
         wait_for_plot(page, "geo-map")
+        check_map_colourbar(page)
         assert_no_plot_annotations(
             page, "distribution-figure", "trend-figure", "neighbourhood-figure"
         )

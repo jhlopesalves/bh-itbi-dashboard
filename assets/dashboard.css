@@ -172,11 +172,13 @@ label { display: block; font-size: 10px; font-weight: 600; letter-spacing: .09em
 .spatial-grid > .chart-card, .analysis-grid > .chart-card, .diagnostics-grid > .chart-card { margin-bottom: 0; }
 .card-heading { display: flex; justify-content: space-between; gap: 16px; align-items: start; margin-bottom: 12px; }
 h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; letter-spacing: -.01em; color: var(--ink-2); }
-.chart-subtitle { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 76ch; line-height: 1.55; }
+.chart-subtitle, .measurement-note { font-size: 12px; color: var(--muted); margin-top: 6px; max-width: 76ch; line-height: 1.55; }
 .card-footnote { color: var(--muted); font-size: 11px; line-height: 1.65; padding-top: 10px; margin-top: 11px; border-top: 1px solid var(--rule-faint); overflow-wrap: anywhere; }
 /* Keep the previous drawing inside its frame while a responsive resize settles. */
 .plot { width: 100%; min-width: 0; overflow: clip; }
 .js-plotly-plot, .plot-container, .svg-container { max-width: 100%; }
+/* Offset the lower endpoint label from the nearby first round tick. */
+#geo-map .cbaxis > g:first-child:not(:only-child) > text { translate: 0 8px; }
 .map-card .card-heading { min-height: 64px; }
 .map-style-field { min-width: 118px; max-width: 136px; flex-shrink: 0; }
 .distribution-control { margin: 14px 0 4px; }
@@ -186,9 +188,9 @@ h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 
 .distribution-summary span { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .distribution-summary strong { font-family: var(--serif); font-size: clamp(17px, 1.6vw, 21px); font-weight: 400; color: var(--ink); white-space: nowrap; letter-spacing: -.015em; margin-top: 3px; font-variant-numeric: lining-nums tabular-nums; }
 .distribution-summary > p { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
-.geography-note { background: var(--paper-2); padding: 16px 18px; margin-top: 20px; border-left: 2px solid var(--teal); }
-.geography-note .eyebrow { margin-bottom: 7px; color: var(--ink-2); }
-.geography-note p:last-child { font-size: 12px; line-height: 1.65; color: var(--muted); }
+.boxed-note { background: var(--paper-2); padding: 16px 18px; margin-top: 20px; border-left: 2px solid var(--teal); }
+.boxed-note .eyebrow { margin-bottom: 7px; color: var(--ink-2); }
+.boxed-note p:last-child { font-size: 12px; line-height: 1.65; color: var(--muted); }
 .comparison-scroll-active { max-height: 475px; overflow-y: auto; }
 #comparison-plot { position: relative; }
 #comparison-note:empty { display: none; }
@@ -278,12 +280,12 @@ h3 { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px;
 @media (max-width: 900px) {
   .spatial-grid, .analysis-grid { grid-template-columns: 1fr; }
   .map-card .card-heading { min-height: auto; flex-wrap: nowrap; }
-  .distribution-card .geography-note { margin-top: 16px; }
+  .distribution-card .boxed-note { margin-top: 16px; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 0; }
   .metric:nth-child(3) { padding-left: 0; border: none; }
   .masthead-main { grid-template-columns: 1fr; gap: 18px; }
   .masthead-meta { border-left: none; border-top: 1px solid var(--rule-faint); padding: 12px 0 0; min-width: 0; }
-  .masthead-facts { grid-template-columns: repeat(3, auto); grid-auto-flow: column; grid-template-rows: auto auto; justify-content: start; gap: 0 28px; }
+  .masthead-facts { grid-template-columns: repeat(4, auto); grid-auto-flow: column; grid-template-rows: auto auto; justify-content: start; gap: 0 28px; }
   .masthead-facts dd { text-align: left; }
   .methodology-grid { grid-template-columns: 1fr; gap: 12px; }
   .diagnostics-grid { grid-template-columns: 1fr; }

@@ -8,7 +8,7 @@ from bh_itbi.formatting import number
 from bh_itbi.text import shared as text
 
 
-def masthead(raw_rows: int) -> html.Header:
+def masthead(source_rows: int, eligible_rows: int) -> html.Header:
     """Render the top editorial masthead and provenance definition list."""
     return html.Header(
         [
@@ -29,6 +29,7 @@ def masthead(raw_rows: int) -> html.Header:
                         [
                             html.H1(text.APP_TITLE),
                             html.P(text.APP_SUBTITLE, className="subtitle"),
+                            html.P(text.MEASUREMENT_NOTE, className="measurement-note"),
                         ],
                         className="masthead-title",
                     ),
@@ -39,8 +40,10 @@ def masthead(raw_rows: int) -> html.Header:
                                 [
                                     html.Dt(text.PERIOD_LABEL),
                                     html.Dd(text.MASTHEAD_PERIOD_DD),
-                                    html.Dt(text.MASTHEAD_ROWS_DT),
-                                    html.Dd(number(raw_rows)),
+                                    html.Dt(text.MASTHEAD_SOURCE_ROWS_DT),
+                                    html.Dd(number(source_rows)),
+                                    html.Dt(text.MASTHEAD_ELIGIBLE_ROWS_DT),
+                                    html.Dd(number(eligible_rows)),
                                     html.Dt(text.MASTHEAD_REAL_DT),
                                     html.Dd(text.MASTHEAD_REAL_DD),
                                 ],

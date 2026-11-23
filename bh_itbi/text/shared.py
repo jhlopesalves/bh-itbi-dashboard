@@ -45,6 +45,10 @@ TAB_LABELS: tuple[tuple[str, str], ...] = (
 APP_TITLE = "Painel do Mercado Residencial de Belo Horizonte"
 APP_UPDATE_TITLE = "Atualizando…"
 APP_SUBTITLE = "Panorama analítico do mercado residencial a partir dos registros do ITBI."
+MEASUREMENT_NOTE = (
+    "Valores declarados em registros de ITBI; não representam necessariamente "
+    "preços de venda verificados."
+)
 APP_META_DESCRIPTION = (
     "Panorama analítico do mercado residencial de Belo Horizonte a partir dos registros "
     "do ITBI: distribuição espacial, séries temporais, diagnósticos e índices."
@@ -61,7 +65,8 @@ MASTHEAD_EYEBROW = "BELO HORIZONTE / MG"
 MASTHEAD_ABOUT_LINK = "Sobre os dados"
 MASTHEAD_META_LABEL = "Base analítica dos registros"
 MASTHEAD_PERIOD_DD = f"{cfg.START_YEAR}–{cfg.END_YEAR}"
-MASTHEAD_ROWS_DT = "Registros na fonte"
+MASTHEAD_SOURCE_ROWS_DT = "Registros na fonte (todos os anos)"
+MASTHEAD_ELIGIBLE_ROWS_DT = "Elegíveis no período"
 MASTHEAD_REAL_DT = "Valores reais"
 MASTHEAD_REAL_DD = f"IPCA, {cfg.IPCA_BASE}"
 PROPERTY_TYPE_LABEL = "Tipo de imóvel"

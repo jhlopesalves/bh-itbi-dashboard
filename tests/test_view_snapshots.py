@@ -32,17 +32,17 @@ from snapshot_io import snapshot_digest, snapshot_json
 from test_app import post_callback
 
 from bh_itbi.app import create_app
+from bh_itbi.filters import Filters, filter_transactions, positive_area
+from bh_itbi.overview import map_points
 from bh_itbi.text.shared import CITY_NAME, TYPE_LABELS
 from bh_itbi.theme import (
     AXIS,
-    CLAY,
     GRID,
     INK,
     MUTED,
     REFERENCE,
     SLATE,
     SURFACE,
-    TEAL,
     TRANSPARENT,
     TYPE_STYLES,
     composition_tint,
@@ -374,7 +374,17 @@ def snapshot_failures(
 
 @pytest.fixture(scope="session")
 def snapshot_app(snapshot_frame: pd.DataFrame, snapshot_models: Any) -> Dash:
-    return create_app(frame=snapshot_frame, models=snapshot_models)
+    return create_app(
+        frame=snapshot_frame,
+        models=snapshot_models,
+        audit_endpoint={
+            "quarter": "2025Q4",
+            "published": 110.04,
+            "robust": 105.44,
+            "robust_lower": 102.57,
+            "robust_upper": 108.38,
+        },
+    )
 
 
 def test_synthetic_dataset_covers_all_required_populations(
@@ -442,6 +452,57 @@ def test_every_plotly_trace_has_an_explicit_colour(view_snapshots: dict[str, Any
             assert figure["layout"]["colorway"] == [INK], output
             for trace in figure["data"]:
                 _assert_trace_colour(trace, output)
+
+
+def test_map_keeps_fixed_scales_with_selection_relative_limits(
+    view_snapshots: dict[str, Any], snapshot_frame: pd.DataFrame
+) -> None:
+    def marker(case: str) -> dict[str, Any]:
+        return view_snapshots[f"overview__{case}"]["overview"]["geo-map"]["figure"]["data"][0][
+            "marker"
+        ]
+
+    default = marker("defaults")
+    selected = marker("apartment_2023_2025")
+    for attribute in ("cmin", "cmax", "sizeref", "colorscale"):
+        assert default[attribute] == selected[attribute]
+    assert default["colorbar"]["title"]["text"] == "R$/m²<br>real"
+    assert default["color"] != selected["color"]
+
+    limits = []
+    price = "price_per_m2_brl_real"
+    for case in ("defaults", "apartment_2023_2025"):
+        kind, years, names, _, _ = VIEW_MATRIX[case]
+        frame = filter_transactions(snapshot_frame, Filters.from_controls(kind, years, names))
+        candidates = frame.loc[frame["face_geocoded"] & positive_area(frame), price]
+        points, stats = map_points(frame)
+        assert stats.lower == candidates.quantile(0.02)
+        assert stats.upper == candidates.quantile(0.98)
+        assert points[price].between(stats.lower, stats.upper).all()
+        limits.append((stats.lower, stats.upper))
+    assert limits[0][0] != limits[1][0]
+    assert limits[0][1] != limits[1][1]
+
+
+def test_map_colourbar_labels_include_both_open_ends(view_snapshots: dict[str, Any]) -> None:
+    figure = view_snapshots["overview__defaults"]["overview"]["geo-map"]["figure"]
+    marker = figure["data"][0]["marker"]
+    ticks = marker["colorbar"]["tickvals"]
+    labels = marker["colorbar"]["ticktext"]
+    assert ticks[0] == marker["cmin"]
+    assert ticks[-1] == marker["cmax"]
+    assert labels[0].startswith("≤ ")
+    assert labels[-1].startswith("≥ ")
+
+
+def test_price_time_axes_follow_the_plotted_values(view_snapshots: dict[str, Any]) -> None:
+    outputs = view_snapshots["overview__defaults"]["overview"]
+    for chart in ("trend-figure", "neighbourhood-figure"):
+        axis = outputs[chart]["figure"]["layout"]["yaxis"]
+        assert "rangemode" not in axis
+        lower, upper = axis["range"]
+        assert 0 < lower < upper
+        assert lower % 500 == upper % 500 == 0
 
 
 @pytest.mark.parametrize("case", VIEW_MATRIX)
@@ -618,13 +679,7 @@ def test_panorama_colours_keep_their_assigned_roles(
             assert property_colours.get(colour) == meaning[1]
         else:
             assert meaning[0] == "neighbourhood"
-        if colour == TEAL:
-            assert meaning == ("property type", "Apartamentos")
-        # The restored property palette shares clay with Lourdes.
-        if colour == CLAY:
-            assert meaning in {("property type", "Casas"), ("neighbourhood", "Lourdes")}
-        else:
-            assert unique.setdefault(colour, meaning) == meaning
+        assert unique.setdefault(colour, meaning) == meaning
 
 
 def test_view_snapshots(view_snapshots: dict[str, Any]) -> None:

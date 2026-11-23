@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypedDict
 
 import numpy as np
 import pandas as pd
@@ -13,6 +14,7 @@ from bh_itbi.config import (
     COMPARISON_RIDGE_LIMIT,
     DEFAULT_NEIGHBOURHOODS,
     DISTRIBUTION_MINIMUM,
+    END_YEAR,
     KDE_BANDWIDTH_EXTENT,
     KDE_GRID_SIZE,
     KDE_MASS_TOLERANCE,
@@ -23,6 +25,7 @@ from bh_itbi.config import (
     QUARTILE_PROBABILITIES,
     RESIDENTIAL_TYPES,
     RIDGE_MINIMUM,
+    START_YEAR,
     SUMMARY_MINIMUM,
     TEMPORAL_MINIMUM,
 )
@@ -52,12 +55,21 @@ class MapStats:
     upper: float
 
 
+class MapScales(TypedDict):
+    """Fixed colour bounds and upper marker area from the full map population."""
+
+    price_lower: float
+    price_upper: float
+    area_reference: float
+
+
 @dataclass(frozen=True)
 class Summary:
     """Eligible record counts, headline medians and face-geocoded coverage."""
 
     n: int
-    nominal: float
+    latest_real: float
+    latest_year: int
     real: float
     real_n: int
     geocoded: int
@@ -167,8 +179,29 @@ def distribution_quartiles(
     return values.quantile(QUARTILE_PROBABILITIES)
 
 
+def _map_candidate_mask(frame: pd.DataFrame) -> pd.Series:
+    """Select records with a face centroid and positive built area."""
+    return frame["face_geocoded"] & positive_area(frame)
+
+
+def map_reference_scales(frame: pd.DataFrame) -> MapScales:
+    """Compute scale limits on eligible, face-geocoded records with positive area."""
+    eligible = frame["year"].between(START_YEAR, END_YEAR)
+    population = frame.loc[
+        eligible & _map_candidate_mask(frame), ["price_per_m2_brl_real", "built_area_m2"]
+    ]
+    low, high = MAP_TRIM_QUANTILES
+    prices = population["price_per_m2_brl_real"]
+    lower, upper = prices.quantile([low, high])
+    return {
+        "price_lower": float(lower),
+        "price_upper": float(upper),
+        "area_reference": float(population["built_area_m2"].quantile(high)),
+    }
+
+
 def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, MapStats]:
-    """Apply the positive-area and face-centroid screen, P2–P98 trim and seeded sample.
+    """Trim the eligible selection at its real-price percentiles and sample it.
 
     This sample is *only* for drawing. All summaries and analytical figures use
     the original filtered eligible records. Identical centroids are not jittered
@@ -181,12 +214,12 @@ def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, MapStats]:
         "transaction_date",
         "lat",
         "lon",
-        "price_per_m2_brl",
+        "price_per_m2_brl_real",
     ]
-    candidates = frame.loc[frame["face_geocoded"] & positive_area(frame), columns]
-    limits = candidates["price_per_m2_brl"].quantile(list(MAP_TRIM_QUANTILES))
-    lower, upper = (float(limit) for limit in limits)
-    screened = candidates.loc[candidates["price_per_m2_brl"].between(lower, upper)]
+    candidates = frame.loc[_map_candidate_mask(frame), columns]
+    prices = candidates["price_per_m2_brl_real"]
+    lower, upper = (float(value) for value in prices.quantile(list(MAP_TRIM_QUANTILES)))
+    screened = candidates.loc[prices.between(lower, upper)]
     points = screened.sample(
         n=min(MAP_SAMPLE_SIZE, len(screened)), random_state=MAP_SAMPLE_SEED
     )
@@ -199,14 +232,15 @@ def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, MapStats]:
     )
 
 
-def summary(frame: pd.DataFrame, minimum: int = SUMMARY_MINIMUM) -> Summary:
+def summary(frame: pd.DataFrame, end_year: int, minimum: int = SUMMARY_MINIMUM) -> Summary:
     """Count all eligible records but suppress small-sample headline medians."""
     count = len(frame)
-    nominal = frame["price_per_m2_brl"].dropna()
     real = frame["price_per_m2_brl_real"].dropna()
+    latest = frame.loc[frame["year"].eq(end_year), "price_per_m2_brl_real"].dropna()
     return Summary(
         n=count,
-        nominal=float(nominal.median()) if len(nominal) >= minimum else float(np.nan),
+        latest_real=float(latest.median()) if len(latest) >= minimum else float(np.nan),
+        latest_year=end_year,
         real=float(real.median()) if len(real) >= minimum else float(np.nan),
         real_n=len(real),
         geocoded=int(frame["face_geocoded"].sum()),

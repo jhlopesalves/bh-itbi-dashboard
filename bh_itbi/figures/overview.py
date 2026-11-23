@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from math import ceil, floor, log10
 from typing import TypedDict
 
 import numpy as np
@@ -18,6 +19,7 @@ from bh_itbi.config import (
 from bh_itbi.filters import Filters
 from bh_itbi.formatting import currency, month_label, number, quarter_label
 from bh_itbi.overview import (
+    MapScales,
     NeighbourhoodDistribution,
     city_quarterly_table,
     temporal_table,
@@ -43,13 +45,13 @@ from bh_itbi.text.shared import (
 from bh_itbi.theme import (
     INK,
     MUTED,
-    PRICE_SCALE,
     REFERENCE,
     TRANSPARENT,
     TYPE_STYLES,
     composition_tint,
     empty_figure,
     neighbourhood_colours,
+    padded_price_range,
     rgba,
     themed,
 )
@@ -76,14 +78,16 @@ class ComparisonPlot(TypedDict):
     axis_title: str
 
 
-def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> None:
+def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> list[pd.Series]:
     """Draw each contiguous observed band separately; never fill across a gap."""
     valid = rows["p25"].notna() & rows["p75"].notna()
     segments = (~valid).cumsum()
     fill = rgba(TYPE_STYLES[group]["line"]["color"], 0.09)
+    bounds: list[pd.Series] = []
     for _, segment in rows.loc[valid].groupby(segments[valid], sort=False):
         if len(segment) < BAND_MINIMUM_POINTS:
             continue
+        bounds.extend((segment["p25"], segment["p75"]))
         fig.add_trace(
             go.Scatter(
                 x=segment["month"],
@@ -108,9 +112,10 @@ def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> None:
                 legendgroup=group,
             )
         )
+    return bounds
 
 
-def _apply_time_axis(fig: go.Figure, filters: Filters) -> None:
+def _apply_time_axis(fig: go.Figure, filters: Filters, plotted: Sequence[pd.Series]) -> None:
     """Configure the shared date x-axis and real-price y-axis for time series."""
     span = filters.end_year - filters.start_year
     fig.update_xaxes(
@@ -118,7 +123,10 @@ def _apply_time_axis(fig: go.Figure, filters: Filters) -> None:
         tickformat="%Y" if span > 0 else "%b",
         range=[f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"],
     )
-    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE, rangemode="tozero")
+    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE)
+    values = pd.concat(plotted).dropna()
+    if not values.empty:
+        fig.update_yaxes(range=padded_price_range(float(values.min()), float(values.max())))
 
 
 def _monthly_reference_trace(rows: pd.DataFrame, label: str) -> go.Scatter:
@@ -176,10 +184,13 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
     ):
         return empty_figure(TEMPORAL_EMPTY_MESSAGE)
     fig = go.Figure()
+    plotted = [monthly["median"]]
+    if reference is not None:
+        plotted.append(reference["median"])
     series = {kind: monthly.loc[monthly["property_type"].eq(kind)] for kind in TYPE_LABELS}
     # Paint both bands before the medians so an overlapping fill cannot wash out a line.
     for property_type, rows in series.items():
-        _band(fig, rows, property_type)
+        plotted.extend(_band(fig, rows, property_type))
     for property_type, label in TYPE_LABELS.items():
         rows = series[property_type]
         if rows.empty:
@@ -189,16 +200,14 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
             ref = reference.loc[reference["property_type"] == property_type]
             fig.add_trace(_monthly_reference_trace(ref, label))
     themed(fig)
-    _apply_time_axis(fig, filters)
+    _apply_time_axis(fig, filters, plotted)
     return fig
 
 
-def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
-    """Draw translucent, area-scaled circles coloured by nominal price per m²."""
-    if points.empty:
-        return empty_figure(MAP_EMPTY_MESSAGE, 540)
+def _map_hover_data(points: pd.DataFrame) -> list[list[str]]:
+    """Prepare map hovers and preserve the source neighbourhood for clicks."""
     hover_columns = ["neighbourhood", "property_type", "built_area_m2", "transaction_date"]
-    custom = [
+    return [
         [
             str(name) if pd.notna(name) else "",
             str(name).title() if pd.notna(name) else UNKNOWN_NEIGHBOURHOOD_LABEL,
@@ -210,31 +219,54 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
             index=False, name=None
         )
     ]
+
+
+def _map_colourbar_ticks(lower: float, upper: float) -> tuple[list[float], list[str]]:
+    """Place open-ended labels around round interior colour-bar ticks."""
+    if lower == upper:
+        return [lower], [number(lower)]
+    step = 10 ** floor(log10(upper - lower))
+    interior = [i * step for i in range(floor(lower / step) + 1, ceil(upper / step))]
+    return (
+        [lower, *interior, upper],
+        [f"≤ {number(lower)}", *(number(tick) for tick in interior), f"≥ {number(upper)}"],
+    )
+
+
+def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure:
+    """Draw area-scaled circles coloured by real price per m² on fixed scales."""
+    if points.empty:
+        return empty_figure(MAP_EMPTY_MESSAGE, 540)
+    tickvals, ticktext = _map_colourbar_ticks(scales["price_lower"], scales["price_upper"])
     fig = go.Figure(
         go.Scattermap(
             lat=points["lat"],
             lon=points["lon"],
             mode="markers",
             marker={
-                "size": points["built_area_m2"],
+                "size": points["built_area_m2"].clip(upper=scales["area_reference"]),
                 "sizemode": "area",
-                "sizeref": points["built_area_m2"].max() / 16**2,
+                "sizeref": scales["area_reference"] / 16**2,
                 "sizemin": 2.5,
                 "opacity": 0.70,
-                "color": points["price_per_m2_brl"],
-                "colorscale": PRICE_SCALE,
+                "color": points["price_per_m2_brl_real"],
+                "colorscale": "Cividis",
+                "cmin": scales["price_lower"],
+                "cmax": scales["price_upper"],
                 "showscale": True,
                 "colorbar": {
                     "title": {"text": MAP_COLORBAR_TITLE, "font": {"size": 10, "color": INK}},
                     "thickness": 8,
                     "len": 0.82,
                     "outlinewidth": 0,
-                    "tickformat": ",.0f",
+                    "tickmode": "array",
+                    "tickvals": tickvals,
+                    "ticktext": ticktext,
                     "tickfont": {"size": 10, "color": MUTED},
                     "xpad": 8,
                 },
             },
-            customdata=custom,
+            customdata=_map_hover_data(points),
             showlegend=False,
             hovertemplate=MAP_HOVER,
         )
@@ -300,8 +332,10 @@ def neighbourhood_trajectories_figure(
     """Compare source neighbourhoods with a city median pooled from raw records."""
     quarterly = temporal_table(rows, filters, neighbourhood=True)
     fig = go.Figure()
+    plotted: list[pd.Series] = []
     for name, colour in neighbourhood_colours(filters.neighbourhoods).items():
         subset = quarterly.loc[quarterly["neighbourhood"].eq(name)]
+        plotted.append(subset["median"])
         label = name.title()
         fig.add_trace(
             go.Scatter(
@@ -322,6 +356,7 @@ def neighbourhood_trajectories_figure(
     # Same type and dates, but no geographical restriction. A pooled city median
     # is recomputed from transactions, never by averaging neighbourhood medians.
     ref = city_quarterly_table(city, filters.city_reference())
+    plotted.append(ref["median"])
     fig.add_trace(
         go.Scatter(
             x=ref["quarter"],
@@ -338,7 +373,7 @@ def neighbourhood_trajectories_figure(
         )
     )
     themed(fig, height=370)
-    _apply_time_axis(fig, filters)
+    _apply_time_axis(fig, filters, plotted)
     # Show up to six rows before scrolling, preserving room for the trajectories.
     fig.update_layout(legend={"maxheight": 124})
     return fig

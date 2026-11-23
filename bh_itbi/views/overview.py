@@ -30,6 +30,7 @@ from bh_itbi.text.overview import (
     comparison_note,
     kpi_coverage_note,
     kpi_coverage_value,
+    kpi_latest_unit,
     map_caption,
 )
 from bh_itbi.text.shared import scope_text
@@ -48,7 +49,8 @@ class OverviewView:
     quartiles: tuple[tuple[str, str], ...] | None
     map_caption: str
     kpi_count: str
-    kpi_nominal: str
+    kpi_latest_real: str
+    kpi_latest_real_unit: str
     kpi_real: str
     kpi_coverage: str
     kpi_coverage_note: str
@@ -124,7 +126,7 @@ def build_overview_view(
         else selected
     )
     points, map_stats = map_points(selected)
-    values = summary(selected)
+    values = summary(selected, filters.end_year)
     comparison_names = filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS
     comparison = selected.loc[selected["neighbourhood"].isin(comparison_names)]
     comparison_grid, comparison_rows = neighbourhood_price_distributions(comparison)
@@ -150,7 +152,8 @@ def build_overview_view(
         quartiles=quartiles,
         map_caption=map_caption(map_stats.shown, map_stats.screened),
         kpi_count=number(values.n),
-        kpi_nominal=currency(values.nominal),
+        kpi_latest_real=currency(values.latest_real),
+        kpi_latest_real_unit=kpi_latest_unit(values.latest_year),
         kpi_real=currency(values.real),
         kpi_coverage=kpi_coverage_value(values.geocoded, values.n),
         kpi_coverage_note=kpi_coverage_note(values.geocoded, values.n),
