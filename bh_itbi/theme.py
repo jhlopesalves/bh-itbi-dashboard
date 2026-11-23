@@ -79,6 +79,9 @@ FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
 EXTRA_NEIGHBOURHOOD_COLOUR = "#2d2d2d"
 EXTRA_NEIGHBOURHOOD_DASHES = ("solid", "dash", "dot")
 
+# Deliberately reuse Panorama neighbourhood hues on the separate models tab.
+PATTERN_COLOURS = {"falling": "#3d3a8c", "stable": "#5f7f3f", "rising": "#b23a6e"}
+
 
 class NeighbourhoodStyle(NamedTuple):
     """Colour and line dash for a neighbourhood series."""
