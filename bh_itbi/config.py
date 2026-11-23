@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE_URL = "https://bh-itbi-dashboard.onrender.com"
+REPOSITORY_URL = "https://github.com/jhlopesalves/bh-itbi-dashboard"
 
 REPO_ID = "pracadata/brazil-itbi"
 REVISION = "5908d77ed56fc9adb6dbafaf2cb38f34245bcd76"
@@ -17,6 +18,13 @@ CACHE_VERSION = "v3"
 CACHE_DIR = ROOT / "data" / "cache" / f"{CACHE_VERSION}-{REVISION[:12]}"
 MODEL_VERSION = "v3"
 MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
+
+AUDIT_VERSION = "v1"
+AUDIT_DIR = CACHE_DIR / f"audit-{AUDIT_VERSION}"
+AUDIT_SEED = 20261122
+AUDIT_CLUSTER_DRAWS = 200
+AUDIT_MEDIAN_DRAWS = 1_000
+AUDIT_LOW_PRICE = 1_000  # Real R$/m²; a descriptive split independent of eligibility.
 
 START_YEAR = 2016
 END_YEAR = 2025
@@ -101,6 +109,10 @@ IDENTITY_TOLERANCE = 1e-8
 HEDONIC_ALPHA = 0.05
 HEDONIC_CONFIDENCE_LEVEL = 1 - HEDONIC_ALPHA
 HEDONIC_MIN_NEIGHBOURHOODS = 2
+HUBER_TUNING = 1.345
+GAUSSIAN_MAD_CONSISTENCY = 0.6744897501960817
+ROBUST_TOLERANCE = 1e-9
+ROBUST_MAX_ITERATIONS = 200
 
 CLUSTER_K = 4
 CLUSTER_K_RANGE = tuple(range(2, 7))
