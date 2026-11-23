@@ -8,12 +8,14 @@ import pandas as pd
 from bh_itbi.config import CLUSTER_N_INIT, PATTERN_ORDER
 from bh_itbi.patterns import (
     PatternMetadata,
+    PatternSample,
+    _independent_pattern_medians,
     fit_pattern_kmeans,
     named_pattern_order,
     pattern_sample,
     trajectory_patterns,
 )
-from bh_itbi.resampling import block_face_pattern_medians
+from bh_itbi.resampling import _block_face_codes
 
 
 class PatternAlternative(TypedDict):
@@ -26,8 +28,8 @@ class PatternAlternative(TypedDict):
     other_switches: list[str]
 
 
-class BlockFaceStability(TypedDict):
-    """Agreement when approximate block faces are the resampling units."""
+class IndependentRecordStability(TypedDict):
+    """Agreement when transactions are resampled independently."""
 
     firm: dict[str, int]
     ari_median: float
@@ -36,20 +38,20 @@ class BlockFaceStability(TypedDict):
 
 
 class AuditPatterns(TypedDict):
-    """Pattern estimates and the audit-only block-face and optimisation checks."""
+    """Pattern estimates and audit-only comparisons and cell diagnostics."""
 
     metadata: PatternMetadata
     centres: pd.DataFrame
     membership: pd.DataFrame
-    block_face: BlockFaceStability
+    independent_records: IndependentRecordStability
     alternative: PatternAlternative
+    fewest_block_faces: pd.DataFrame
 
 
 def _lower_restart_partition(
-    frame: pd.DataFrame, membership: pd.DataFrame
+    sample: PatternSample, membership: pd.DataFrame
 ) -> PatternAlternative:
     """Compare the deterministic labels with the near-tie from the earlier restart count."""
-    sample = pattern_sample(frame)
     fitted = fit_pattern_kmeans(sample.shapes, n_init=CLUSTER_N_INIT)
     order = named_pattern_order(fitted.cluster_centers_)
     labels, inertia = fitted.labels_, fitted.inertia_
@@ -69,21 +71,49 @@ def _lower_restart_partition(
     }
 
 
+def _fewest_pattern_block_faces(sample: PatternSample) -> pd.DataFrame:
+    """List the cells with the fewest resampling units, breaking ties by record count."""
+    cells = []
+    for cell in sample.cells:
+        sizes = np.bincount(_block_face_codes(cell))
+        cells.append(
+            {
+                "neighbourhood": str(cell["neighbourhood"].iat[0]),
+                "period": str(cell["period"].iat[0]),
+                "records": len(cell),
+                "block_faces": len(sizes),
+                "largest_face_share": float(sizes.max() / len(cell)),
+            }
+        )
+    return (
+        pd.DataFrame(cells)
+        .sort_values(
+            ["block_faces", "records", "neighbourhood", "period"],
+            ascending=[True, False, True, True],
+        )
+        .head(5)
+    )
+
+
 def audit_trajectory_patterns(frame: pd.DataFrame) -> AuditPatterns:
     """Measure independent and block-face stability on the same fitted partition."""
     members, centres, metadata = trajectory_patterns(frame)
     columns = ["neighbourhood", "pattern", "membership_share", "firm"]
     membership = members.drop_duplicates("neighbourhood")[columns]
-    _, _, block_face = trajectory_patterns(frame, resample_cell=block_face_pattern_medians)
+    _, _, independent = trajectory_patterns(frame, resample_cell=_independent_pattern_medians)
+    sample = pattern_sample(frame)
     return {
         "metadata": metadata,
         "centres": centres,
         "membership": membership,
-        "block_face": {
-            "firm": {name: summary["firm"] for name, summary in block_face["patterns"].items()},
-            "ari_median": block_face["ari_median"],
-            "ari_p10": block_face["ari_p10"],
-            "ari_p90": block_face["ari_p90"],
+        "independent_records": {
+            "firm": {
+                name: summary["firm"] for name, summary in independent["patterns"].items()
+            },
+            "ari_median": independent["ari_median"],
+            "ari_p10": independent["ari_p10"],
+            "ari_p90": independent["ari_p90"],
         },
-        "alternative": _lower_restart_partition(frame, membership),
+        "alternative": _lower_restart_partition(sample, membership),
+        "fewest_block_faces": _fewest_pattern_block_faces(sample),
     }

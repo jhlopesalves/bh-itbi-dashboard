@@ -24,15 +24,18 @@ from bh_itbi.config import (
     PATTERN_ORDER,
     PATTERN_PERIOD_MINIMUM,
     PATTERN_PERIODS,
+    PATTERN_RESAMPLING,
     PATTERN_SEED,
     START_YEAR,
 )
+from bh_itbi.resampling import block_face_pattern_medians
 
 if TYPE_CHECKING:
     from sklearn.cluster import KMeans
 
 type _CellSampler = Callable[[pd.DataFrame, np.random.Generator, int], NDArray[np.float64]]
 _PERMUTATIONS = tuple(permutations(range(PATTERN_K)))
+_CENTRE_QUANTILES = (0.10, 0.90)
 
 
 class ClusteringError(ValueError):
@@ -49,14 +52,16 @@ class PatternSettings(TypedDict):
     draws: int
     seed: int
     firm_share: float
+    resampling: str
 
 
 class PatternSummary(TypedDict):
-    """Pattern membership counts and peak bootstrap SE on the log × 100 scale."""
+    """Pattern membership counts and centre quantiles in period order."""
 
     size: int
     firm: int
-    max_centre_se: float
+    p10: list[float]
+    p90: list[float]
 
 
 class PatternMetadata(PatternSettings):
@@ -68,6 +73,10 @@ class PatternMetadata(PatternSettings):
     ari_median: float
     ari_p10: float
     ari_p90: float
+    separation_share: float
+    falling_first: list[float]
+    rising_last: list[float]
+    rising_size: list[float]
     patterns: dict[str, PatternSummary]
     adjustment: dict[str, float]
     age_reference: str
@@ -86,13 +95,15 @@ class PatternSample:
 
 @dataclass(frozen=True)
 class PatternStability:
-    """Record-level agreement and centre variation across aligned refits."""
+    """Agreement, separation and centre ranges across aligned refits."""
 
     shares: NDArray[np.float64]
-    centre_se: NDArray[np.float64]
+    centre_ranges: NDArray[np.float64]
     ari_median: float
     ari_p10: float
     ari_p90: float
+    separation_share: float
+    rising_size: list[float]
 
 
 def pattern_settings() -> PatternSettings:
@@ -105,6 +116,7 @@ def pattern_settings() -> PatternSettings:
         "draws": PATTERN_DRAWS,
         "seed": PATTERN_SEED,
         "firm_share": PATTERN_FIRM_SHARE,
+        "resampling": PATTERN_RESAMPLING,
     }
 
 
@@ -225,8 +237,21 @@ def _independent_pattern_medians(
     return np.median(rng.choice(values, size=(draws, len(values))), axis=1)
 
 
+def _identifies_named_patterns(
+    centres: NDArray[np.float64], order: tuple[int, int, int]
+) -> bool:
+    """Check the endpoint naming rule after aligning a draw to the fitted labels."""
+    try:
+        return named_pattern_order(centres) == order
+    except ClusteringError:
+        return False
+
+
 def _pattern_bootstrap(
-    sample: PatternSample, fitted: KMeans, resample_cell: _CellSampler
+    sample: PatternSample,
+    fitted: KMeans,
+    order: tuple[int, int, int],
+    resample_cell: _CellSampler,
 ) -> PatternStability:
     """Refit centred cell medians and compare each partition with the full-data fit."""
     from sklearn.metrics import adjusted_rand_score  # noqa: PLC0415
@@ -240,21 +265,30 @@ def _pattern_bootstrap(
     matches = np.zeros(len(reference_labels), dtype=int)
     aris = np.empty(PATTERN_DRAWS)
     aligned_centres = np.empty((PATTERN_DRAWS, PATTERN_K, len(PATTERN_PERIODS)))
+    identified = np.empty(PATTERN_DRAWS, dtype=bool)
+    sizes = np.empty((PATTERN_DRAWS, PATTERN_K), dtype=int)
     for i, matrix in enumerate(shapes):
         draw = fit_pattern_kmeans(matrix)
         labels = draw.labels_
         assert labels is not None
-        order = align_pattern_labels(fitted.cluster_centers_, draw.cluster_centers_)
-        aligned_centres[i] = draw.cluster_centers_[list(order)]
-        matches += np.argsort(order)[labels] == reference_labels
+        permutation = align_pattern_labels(fitted.cluster_centers_, draw.cluster_centers_)
+        aligned_centres[i] = draw.cluster_centers_[list(permutation)]
+        aligned_labels = np.argsort(permutation)[labels]
+        matches += aligned_labels == reference_labels
+        identified[i] = _identifies_named_patterns(aligned_centres[i], order)
+        sizes[i] = np.bincount(aligned_labels, minlength=PATTERN_K)
         aris[i] = adjusted_rand_score(reference_labels, labels)
     lo, median, hi = np.quantile(aris, [0.10, 0.5, 0.90])
     return PatternStability(
-        matches / PATTERN_DRAWS,
-        INDEX_BASE * aligned_centres.std(axis=0, ddof=1),
-        float(median),
-        float(lo),
-        float(hi),
+        shares=matches / PATTERN_DRAWS,
+        centre_ranges=np.quantile(
+            INDEX_BASE * np.exp(aligned_centres), _CENTRE_QUANTILES, axis=0
+        ),
+        ari_median=float(median),
+        ari_p10=float(lo),
+        ari_p90=float(hi),
+        separation_share=float(identified.mean()),
+        rising_size=np.quantile(sizes[:, order[-1]], _CENTRE_QUANTILES).tolist(),
     )
 
 
@@ -285,14 +319,15 @@ def _pattern_tables(
             "pattern": np.repeat(names, len(PATTERN_PERIODS)),
             "period": np.tile(PATTERN_PERIODS, PATTERN_K),
             "index": (INDEX_BASE * np.exp(fitted.cluster_centers_[list(order)])).ravel(),
-            "se": stability.centre_se[list(order)].ravel(),
+            "p10": stability.centre_ranges[0, list(order)].ravel(),
+            "p90": stability.centre_ranges[1, list(order)].ravel(),
         }
     )
     return members, centres
 
 
 def trajectory_patterns(
-    frame: pd.DataFrame, *, resample_cell: _CellSampler = _independent_pattern_medians
+    frame: pd.DataFrame, *, resample_cell: _CellSampler = block_face_pattern_medians
 ) -> tuple[pd.DataFrame, pd.DataFrame, PatternMetadata]:
     """Estimate the fixed patterns and bootstrap their centres and membership."""
     with threadpool_limits(limits=2):
@@ -305,16 +340,17 @@ def trajectory_patterns(
         fitted = fit_pattern_kmeans(sample.shapes)
         order = named_pattern_order(fitted.cluster_centers_)
         silhouettes = _pattern_silhouettes(sample.shapes, fitted, distinct)
-        stability = _pattern_bootstrap(sample, fitted, resample_cell)
+        stability = _pattern_bootstrap(sample, fitted, order, resample_cell)
     members, centres = _pattern_tables(sample, fitted, order, stability)
     membership = members.drop_duplicates("neighbourhood")
     summary: dict[str, PatternSummary] = {}
-    for name in PATTERN_ORDER:
+    for name, label in zip(PATTERN_ORDER, order, strict=True):
         selected = membership.loc[membership["pattern"].eq(name)]
         summary[name] = {
             "size": len(selected),
             "firm": int(selected["firm"].sum()),
-            "max_centre_se": float(centres.loc[centres["pattern"].eq(name), "se"].max()),
+            "p10": stability.centre_ranges[0, label].tolist(),
+            "p90": stability.centre_ranges[1, label].tolist(),
         }
     inertia = fitted.inertia_
     assert inertia is not None
@@ -323,12 +359,19 @@ def trajectory_patterns(
         centres,
         {
             **pattern_settings(),
+            "resampling": "independent_records"
+            if resample_cell is _independent_pattern_medians
+            else PATTERN_RESAMPLING,
             "n_neighbourhoods": len(sample.counts),
             "inertia": float(inertia),
             "silhouettes": silhouettes,
             "ari_median": stability.ari_median,
             "ari_p10": stability.ari_p10,
             "ari_p90": stability.ari_p90,
+            "separation_share": stability.separation_share,
+            "falling_first": stability.centre_ranges[:, order[0], 0].tolist(),
+            "rising_last": stability.centre_ranges[:, order[-1], -1].tolist(),
+            "rising_size": stability.rising_size,
             "patterns": summary,
             "adjustment": sample.adjustment,
             "age_reference": sample.age_reference,

@@ -297,7 +297,7 @@ def _pattern_panel_figure(
             mode="lines+markers",
             line={"color": colour, "width": 3},
             marker={"color": colour, "size": 6},
-            customdata=centre["se"],
+            customdata=centre[["p10", "p90"]].to_numpy(),
             hovertemplate=PATTERN_CENTRE_HOVER,
         )
     )

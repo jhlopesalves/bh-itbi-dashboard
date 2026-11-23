@@ -587,7 +587,7 @@ def _audit_clustering_section(stability: TrajectoryStability) -> str:
     )
 
 
-def _audit_patterns_section(evidence: AuditPatterns) -> str:
+def _audit_pattern_near_tie(evidence: AuditPatterns) -> str:
     metadata = evidence["metadata"]
     alternative = evidence["alternative"]
     alternative_sizes = " / ".join(str(alternative["sizes"][name]) for name in PATTERN_ORDER)
@@ -601,11 +601,20 @@ def _audit_patterns_section(evidence: AuditPatterns) -> str:
         near_tie += f", with {switches} switching between stable and rising"
     if other:
         near_tie += f" and {other} switching assignment elsewhere"
+    return f"{near_tie}."
+
+
+def _audit_patterns_section(evidence: AuditPatterns) -> str:
+    metadata = evidence["metadata"]
+    patterns = metadata["patterns"]
     summaries = pd.DataFrame(
-        [{"pattern": name, **metadata["patterns"][name]} for name in PATTERN_ORDER]
+        [
+            {"pattern": name, "size": patterns[name]["size"], "firm": patterns[name]["firm"]}
+            for name in PATTERN_ORDER
+        ]
     )
-    records_firm = {name: metadata["patterns"][name]["firm"] for name in PATTERN_ORDER}
-    block = evidence["block_face"]
+    block_firm = {name: patterns[name]["firm"] for name in PATTERN_ORDER}
+    independent = evidence["independent_records"]
     stability = pd.DataFrame(
         [
             {
@@ -616,8 +625,8 @@ def _audit_patterns_section(evidence: AuditPatterns) -> str:
                 **{f"{name} firm": firm[name] for name in PATTERN_ORDER},
             }
             for scheme, result, firm in (
-                ("Independent records", metadata, records_firm),
-                ("Block faces", block, block["firm"]),
+                ("Block faces (published)", metadata, block_firm),
+                ("Independent records", independent, independent["firm"]),
             )
         ]
     )
@@ -625,12 +634,23 @@ def _audit_patterns_section(evidence: AuditPatterns) -> str:
         (
             "## Trajectory patterns",
             f"> {TRAJECTORY_PATTERNS_CONTEXT}",
-            f"{near_tie}.",
+            _audit_pattern_near_tie(evidence),
             _audit_report_table(summaries),
             _audit_report_table(stability),
             "Block faces are resampled within each neighbourhood and biennium, with unmatched "
-            "records treated as singleton faces. See [trajectory_patterns.json]"
-            "(trajectory_patterns.json) for the full estimates and membership shares.",
+            "records treated as singleton faces. The five cells with the fewest block faces "
+            "are listed below.",
+            _audit_report_table(
+                evidence["fewest_block_faces"].rename(
+                    columns={"largest_face_share": "largest-face share"}
+                ),
+                precision=".1%",
+            ),
+            "Draws in which the three patterns are not identified mostly assign one centre to "
+            "a single neighbourhood whose cell is dominated by one block face; "
+            "a minimum block-face count per cell is deferred.",
+            "See [trajectory_patterns.json](trajectory_patterns.json) for the full "
+            "estimates and membership shares.",
         )
     )
 

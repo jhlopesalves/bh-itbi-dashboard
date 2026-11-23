@@ -409,9 +409,9 @@ def check_pattern_panels(page: Page, width: int) -> None:
     )
     expect(card.locator(".pattern-counts")).to_have_text(
         [
-            "35 bairros · 29 firmes · 6 de fronteira",
-            "51 bairros · 32 firmes · 19 de fronteira",
-            "17 bairros · 11 firmes · 6 de fronteira",
+            "35 bairros · 19 firmes · 16 de fronteira",
+            "51 bairros · 10 firmes · 41 de fronteira",
+            "17 bairros · 5 firmes · 12 de fronteira",
         ]
     )
     expect(card.get_by_role("link", name="Consultar a auditoria")).to_be_visible()
@@ -456,7 +456,7 @@ def check_pattern_panels(page: Page, width: int) -> None:
         Plotly.Fx.hover(plot, [{curveNumber: plot.data.length - 1, pointNumber: 1}]);
     }""")
     expect(hover).to_contain_text("Centro do padrão")
-    expect(hover).to_contain_text("(EP ")
+    expect(hover).to_contain_text(re.compile(r"8 de cada 10 reamostragens: \d+,\d a \d+,\d"))
     plot.evaluate("plot => Plotly.Fx.unhover(plot)")
 
 

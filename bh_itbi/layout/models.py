@@ -107,11 +107,10 @@ def _patterns_card(models: PreparedModels) -> html.Section:
     sizes = metadata["patterns"]
     total = metadata["n_neighbourhoods"]
     borderline = (total - sum(summary["firm"] for summary in sizes.values())) / total
-    largest_se = max(sizes[name]["max_centre_se"] for name in ("falling", "stable"))
     note = text.patterns_footnote(
-        metadata["draws"],
-        metadata["firm_share"],
-        (largest_se, sizes["rising"]["max_centre_se"]),
+        (metadata["draws"], metadata["firm_share"]),
+        metadata["separation_share"],
+        (metadata["falling_first"], metadata["rising_last"]),
         metadata["ari_median"],
         borderline,
     )

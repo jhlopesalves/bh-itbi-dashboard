@@ -60,11 +60,17 @@ PATTERN_MEMBER_HOVER = (
     "<br>No mesmo padrão em %{customdata:.0%} das reamostragens<extra></extra>"
 )
 PATTERN_CENTRE_HOVER = (
-    "Centro do padrão<br>%{x}: %{y:.1f} (EP %{customdata:.1f})<extra></extra>"
+    "Centro do padrão<br>%{x}: %{y:.1f}<br>"
+    "8 de cada 10 reamostragens: %{customdata[0]:.1f} a %{customdata[1]:.1f}<extra></extra>"
 )
 AUDIT_LINK_TEXT = "Consultar a auditoria"
 AUDIT_REPORT_URL = f"{cfg.REPOSITORY_URL}/blob/main/docs/robustness/report.md"
-_PATTERN_SHARE_LABELS = {0.25: "um quarto", 1 / 3: "um terço", 0.50: "metade"}
+_PATTERN_SHARE_LABELS = {
+    0.25: "um quarto",
+    1 / 3: "um terço",
+    0.50: "metade",
+    2 / 3: "dois terços",
+}
 _PATTERN_SHARE_TOLERANCE = 0.05
 
 
@@ -141,9 +147,9 @@ def pattern_counts(size: int, firm: int) -> str:
 
 
 def patterns_footnote(
-    draws: int,
-    firm_share: float,
-    centre_se: tuple[float, float],
+    resampling: tuple[int, float],
+    separation_share: float,
+    centre_ranges: tuple[Sequence[float], Sequence[float]],
     ari_median: float,
     borderline_share: float,
 ) -> str:
@@ -154,17 +160,22 @@ def patterns_footnote(
         if abs(nearest - borderline_share) <= _PATTERN_SHARE_TOLERANCE
         else f"{number(100 * borderline_share)}%"
     )
-    largest, rising = centre_se
+    draws, firm_share = resampling
+    falling, rising = centre_ranges
+    reappear = round(10 * separation_share)
     return (
         "Agrupamento por k-médias em três padrões, aplicado à forma das trajetórias "
         "(cada bairro centrado na própria média). Linha forte: centro do padrão; linhas finas: "
         f"bairros que ficam no mesmo padrão em pelo menos {number(100 * firm_share)}% de "
         f"{number(draws)} reamostragens; tracejado cinza: bairros de fronteira. "
-        "Os centros dos padrões são estáveis "
-        f"(erro-padrão de até {number(largest, 1)} ponto nos dois maiores padrões e de "
-        f"{number(rising, 1)} no de alta recente), mas a classificação completa não é: "
-        f"a concordância mediana entre reamostragens é {number(ari_median, 2)}, "
-        f"porque cerca de {share} dos bairros fica entre padrões. "
+        "Cada reamostragem sorteia faces de quadra inteiras, porque vendas do mesmo prédio "
+        "ou quarteirão não são independentes. "
+        f"Os três padrões reaparecem em {number(reappear)} de cada 10 reamostragens. "
+        f"Em 8 de cada 10, o primeiro biênio da queda fica entre {number(falling[0])} e "
+        f"{number(falling[1])}, e o último biênio da alta recente, entre {number(rising[0])} e "
+        f"{number(rising[1])}; os bairros que compõem a alta recente, porém, variam. "
+        f"Cerca de {share} dos bairros ficam entre padrões (concordância mediana entre "
+        f"reamostragens: {number(ari_median, 2)}). "
         "O ajuste considera apenas área e faixa de idade; outras diferenças de composição "
         "permanecem. A classificação anterior, em quatro grupos e sem ajuste, "
         "foi substituída após a auditoria de robustez."
