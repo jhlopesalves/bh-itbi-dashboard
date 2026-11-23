@@ -35,14 +35,12 @@ from bh_itbi.app import create_app
 from bh_itbi.text.shared import CITY_NAME, TYPE_LABELS
 from bh_itbi.theme import (
     AXIS,
-    CLAY,
     GRID,
     INK,
     MUTED,
     REFERENCE,
     SLATE,
     SURFACE,
-    TEAL,
     TRANSPARENT,
     TYPE_STYLES,
     composition_tint,
@@ -654,13 +652,7 @@ def test_panorama_colours_keep_their_assigned_roles(
             assert property_colours.get(colour) == meaning[1]
         else:
             assert meaning[0] == "neighbourhood"
-        if colour == TEAL:
-            assert meaning == ("property type", "Apartamentos")
-        # The restored property palette shares clay with Lourdes.
-        if colour == CLAY:
-            assert meaning in {("property type", "Casas"), ("neighbourhood", "Lourdes")}
-        else:
-            assert unique.setdefault(colour, meaning) == meaning
+        assert unique.setdefault(colour, meaning) == meaning
 
 
 def test_view_snapshots(view_snapshots: dict[str, Any]) -> None:

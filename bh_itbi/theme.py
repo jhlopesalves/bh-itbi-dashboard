@@ -72,12 +72,12 @@ TYPE_STYLES: dict[str, PropertyStyle] = {
 
 FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
     "SAVASSI": "#4f8f4a",
-    "LOURDES": CLAY,
-    "BURITIS": BLUE,
-    "CASTELO": GOLD,
+    "LOURDES": "#a8326a",
+    "BURITIS": "#2a9bb5",
+    "CASTELO": "#7a4a2a",
     "CENTRO": PLUM,
 }
-EXTRA_NEIGHBOURHOOD_COLOURS = ("#a8326a", "#2a9bb5", "#7a4a2a")
+EXTRA_NEIGHBOURHOOD_COLOURS = ("#5b3db8", "#7e2935", "#6b761d")
 
 # In draw order, from the earliest period at the back to the latest in front.
 DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
