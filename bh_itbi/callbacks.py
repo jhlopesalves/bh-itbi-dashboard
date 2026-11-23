@@ -30,6 +30,7 @@ from bh_itbi.figures import (
 from bh_itbi.filters import Filters
 from bh_itbi.layout.overview import distribution_summary
 from bh_itbi.models import PreparedModels
+from bh_itbi.overview import MapScales
 from bh_itbi.text.shared import TAB_LABELS, period_text
 from bh_itbi.urls import decode_query, default_controls
 from bh_itbi.views import (
@@ -250,7 +251,7 @@ def _view_serialiser(view_lock: Lock) -> _ViewSerialiser:
 
 
 def _register_overview_callback(
-    app: Dash, frame: pd.DataFrame, serialise_view: _ViewSerialiser
+    app: Dash, frame: pd.DataFrame, serialise_view: _ViewSerialiser, scales: MapScales
 ) -> None:
     """Register the overview with a bounded cache of rendered selections."""
 
@@ -258,9 +259,9 @@ def _register_overview_callback(
     # than keeping sixteen full sets of Plotly figures for arbitrary selections.
     @lru_cache(maxsize=2)
     def overview(filters: Filters, distribution_metric: str, map_style: str) -> OverviewOutput:
-        view = build_overview_view(frame, filters, distribution_metric)
+        view = build_overview_view(frame, filters, distribution_metric, scales)
         return {
-            "geo_map": map_figure(view.points, map_style),
+            "geo_map": map_figure(view.points, map_style, scales),
             "map_caption": view.map_caption,
             "kpi_count": view.kpi_count,
             "kpi_nominal": view.kpi_nominal,
@@ -351,13 +352,15 @@ def _register_resize_callback(app: Dash) -> None:
     )
 
 
-def register_callbacks(app: Dash, frame: pd.DataFrame, models: PreparedModels | None) -> None:
+def register_callbacks(
+    app: Dash, frame: pd.DataFrame, models: PreparedModels | None, scales: MapScales
+) -> None:
     """Register all client and server callbacks on the Dash application."""
     serialise_view = _view_serialiser(Lock())
     neighbourhood_options = set(frame["neighbourhood"].dropna())
 
     _register_clientside_callbacks(app)
-    _register_overview_callback(app, frame, serialise_view)
+    _register_overview_callback(app, frame, serialise_view, scales)
     _register_selection_callbacks(app, frame, neighbourhood_options)
     _register_tab_callbacks(app)
     _register_diagnostics_callback(app, frame, serialise_view)

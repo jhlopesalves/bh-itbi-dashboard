@@ -12,6 +12,7 @@ from bh_itbi.config import ROOT, SITE_URL
 from bh_itbi.data import DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
 from bh_itbi.models import AuditEndpoint, PreparedModels, load_audit_endpoint, load_models
+from bh_itbi.overview import map_reference_scales
 from bh_itbi.text import shared as text
 from bh_itbi.theme import PAPER
 
@@ -58,7 +59,7 @@ def create_app(
     )
     app.index_string = INDEX_TEMPLATE
     app.layout = build_layout(neighbourhoods, models, source_rows, audit_endpoint)
-    register_callbacks(app, frame, models)
+    register_callbacks(app, frame, models, map_reference_scales(frame))
 
     @app.server.get("/healthz")
     def health() -> dict[str, str]:

@@ -35,13 +35,6 @@ DISTANCE_AMBER = "#e8a33d"
 DISTANCE_ROSE = "#c94f7c"
 DISTANCE_PLUM = "#5e2a6e"
 
-PRICE_NAVY = "#00007f"
-PRICE_BLUE = "#0000ff"
-PRICE_CYAN = "#00ffff"
-PRICE_YELLOW = "#ffff00"
-PRICE_RED = "#ff0000"
-PRICE_MAROON = "#7f0000"
-
 FONT = 'Inter, "Segoe UI", "Ubuntu Sans", "Noto Sans", "Helvetica Neue", Arial, sans-serif'
 
 
@@ -80,16 +73,6 @@ FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
 }
 EXTRA_NEIGHBOURHOOD_COLOURS = ("#a8326a", "#2a9bb5", "#7a4a2a")
 
-# Matplotlib's "jet", as in Géron's California housing map (translucent,
-# size-encoded circles coloured by price).
-PRICE_SCALE: list[list[float | str]] = [
-    [0.0, PRICE_NAVY],
-    [0.125, PRICE_BLUE],
-    [0.375, PRICE_CYAN],
-    [0.625, PRICE_YELLOW],
-    [0.875, PRICE_RED],
-    [1.0, PRICE_MAROON],
-]
 # In draw order, from the earliest period at the back to the latest in front.
 DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
     zip(

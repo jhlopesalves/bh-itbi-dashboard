@@ -454,6 +454,22 @@ def test_every_plotly_trace_has_an_explicit_colour(view_snapshots: dict[str, Any
                 _assert_trace_colour(trace, output)
 
 
+def test_map_scales_are_identical_across_callback_filters(
+    view_snapshots: dict[str, Any],
+) -> None:
+    def marker(case: str) -> dict[str, Any]:
+        return view_snapshots[f"overview__{case}"]["overview"]["geo-map"]["figure"]["data"][0][
+            "marker"
+        ]
+
+    default = marker("defaults")
+    selected = marker("apartment_2023_2025")
+    for attribute in ("cmin", "cmax", "sizeref", "colorscale"):
+        assert default[attribute] == selected[attribute]
+    assert default["colorbar"]["title"]["text"] == "R$/m²<br>real"
+    assert default["color"] != selected["color"]
+
+
 @pytest.mark.parametrize("case", VIEW_MATRIX)
 def test_neighbourhood_cards_share_colours_and_labels(
     view_snapshots: dict[str, Any], case: str

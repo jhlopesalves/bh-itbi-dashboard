@@ -18,6 +18,7 @@ from bh_itbi.config import (
 from bh_itbi.filters import Filters
 from bh_itbi.formatting import currency, month_label, number, quarter_label
 from bh_itbi.overview import (
+    MapScales,
     NeighbourhoodDistribution,
     city_quarterly_table,
     temporal_table,
@@ -43,7 +44,6 @@ from bh_itbi.text.shared import (
 from bh_itbi.theme import (
     INK,
     MUTED,
-    PRICE_SCALE,
     REFERENCE,
     TRANSPARENT,
     TYPE_STYLES,
@@ -193,12 +193,10 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
     return fig
 
 
-def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
-    """Draw translucent, area-scaled circles coloured by nominal price per m²."""
-    if points.empty:
-        return empty_figure(MAP_EMPTY_MESSAGE, 540)
+def _map_hover_data(points: pd.DataFrame) -> list[list[str]]:
+    """Prepare map hovers and preserve the source neighbourhood for clicks."""
     hover_columns = ["neighbourhood", "property_type", "built_area_m2", "transaction_date"]
-    custom = [
+    return [
         [
             str(name) if pd.notna(name) else "",
             str(name).title() if pd.notna(name) else UNKNOWN_NEIGHBOURHOOD_LABEL,
@@ -210,19 +208,27 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
             index=False, name=None
         )
     ]
+
+
+def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure:
+    """Draw area-scaled circles coloured by real price per m² on fixed scales."""
+    if points.empty:
+        return empty_figure(MAP_EMPTY_MESSAGE, 540)
     fig = go.Figure(
         go.Scattermap(
             lat=points["lat"],
             lon=points["lon"],
             mode="markers",
             marker={
-                "size": points["built_area_m2"],
+                "size": points["built_area_m2"].clip(upper=scales["area_reference"]),
                 "sizemode": "area",
-                "sizeref": points["built_area_m2"].max() / 16**2,
+                "sizeref": scales["area_reference"] / 16**2,
                 "sizemin": 2.5,
                 "opacity": 0.70,
-                "color": points["price_per_m2_brl"],
-                "colorscale": PRICE_SCALE,
+                "color": points["price_per_m2_brl_real"],
+                "colorscale": "Cividis",
+                "cmin": scales["price_lower"],
+                "cmax": scales["price_upper"],
                 "showscale": True,
                 "colorbar": {
                     "title": {"text": MAP_COLORBAR_TITLE, "font": {"size": 10, "color": INK}},
@@ -234,7 +240,7 @@ def map_figure(points: pd.DataFrame, style: str) -> go.Figure:
                     "xpad": 8,
                 },
             },
-            customdata=custom,
+            customdata=_map_hover_data(points),
             showlegend=False,
             hovertemplate=MAP_HOVER,
         )

@@ -28,7 +28,7 @@ CITY_TRAJECTORY_HOVER = (
 )
 MAP_HOVER = (
     "<b>%{customdata[1]}</b><br>%{customdata[2]}"
-    "<br>Valor declarado: R$ %{marker.color:,.0f}/m²"
+    "<br>Valor declarado real: R$ %{marker.color:,.0f}/m²"
     "<br>Área construída: %{customdata[3]} m²"
     "<br>%{customdata[4]}<extra></extra>"
 )
@@ -40,11 +40,11 @@ DISTRIBUTION_LABELS: dict[str, str] = {
 TEMPORAL_EMPTY_MESSAGE = (
     f"São necessárias {cfg.TEMPORAL_MINIMUM} transações por mês e tipo.<br>Amplie o recorte."
 )
-MAP_EMPTY_MESSAGE = "Sem registros com localização de face e área válida neste recorte."
+MAP_EMPTY_MESSAGE = "Sem registros neste recorte que atendam aos critérios do mapa."
 DISTRIBUTION_EMPTY_MESSAGE = (
     f"São necessários ao menos {cfg.DISTRIBUTION_MINIMUM} valores válidos."
 )
-MAP_COLORBAR_TITLE = "R$/m²<br>nominal"
+MAP_COLORBAR_TITLE = "R$/m²<br>real"
 LOG_CURRENCY_AXIS_TITLE = "R$ · escala logarítmica"
 DISTRIBUTION_HOVER = (
     "%{customdata[0]} a %{customdata[1]}<br>Transações: %{y:,.0f}" + TRACE_NAME_EXTRA
@@ -61,7 +61,8 @@ KPI_COVERAGE_LABEL = "Geolocalização por face"
 KPI_COVERAGE_UNIT = "dos registros com centroide de face de quadra"
 MAP_TITLE = "Distribuição espacial do valor declarado"
 MAP_SUBTITLE = (
-    "Cor: valor declarado nominal por m². Área do marcador: área construída. "
+    "Cor: valor declarado real por m² (IPCA), em escala fixa para todo o período. "
+    "Área do marcador: área construída, em escala fixa. "
     "Um clique filtra pelo bairro informado no registro."
 )
 MAP_STYLE_LABEL = "Fundo do mapa"
@@ -126,7 +127,8 @@ def map_caption(shown: int, screened: int) -> str:
     """Describe the trimmed and sampled point count drawn on the map."""
     return (
         f"{number(shown)} pontos de {number(screened)} "
-        f"registros entre P{cfg.MAP_LOWER_PERCENTILE} e P{cfg.MAP_UPPER_PERCENTILE}, "
+        f"registros entre P{cfg.MAP_LOWER_PERCENTILE} e P{cfg.MAP_UPPER_PERCENTILE} "
+        f"do valor real por m² de {cfg.START_YEAR}–{cfg.END_YEAR} (escala fixa), "
         "após exigir localização de face "
         f"e área positiva. Amostra de até {number(cfg.MAP_SAMPLE_SIZE)} pontos; "
         "os indicadores usam todo o recorte elegível."

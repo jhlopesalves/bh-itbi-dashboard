@@ -9,14 +9,15 @@ import pytest
 
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
 from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
-from bh_itbi.figures import distribution_figure, temporal_figure
-from bh_itbi.filters import Filters, filter_transactions
+from bh_itbi.figures import distribution_figure, map_figure, temporal_figure
+from bh_itbi.filters import Filters, filter_transactions, positive_area
 from bh_itbi.formatting import number
 from bh_itbi.models import model_population
 from bh_itbi.overview import (
     city_quarterly_table,
     distribution_quartiles,
     map_points,
+    map_reference_scales,
     summary,
     temporal_table,
 )
@@ -91,13 +92,42 @@ def test_city_reference_removes_neighbourhood_filter(source_factory):
 
 def test_map_screen_and_seeded_sample_do_not_change_summary_population(source_factory):
     frame = prepare_transactions(source_factory(9000))
-    points, stats = map_points(frame)
+    scales = map_reference_scales(frame)
+    points, stats = map_points(frame, scales)
     assert stats.candidates == 9000
     assert stats.shown == 8000
     assert len(points) == 8000
-    assert points["price_per_m2_brl"].between(stats.lower, stats.upper).all()
-    pd.testing.assert_frame_equal(points, map_points(frame)[0])
+    assert points["price_per_m2_brl_real"].between(stats.lower, stats.upper).all()
+    assert (stats.lower, stats.upper) == (scales["price_lower"], scales["price_upper"])
+    pd.testing.assert_frame_equal(points, map_points(frame, scales)[0])
     assert summary(frame).n == 9000
+
+
+def test_map_reference_scales_use_full_eligible_geocoded_population(snapshot_frame):
+    population = filter_transactions(snapshot_frame, Filters())
+    population = population.loc[population["face_geocoded"] & positive_area(population)]
+    prices = population["price_per_m2_brl_real"]
+    scales = map_reference_scales(snapshot_frame)
+    assert scales == map_reference_scales(snapshot_frame.sample(frac=1, random_state=7))
+    assert scales == {
+        "price_lower": prices.quantile(0.02),
+        "price_upper": prices.quantile(0.98),
+        "area_reference": population["built_area_m2"].quantile(0.98),
+    }
+
+
+def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
+    scales = map_reference_scales(snapshot_frame)
+    points, _ = map_points(filter_transactions(snapshot_frame, Filters()), scales)
+    area = points["built_area_m2"]
+    reference = scales["area_reference"]
+    assert area.gt(reference).any()
+    marker = map_figure(points, "white-bg", scales).data[0].marker
+    np.testing.assert_array_equal(marker.size, area.clip(upper=reference))
+    np.testing.assert_array_equal(marker.color, points["price_per_m2_brl_real"])
+    assert marker.sizeref == reference / 16**2
+    assert marker.sizemode == "area"
+    assert marker.sizemin == 2.5
 
 
 def test_quantiles_count_non_missing_values_before_suppression():

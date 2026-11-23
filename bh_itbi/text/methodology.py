@@ -37,8 +37,9 @@ METHODOLOGY_TIME_P2 = (
 METHODOLOGY_GEO_HEADING = "Geografia e proveniência"
 METHODOLOGY_GEO_P1 = (
     f"O mapa mostra até {number(cfg.MAP_SAMPLE_SIZE)} registros com área positiva "
-    "e centroide de face, após restringir o valor nominal/m² "
-    f"a P{cfg.MAP_LOWER_PERCENTILE}–P{cfg.MAP_UPPER_PERCENTILE} do recorte. "
+    "e centroide de face, após restringir o valor real por m² (IPCA) "
+    f"aos limites fixos P{cfg.MAP_LOWER_PERCENTILE}–P{cfg.MAP_UPPER_PERCENTILE} "
+    f"desses registros no período completo de {cfg.START_YEAR}–{cfg.END_YEAR}. "
     "Centroides de CEP e bairro não "
     "entram no mapa. Não há deslocamento artificial dos pontos. "
     "Os resumos e as séries usam todos os registros elegíveis, "
