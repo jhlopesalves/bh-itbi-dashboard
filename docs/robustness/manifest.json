@@ -3,9 +3,9 @@
   "cached_table_verified": true,
   "cluster_draws": 200,
   "dirty": false,
-  "git_commit": "013fc6de6cf861ed9c0840eeec0cb115b47fc4a1",
+  "git_commit": "40a6a74454dace8c767a3647d6ff2d640ad26ce1",
   "median_draws": 1000,
-  "model_version": "v4",
+  "model_version": "v5",
   "pattern_settings": {
     "draws": 200,
     "firm_share": 0.8,
@@ -13,6 +13,7 @@
     "n_init": 200,
     "period_minimum": 60,
     "random_state": 42,
+    "resampling": "block_face",
     "seed": 20261123
   },
   "patterns_id": "trajectory-patterns-v1",

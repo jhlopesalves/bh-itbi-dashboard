@@ -18,724 +18,776 @@
       "SANTA MONICA"
     ]
   },
-  "block_face": {
-    "ari_median": 0.3210120252,
-    "ari_p10": 0.1742139714,
-    "ari_p90": 0.4541598394,
-    "firm": {
-      "falling": 19,
-      "rising": 5,
-      "stable": 10
-    }
-  },
   "centres": [
     {
       "index": 108.5394686,
+      "p10": 107.2159736,
+      "p90": 111.3546902,
       "pattern": "falling",
-      "period": "2016–2017",
-      "se": 0.6562836361
+      "period": "2016–2017"
     },
     {
       "index": 100.9340189,
+      "p10": 97.5011344,
+      "p90": 102.2807335,
       "pattern": "falling",
-      "period": "2018–2019",
-      "se": 0.9947744507
+      "period": "2018–2019"
     },
     {
       "index": 97.21946995,
+      "p10": 95.38953315,
+      "p90": 98.70995637,
       "pattern": "falling",
-      "period": "2020–2021",
-      "se": 0.6674651596
+      "period": "2020–2021"
     },
     {
       "index": 93.93796854,
+      "p10": 92.89481303,
+      "p90": 95.22294861,
       "pattern": "falling",
-      "period": "2022–2023",
-      "se": 0.6160546117
+      "period": "2022–2023"
     },
     {
       "index": 99.94943191,
+      "p10": 98.72132688,
+      "p90": 101.9358936,
       "pattern": "falling",
-      "period": "2024–2025",
-      "se": 0.6958467263
+      "period": "2024–2025"
     },
     {
       "index": 99.77726581,
+      "p10": 96.51340503,
+      "p90": 101.5880218,
       "pattern": "stable",
-      "period": "2016–2017",
-      "se": 0.8797875751
+      "period": "2016–2017"
     },
     {
       "index": 98.64031784,
+      "p10": 97.69066961,
+      "p90": 102.8747037,
       "pattern": "stable",
-      "period": "2018–2019",
-      "se": 0.881504552
+      "period": "2018–2019"
     },
     {
       "index": 99.94522836,
+      "p10": 98.81704671,
+      "p90": 101.7063661,
       "pattern": "stable",
-      "period": "2020–2021",
-      "se": 0.5232630917
+      "period": "2020–2021"
     },
     {
       "index": 97.89100175,
+      "p10": 96.19145018,
+      "p90": 99.34038574,
       "pattern": "stable",
-      "period": "2022–2023",
-      "se": 0.5279415696
+      "period": "2022–2023"
     },
     {
       "index": 103.8506217,
+      "p10": 101.5332188,
+      "p90": 106.8566225,
       "pattern": "stable",
-      "period": "2024–2025",
-      "se": 0.5849553784
+      "period": "2024–2025"
     },
     {
       "index": 97.84912361,
+      "p10": 95.54927189,
+      "p90": 103.4356704,
       "pattern": "rising",
-      "period": "2016–2017",
-      "se": 1.271429085
+      "period": "2016–2017"
     },
     {
       "index": 97.02244631,
+      "p10": 92.74245781,
+      "p90": 99.28027778,
       "pattern": "rising",
-      "period": "2018–2019",
-      "se": 1.465030263
+      "period": "2018–2019"
     },
     {
       "index": 94.3464779,
+      "p10": 92.90810248,
+      "p90": 98.9631662,
       "pattern": "rising",
-      "period": "2020–2021",
-      "se": 1.06721768
+      "period": "2020–2021"
     },
     {
       "index": 96.89700353,
+      "p10": 95.64837846,
+      "p90": 99.78723536,
       "pattern": "rising",
-      "period": "2022–2023",
-      "se": 0.749916934
+      "period": "2022–2023"
     },
     {
       "index": 115.2218384,
+      "p10": 109.371075,
+      "p90": 118.3147272,
       "pattern": "rising",
-      "period": "2024–2025",
-      "se": 1.384963843
+      "period": "2024–2025"
     }
   ],
+  "fewest_block_faces": [
+    {
+      "block_faces": 8,
+      "largest_face_share": 0.6875,
+      "neighbourhood": "MANTIQUEIRA",
+      "period": "2016–2017",
+      "records": 128
+    },
+    {
+      "block_faces": 9,
+      "largest_face_share": 0.51875,
+      "neighbourhood": "SANTA HELENA",
+      "period": "2018–2019",
+      "records": 160
+    },
+    {
+      "block_faces": 9,
+      "largest_face_share": 0.7281553398,
+      "neighbourhood": "SANTA HELENA",
+      "period": "2016–2017",
+      "records": 103
+    },
+    {
+      "block_faces": 10,
+      "largest_face_share": 0.5256410256,
+      "neighbourhood": "CALIFORNIA",
+      "period": "2022–2023",
+      "records": 78
+    },
+    {
+      "block_faces": 13,
+      "largest_face_share": 0.2903225806,
+      "neighbourhood": "CALIFORNIA",
+      "period": "2018–2019",
+      "records": 62
+    }
+  ],
+  "independent_records": {
+    "ari_median": 0.6007522768,
+    "ari_p10": 0.4587962622,
+    "ari_p90": 0.72232665,
+    "firm": {
+      "falling": 29,
+      "rising": 11,
+      "stable": 32
+    }
+  },
   "membership": [
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.825,
       "neighbourhood": "AEROPORTO",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.66,
+      "membership_share": 0.635,
       "neighbourhood": "ALTO BARROCA",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.795,
+      "membership_share": 0.565,
       "neighbourhood": "ALTO CAICARAS",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.98,
+      "firm": false,
+      "membership_share": 0.77,
       "neighbourhood": "ANCHIETA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.965,
+      "firm": false,
+      "membership_share": 0.795,
       "neighbourhood": "ARAGUAIA",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.73,
+      "membership_share": 0.555,
       "neighbourhood": "BANDEIRANTES",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.525,
+      "membership_share": 0.495,
       "neighbourhood": "BARREIRO",
       "pattern": "rising"
     },
     {
       "firm": true,
-      "membership_share": 0.985,
+      "membership_share": 0.8,
       "neighbourhood": "BARRO PRETO",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.85,
+      "firm": false,
+      "membership_share": 0.695,
       "neighbourhood": "BELVEDERE",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.975,
+      "firm": false,
+      "membership_share": 0.76,
       "neighbourhood": "BOA VIAGEM",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.955,
+      "firm": false,
+      "membership_share": 0.75,
       "neighbourhood": "BURITIS",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.76,
+      "membership_share": 0.485,
       "neighbourhood": "CAICARA ADELAIDE",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.875,
+      "firm": false,
+      "membership_share": 0.69,
       "neighbourhood": "CAICARAS",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.995,
+      "firm": false,
+      "membership_share": 0.765,
       "neighbourhood": "CALAFATE",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.955,
       "neighbourhood": "CALIFORNIA",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.995,
+      "membership_share": 0.93,
       "neighbourhood": "CAMARGOS",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.97,
+      "membership_share": 0.905,
       "neighbourhood": "CANDELARIA",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.68,
+      "membership_share": 0.47,
       "neighbourhood": "CARDOSO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.99,
+      "membership_share": 0.87,
       "neighbourhood": "CARLOS PRATES",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.985,
+      "membership_share": 0.845,
       "neighbourhood": "CARMO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.85,
       "neighbourhood": "CASTELO",
       "pattern": "rising"
     },
     {
       "firm": true,
-      "membership_share": 0.985,
+      "membership_share": 0.915,
       "neighbourhood": "CENTRO",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.95,
+      "firm": false,
+      "membership_share": 0.775,
       "neighbourhood": "CIDADE NOVA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.905,
+      "firm": false,
+      "membership_share": 0.47,
       "neighbourhood": "CINQUENTENARIO",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.96,
+      "membership_share": 0.84,
       "neighbourhood": "COLEGIO BATISTA",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.965,
+      "membership_share": 0.835,
       "neighbourhood": "CONJUNTO CALIFORNIA I",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.53,
+      "membership_share": 0.49,
       "neighbourhood": "COPACABANA",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.935,
+      "membership_share": 0.8,
       "neighbourhood": "CORACAO DE JESUS",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.89,
+      "membership_share": 0.815,
       "neighbourhood": "CORACAO EUCARISTICO",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.53,
+      "membership_share": 0.415,
       "neighbourhood": "CRUZEIRO",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.975,
+      "firm": false,
+      "membership_share": 0.73,
       "neighbourhood": "DIAMANTE",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.775,
+      "membership_share": 0.485,
       "neighbourhood": "DONA CLARA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.955,
+      "firm": false,
+      "membership_share": 0.74,
       "neighbourhood": "ENGENHO NOGUEIRA",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.965,
+      "membership_share": 0.935,
       "neighbourhood": "ESPLANADA",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.89,
       "neighbourhood": "ESTORIL",
       "pattern": "rising"
     },
     {
-      "firm": true,
-      "membership_share": 0.945,
+      "firm": false,
+      "membership_share": 0.385,
       "neighbourhood": "ESTRELA DO ORIENTE",
       "pattern": "rising"
     },
     {
       "firm": true,
-      "membership_share": 0.995,
+      "membership_share": 0.84,
       "neighbourhood": "FERNAO DIAS",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.855,
+      "firm": false,
+      "membership_share": 0.71,
       "neighbourhood": "FLORESTA",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.78,
+      "membership_share": 0.615,
       "neighbourhood": "FUNCIONARIOS",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.87,
+      "membership_share": 0.83,
       "neighbourhood": "GRACA",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.805,
+      "firm": false,
+      "membership_share": 0.57,
       "neighbourhood": "GRAJAU",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.23,
+      "membership_share": 0.175,
       "neighbourhood": "GUARANI",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.975,
+      "membership_share": 0.805,
       "neighbourhood": "GUTIERREZ",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.66,
+      "membership_share": 0.545,
       "neighbourhood": "HAVAI",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.625,
+      "membership_share": 0.47,
       "neighbourhood": "HELIOPOLIS",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.755,
+      "membership_share": 0.4,
       "neighbourhood": "INDAIA",
       "pattern": "rising"
     },
     {
-      "firm": true,
-      "membership_share": 0.965,
+      "firm": false,
+      "membership_share": 0.775,
       "neighbourhood": "IPIRANGA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.91,
+      "firm": false,
+      "membership_share": 0.7,
       "neighbourhood": "ITAPOA",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.95,
       "neighbourhood": "JAQUELINE",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.865,
+      "firm": false,
+      "membership_share": 0.52,
       "neighbourhood": "JARAGUA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.83,
+      "firm": false,
+      "membership_share": 0.635,
       "neighbourhood": "JARDIM AMERICA",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.795,
+      "membership_share": 0.675,
       "neighbourhood": "JARDIM GUANABARA",
       "pattern": "rising"
     },
     {
       "firm": true,
-      "membership_share": 0.975,
+      "membership_share": 0.915,
       "neighbourhood": "JARDIM MONTANHES",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.925,
+      "firm": false,
+      "membership_share": 0.715,
       "neighbourhood": "LIBERDADE",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 1.0,
+      "firm": false,
+      "membership_share": 0.79,
       "neighbourhood": "LOURDES",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.45,
+      "membership_share": 0.395,
       "neighbourhood": "LUXEMBURGO",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.44,
+      "membership_share": 0.41,
       "neighbourhood": "MANACAS",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.985,
+      "firm": false,
+      "membership_share": 0.785,
       "neighbourhood": "MANTIQUEIRA",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.325,
+      "membership_share": 0.37,
       "neighbourhood": "MILIONARIOS",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.555,
+      "membership_share": 0.46,
       "neighbourhood": "MINAS BRASIL",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.895,
+      "membership_share": 0.82,
       "neighbourhood": "MONSENHOR MESSIAS",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.96,
+      "membership_share": 0.88,
       "neighbourhood": "NOVA GAMELEIRA",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 0.985,
+      "membership_share": 0.805,
       "neighbourhood": "NOVA GRANADA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.975,
+      "firm": false,
+      "membership_share": 0.745,
       "neighbourhood": "NOVA SUISSA",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.555,
+      "membership_share": 0.525,
       "neighbourhood": "NOVO SAO LUCAS",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.585,
+      "membership_share": 0.53,
       "neighbourhood": "OURO PRETO",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.75,
+      "membership_share": 0.52,
       "neighbourhood": "PADRE EUSTAQUIO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.925,
       "neighbourhood": "PALMARES",
       "pattern": "rising"
     },
     {
       "firm": false,
-      "membership_share": 0.795,
+      "membership_share": 0.69,
       "neighbourhood": "PAQUETA",
       "pattern": "rising"
     },
     {
       "firm": true,
-      "membership_share": 0.995,
+      "membership_share": 0.855,
       "neighbourhood": "PIRATININGA",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.77,
+      "membership_share": 0.565,
       "neighbourhood": "PLANALTO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.86,
       "neighbourhood": "PRADO",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.975,
+      "firm": false,
+      "membership_share": 0.785,
       "neighbourhood": "RIO BRANCO",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.84,
       "neighbourhood": "SAGRADA FAMILIA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 1.0,
+      "firm": false,
+      "membership_share": 0.68,
       "neighbourhood": "SALGADO FILHO",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.605,
+      "membership_share": 0.51,
       "neighbourhood": "SANTA AMELIA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.99,
+      "firm": false,
+      "membership_share": 0.735,
       "neighbourhood": "SANTA BRANCA",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.765,
+      "membership_share": 0.54,
       "neighbourhood": "SANTA CRUZ",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.95,
+      "firm": false,
+      "membership_share": 0.725,
       "neighbourhood": "SANTA EFIGENIA",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.55,
+      "membership_share": 0.44,
       "neighbourhood": "SANTA HELENA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.915,
+      "firm": false,
+      "membership_share": 0.76,
       "neighbourhood": "SANTA INES",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.54,
+      "membership_share": 0.455,
       "neighbourhood": "SANTA LUCIA",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.445,
+      "membership_share": 0.37,
       "neighbourhood": "SANTA MONICA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.84,
+      "firm": false,
+      "membership_share": 0.73,
       "neighbourhood": "SANTA ROSA",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.8,
+      "firm": false,
+      "membership_share": 0.65,
       "neighbourhood": "SANTA TEREZA",
       "pattern": "falling"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.91,
       "neighbourhood": "SANTA TEREZINHA",
       "pattern": "rising"
     },
     {
-      "firm": true,
-      "membership_share": 0.81,
+      "firm": false,
+      "membership_share": 0.65,
       "neighbourhood": "SANTO AGOSTINHO",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.935,
+      "firm": false,
+      "membership_share": 0.69,
       "neighbourhood": "SANTO ANTONIO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.93,
+      "membership_share": 0.805,
       "neighbourhood": "SAO FRANCISCO",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.995,
+      "firm": false,
+      "membership_share": 0.78,
       "neighbourhood": "SAO JOAO BATISTA",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.985,
+      "firm": false,
+      "membership_share": 0.735,
       "neighbourhood": "SAO LUIZ",
       "pattern": "rising"
     },
     {
-      "firm": true,
-      "membership_share": 0.94,
+      "firm": false,
+      "membership_share": 0.545,
       "neighbourhood": "SAO PEDRO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.89,
       "neighbourhood": "SAVASSI",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.995,
+      "firm": false,
+      "membership_share": 0.78,
       "neighbourhood": "SERRA",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.895,
+      "membership_share": 0.805,
       "neighbourhood": "SERRA VERDE",
       "pattern": "falling"
     },
     {
       "firm": false,
-      "membership_share": 0.685,
+      "membership_share": 0.48,
       "neighbourhood": "SERRANO",
       "pattern": "stable"
     },
     {
       "firm": false,
-      "membership_share": 0.575,
+      "membership_share": 0.415,
       "neighbourhood": "SILVEIRA",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 1.0,
+      "membership_share": 0.87,
       "neighbourhood": "SION",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.985,
+      "membership_share": 0.94,
       "neighbourhood": "SOLAR DO BARREIRO",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 1.0,
+      "firm": false,
+      "membership_share": 0.61,
       "neighbourhood": "TEIXEIRA DIAS",
       "pattern": "falling"
     },
     {
-      "firm": true,
-      "membership_share": 0.925,
+      "firm": false,
+      "membership_share": 0.71,
       "neighbourhood": "UNIAO",
       "pattern": "stable"
     },
     {
       "firm": true,
-      "membership_share": 0.995,
+      "membership_share": 0.85,
       "neighbourhood": "VILA CLORIS",
       "pattern": "stable"
     },
     {
-      "firm": true,
-      "membership_share": 0.9,
+      "firm": false,
+      "membership_share": 0.72,
       "neighbourhood": "VILA PARIS",
       "pattern": "falling"
     }
@@ -749,10 +801,14 @@
       "new": 0.2185671958
     },
     "age_reference": "11_25",
-    "ari_median": 0.6007522768,
-    "ari_p10": 0.4587962622,
-    "ari_p90": 0.72232665,
+    "ari_median": 0.3210120252,
+    "ari_p10": 0.1742139714,
+    "ari_p90": 0.4541598394,
     "draws": 200,
+    "falling_first": [
+      107.2159736,
+      111.3546902
+    ],
     "firm_share": 0.8,
     "inertia": 0.6476067335,
     "k": 3,
@@ -760,24 +816,73 @@
     "n_neighbourhoods": 103,
     "patterns": {
       "falling": {
-        "firm": 29,
-        "max_centre_se": 0.9947744507,
+        "firm": 19,
+        "p10": [
+          107.2159736,
+          97.5011344,
+          95.38953315,
+          92.89481303,
+          98.72132688
+        ],
+        "p90": [
+          111.3546902,
+          102.2807335,
+          98.70995637,
+          95.22294861,
+          101.9358936
+        ],
         "size": 35
       },
       "rising": {
-        "firm": 11,
-        "max_centre_se": 1.465030263,
+        "firm": 5,
+        "p10": [
+          95.54927189,
+          92.74245781,
+          92.90810248,
+          95.64837846,
+          109.371075
+        ],
+        "p90": [
+          103.4356704,
+          99.28027778,
+          98.9631662,
+          99.78723536,
+          118.3147272
+        ],
         "size": 17
       },
       "stable": {
-        "firm": 32,
-        "max_centre_se": 0.881504552,
+        "firm": 10,
+        "p10": [
+          96.51340503,
+          97.69066961,
+          98.81704671,
+          96.19145018,
+          101.5332188
+        ],
+        "p90": [
+          101.5880218,
+          102.8747037,
+          101.7063661,
+          99.34038574,
+          106.8566225
+        ],
         "size": 51
       }
     },
     "period_minimum": 60,
     "random_state": 42,
+    "resampling": "block_face",
+    "rising_last": [
+      109.371075,
+      118.3147272
+    ],
+    "rising_size": [
+      8.9,
+      39.0
+    ],
     "seed": 20261123,
+    "separation_share": 0.93,
     "silhouettes": {
       "2": 0.2665041728,
       "3": 0.2655948602,

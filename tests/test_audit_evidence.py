@@ -108,6 +108,7 @@ def test_reference_trajectory_patterns(evidence_dir) -> None:
     metadata = evidence["metadata"]
     members = pd.DataFrame(evidence["membership"])
     centres = pd.DataFrame(evidence["centres"])
+    assert set(centres) == {"pattern", "period", "index", "p10", "p90"}
     assert_pinned_patterns(metadata, members, centres)
     assert len(members) == members["neighbourhood"].nunique() == metadata["n_neighbourhoods"]
     assert members["membership_share"].between(0, 1).all()
@@ -120,15 +121,30 @@ def test_reference_trajectory_patterns(evidence_dir) -> None:
     assert alternative["other_switches"] == ["LUXEMBURGO"]
 
 
-def test_block_face_pattern_stability_structure(evidence_dir) -> None:
+def test_independent_record_pattern_stability_structure(evidence_dir) -> None:
     evidence = _load_json(evidence_dir / "trajectory_patterns.json")
-    block = evidence["block_face"]
-    assert set(block) == {"firm", "ari_p10", "ari_median", "ari_p90"}
-    assert -1 <= block["ari_p10"] <= block["ari_median"] <= block["ari_p90"] <= 1
-    assert block["firm"].keys() == set(PATTERN_ORDER)
-    for name, count in block["firm"].items():
+    independent = evidence["independent_records"]
+    assert set(independent) == {"firm", "ari_p10", "ari_median", "ari_p90"}
+    assert (
+        -1 <= independent["ari_p10"] <= independent["ari_median"] <= independent["ari_p90"] <= 1
+    )
+    assert independent["firm"].keys() == set(PATTERN_ORDER)
+    for name, count in independent["firm"].items():
         assert isinstance(count, int)
         assert 0 <= count <= evidence["metadata"]["patterns"][name]["size"]
+
+
+def test_pattern_cells_with_fewest_block_faces(evidence_dir) -> None:
+    cells = _load_json(evidence_dir / "trajectory_patterns.json")["fewest_block_faces"]
+    assert len(cells) == 5
+    assert [row["block_faces"] for row in cells] == [8, 9, 9, 10, 13]
+    assert [(row["neighbourhood"], row["period"]) for row in cells[:3]] == [
+        ("MANTIQUEIRA", "2016–2017"),
+        ("SANTA HELENA", "2018–2019"),
+        ("SANTA HELENA", "2016–2017"),
+    ]
+    assert cells[1]["records"] == 160
+    assert cells[1]["largest_face_share"] == pytest.approx(83 / 160)
 
 
 @pytest.mark.parametrize("spec_id", REFERENCE_SPECIFICATIONS)
