@@ -8,7 +8,7 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 **[Acessar o painel interativo](https://bh-itbi-dashboard.onrender.com/)**
 
-![Panorama com filtros, indicadores, mapa do valor nominal por m², histograma do valor real por m², séries mensais, distribuições por bairro e trajetórias trimestrais.](docs/images/panorama.png)
+![Panorama com filtros, indicadores, mapa do valor real por m², histograma do valor real por m², séries mensais, distribuições por bairro e trajetórias trimestrais.](docs/images/panorama.png)
 
 *Panorama dos valores declarados de apartamentos e casas no recorte padrão, com mapa, distribuições, séries mensais e trajetórias por bairro.*
 
