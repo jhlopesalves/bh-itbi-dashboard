@@ -15,7 +15,7 @@ from threadpoolctl import threadpool_limits
 
 from bh_itbi import models
 from bh_itbi.app import create_app
-from bh_itbi.cluster import ClusteringError, cluster_trajectories
+from bh_itbi.cluster import ClusteringError, cluster_trajectories, trajectory_stability
 from bh_itbi.config import CLUSTER_K, CLUSTER_YEAR_MINIMUM, START_YEAR, YEARS
 
 
@@ -215,3 +215,31 @@ def test_prepares_and_displays_a_four_group_fit_with_undefined_silhouette(
     assert "A silhueta é indefinida com um bairro por grupo." in json.dumps(
         response.get_json(), ensure_ascii=False
     )
+
+
+def test_stability_uses_published_labels_and_fixed_resampling(snapshot_frame, snapshot_models):
+    members = snapshot_models.members
+    original = members.copy(deep=True)
+    metadata = snapshot_models.metadata["clusters"]
+    with threadpool_limits(limits=1):
+        first, second = (
+            trajectory_stability(
+                snapshot_frame, members, metadata, rng=np.random.default_rng(713), draws=4
+            )
+            for _ in range(2)
+        )
+    assert first == second
+    pd.testing.assert_frame_equal(members, original)
+    assert first["published_sizes"] == metadata["members_per_group"]
+    assert first["published_silhouettes"] == metadata["silhouettes"]
+    bootstrap = first["bootstrap"]
+    assert bootstrap["draws"] == 4
+    assert -1 <= bootstrap["ari_p10"] <= bootstrap["ari_median"] <= bootstrap["ari_p90"] <= 1
+    assert bootstrap["endpoint_se_median"] > 0
+    expected_group = members.set_index("neighbourhood")["group"].to_dict()["SAVASSI"]
+    row = next(item for item in first["composition"] if item["neighbourhood"] == "SAVASSI")
+    assert row["group"] == expected_group
+    assert row["all_n_start"] == row["all_n_end"] == 32
+    assert row["excluding_new_n_start"] == row["excluding_new_n_end"] == 24
+    assert not row["all_small_cell"]
+    assert row["excluding_new_small_cell"]
