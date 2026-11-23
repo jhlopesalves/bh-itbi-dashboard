@@ -64,31 +64,41 @@ def test_single_named_colour_tokens_and_rgb_mixing() -> None:
     assert theme.composition_tint(theme.SURFACE, strength=0.62) == theme.SURFACE
 
 
-def test_reference_neighbourhoods_keep_their_colours() -> None:
+def test_reference_neighbourhoods_use_fixed_solid_styles() -> None:
     expected = {
         "SAVASSI": "#4f8f4a",
         "LOURDES": "#a8326a",
         "BURITIS": "#2a9bb5",
         "CASTELO": "#7a4a2a",
-        "CENTRO": "#8f579f",
+        "CENTRO": "#3d3a8c",
     }
-    assert theme.neighbourhood_colours([]) == expected
+    assert theme.neighbourhood_styles([]) == {
+        name: theme.NeighbourhoodStyle(colour, "solid") for name, colour in expected.items()
+    }
     for name, colour in expected.items():
-        assert theme.neighbourhood_colours([name]) == {name: colour}
-    assert theme.neighbourhood_colours(["SION", *reversed(expected)]) == expected | {
-        "SION": "#5b3db8"
+        assert theme.neighbourhood_styles([name]) == {
+            name: theme.NeighbourhoodStyle(colour, "solid")
+        }
+
+
+def test_extra_neighbourhood_dashes_follow_distinct_names_in_alphabetical_order() -> None:
+    names = ["SION", "CENTRO", "SION", "ANCHIETA"]
+    expected = {
+        "ANCHIETA": theme.NeighbourhoodStyle("#2d2d2d", "solid"),
+        "CENTRO": theme.NeighbourhoodStyle("#3d3a8c", "solid"),
+        "SION": theme.NeighbourhoodStyle("#2d2d2d", "dash"),
     }
-
-
-def test_extra_neighbourhood_colours_follow_distinct_names_in_alphabetical_order() -> None:
-    colours = theme.neighbourhood_colours(["SION", "UNKNOWN", "SION", "ANCHIETA"])
-    assert colours == {"ANCHIETA": "#5b3db8", "SION": "#7e2935", "UNKNOWN": "#6b761d"}
-    assert not set(colours.values()) & {theme.TEAL, *theme.neighbourhood_colours([]).values()}
+    assert theme.neighbourhood_styles(names) == expected
+    assert theme.neighbourhood_styles(["UNKNOWN", *names]) == expected | {
+        "UNKNOWN": theme.NeighbourhoodStyle("#2d2d2d", "dot")
+    }
 
 
 def test_four_extra_neighbourhoods_switch_the_whole_selection_to_slate() -> None:
     names = ["SION", "ANCHIETA", "FUNCIONARIOS", "UNKNOWN", "SAVASSI", "CENTRO", "SION"]
-    assert theme.neighbourhood_colours(names) == dict.fromkeys(names, "#8a929a")
+    assert theme.neighbourhood_styles(names) == dict.fromkeys(
+        names, theme.NeighbourhoodStyle("#8a929a", "solid")
+    )
 
 
 def test_browser_chart_cutoffs_match_configuration() -> None:

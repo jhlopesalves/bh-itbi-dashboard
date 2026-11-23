@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from math import ceil, floor
-from typing import TypedDict
+from typing import NamedTuple, TypedDict
 
 import plotly.graph_objects as go
 
@@ -27,7 +27,6 @@ TEAL = "#1d6f73"
 CLAY = "#c0603a"
 BLUE = "#3e6daa"
 GOLD = "#a88620"
-PLUM = "#8f579f"
 SLATE = "#8a929a"
 
 GRID = "#e6eae6"
@@ -75,9 +74,18 @@ FIXED_NEIGHBOURHOOD_COLOURS: dict[str, str] = {
     "LOURDES": "#a8326a",
     "BURITIS": "#2a9bb5",
     "CASTELO": "#7a4a2a",
-    "CENTRO": PLUM,
+    "CENTRO": "#3d3a8c",
 }
-EXTRA_NEIGHBOURHOOD_COLOURS = ("#5b3db8", "#7e2935", "#6b761d")
+EXTRA_NEIGHBOURHOOD_COLOUR = "#2d2d2d"
+EXTRA_NEIGHBOURHOOD_DASHES = ("solid", "dash", "dot")
+
+
+class NeighbourhoodStyle(NamedTuple):
+    """Colour and line dash for a neighbourhood series."""
+
+    colour: str
+    dash: str
+
 
 # In draw order, from the earliest period at the back to the latest in front.
 DISTANCE_PERIOD_STYLES: dict[str, tuple[str, float, float]] = dict(
@@ -115,15 +123,25 @@ def rgba(colour: str, opacity: float) -> str:
 REFERENCE: LineStyle = {"color": rgba(INK, 0.45), "dash": "4px,3px", "width": 0.9}
 
 
-def neighbourhood_colours(names: Sequence[str]) -> dict[str, str]:
-    """Assign hues to distinct source names, using slate when the extra hues run out."""
+def neighbourhood_styles(names: Sequence[str]) -> dict[str, NeighbourhoodStyle]:
+    """Assign fixed colours and ordered charcoal dashes to the selected names."""
     selected = dict.fromkeys(names or DEFAULT_NEIGHBOURHOODS)
     extras = sorted(selected.keys() - FIXED_NEIGHBOURHOOD_COLOURS.keys())
-    if len(extras) > len(EXTRA_NEIGHBOURHOOD_COLOURS):
-        return dict.fromkeys(selected, SLATE)
-    extra_colours = dict(zip(extras, EXTRA_NEIGHBOURHOOD_COLOURS[: len(extras)], strict=True))
-    colours = FIXED_NEIGHBOURHOOD_COLOURS | extra_colours
-    return {name: colours[name] for name in selected}
+    if len(extras) > len(EXTRA_NEIGHBOURHOOD_DASHES):
+        return dict.fromkeys(selected, NeighbourhoodStyle(SLATE, "solid"))
+    styles = {
+        name: NeighbourhoodStyle(colour, "solid")
+        for name, colour in FIXED_NEIGHBOURHOOD_COLOURS.items()
+    }
+    styles.update(
+        {
+            name: NeighbourhoodStyle(EXTRA_NEIGHBOURHOOD_COLOUR, dash)
+            for name, dash in zip(
+                extras, EXTRA_NEIGHBOURHOOD_DASHES[: len(extras)], strict=True
+            )
+        }
+    )
+    return {name: styles[name] for name in selected}
 
 
 def composition_tint(hue: str, *, strength: float = 0.62) -> str:

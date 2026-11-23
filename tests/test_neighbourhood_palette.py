@@ -6,7 +6,7 @@ from math import dist
 from bh_itbi.theme import (
     BLUE,
     CLAY,
-    EXTRA_NEIGHBOURHOOD_COLOURS,
+    EXTRA_NEIGHBOURHOOD_COLOUR,
     FIXED_NEIGHBOURHOOD_COLOURS,
     GOLD,
     SLATE,
@@ -41,12 +41,18 @@ def relative_luminance(colour: str) -> float:
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
 
-def test_neighbourhood_palette_has_distinct_hues_and_adequate_contrast() -> None:
-    colours = (*FIXED_NEIGHBOURHOOD_COLOURS.values(), *EXTRA_NEIGHBOURHOOD_COLOURS)
-    reserved = (TEAL, CLAY, BLUE, GOLD, SLATE)
-    for first, second in (*combinations(colours, 2), *product(colours, reserved)):
+def test_fixed_neighbourhood_colours_have_distinct_hues() -> None:
+    colours = FIXED_NEIGHBOURHOOD_COLOURS.values()
+    for first, second in combinations(colours, 2):
+        separation = dist(cielab_d65(first), cielab_d65(second))
+        assert separation >= 40, (first, second, separation)
+    for first, second in product(colours, (TEAL, CLAY, BLUE, GOLD)):
         separation = dist(cielab_d65(first), cielab_d65(second))
         assert separation >= 20, (first, second, separation)
+
+
+def test_neighbourhood_palette_has_adequate_contrast() -> None:
+    colours = (*FIXED_NEIGHBOURHOOD_COLOURS.values(), EXTRA_NEIGHBOURHOOD_COLOUR, SLATE)
     for colour in colours:
         dark, light = sorted((relative_luminance(colour), relative_luminance(SURFACE)))
         ratio = (light + 0.05) / (dark + 0.05)

@@ -50,7 +50,7 @@ from bh_itbi.theme import (
     TYPE_STYLES,
     composition_tint,
     empty_figure,
-    neighbourhood_colours,
+    neighbourhood_styles,
     padded_price_range,
     rgba,
     themed,
@@ -295,7 +295,7 @@ def neighbourhood_comparison_data(
     names: Sequence[str],
 ) -> ComparisonPlot:
     """Send only the visible curves and summaries to the browser."""
-    colours = neighbourhood_colours(names)
+    styles = neighbourhood_styles(names)
     visible: list[ComparisonRow] = []
     for row in rows:
         if row.density is None:
@@ -305,7 +305,7 @@ def neighbourhood_comparison_data(
             visible_prices, visible_density = trim_log_density(grid, row.density)
             prices = visible_prices.tolist()
             density = visible_density.tolist()
-        colour = colours[row.neighbourhood]
+        colour = styles[row.neighbourhood].colour
         visible.append(
             {
                 "name": row.neighbourhood.title(),
@@ -334,7 +334,7 @@ def neighbourhood_trajectories_figure(
     quarterly = temporal_table(rows, filters, neighbourhood=True)
     fig = go.Figure()
     plotted: list[pd.Series] = []
-    for name, colour in neighbourhood_colours(filters.neighbourhoods).items():
+    for name, style in neighbourhood_styles(filters.neighbourhoods).items():
         subset = quarterly.loc[quarterly["neighbourhood"].eq(name)]
         plotted.append(subset["median"])
         label = name.title()
@@ -344,7 +344,7 @@ def neighbourhood_trajectories_figure(
                 y=subset["median"],
                 mode="lines+markers",
                 name=label,
-                line={"color": colour, "width": 2},
+                line={"color": style.colour, "dash": style.dash, "width": 2},
                 marker={"size": 4},
                 connectgaps=False,
                 customdata=[

@@ -37,6 +37,7 @@ from bh_itbi.overview import map_points
 from bh_itbi.text.shared import CITY_NAME, TYPE_LABELS
 from bh_itbi.theme import (
     AXIS,
+    EXTRA_NEIGHBOURHOOD_COLOUR,
     GRID,
     INK,
     MUTED,
@@ -46,7 +47,7 @@ from bh_itbi.theme import (
     TRANSPARENT,
     TYPE_STYLES,
     composition_tint,
-    neighbourhood_colours,
+    neighbourhood_styles,
     rgba,
 )
 
@@ -518,13 +519,14 @@ def test_neighbourhood_cards_share_colours_and_labels(
         trace["name"]: trace for trace in figure["data"] if trace["name"] != CITY_NAME
     }
     assert trajectories
-    colours = neighbourhood_colours(sorted(VIEW_MATRIX[case][2]))
+    styles = neighbourhood_styles(sorted(VIEW_MATRIX[case][2]))
     assert [trace["name"] for trace in figure["data"]] == [
-        *(name.title() for name in colours),
+        *(name.title() for name in styles),
         CITY_NAME,
     ]
-    assert {name: trace["line"]["color"] for name, trace in trajectories.items()} == {
-        name.title(): colour for name, colour in colours.items()
+    assert {name: trace["line"] for name, trace in trajectories.items()} == {
+        name.title(): {"color": style.colour, "dash": style.dash, "width": 2}
+        for name, style in styles.items()
     }
     for trace in figure["data"]:
         assert "meta" not in trace
@@ -661,7 +663,12 @@ def test_panorama_colours_keep_their_assigned_roles(
             for colour in _plotly_trace_colours(trace)
         )
     neutrals = {INK, MUTED, SURFACE, GRID, AXIS, SLATE, TRANSPARENT, REFERENCE["color"]}
-    neutrals.update(composition_tint(SLATE, strength=strength) for strength in (0.34, 0.68))
+    neutrals.add(EXTRA_NEIGHBOURHOOD_COLOUR)
+    neutrals.update(
+        composition_tint(colour, strength=strength)
+        for colour in (SLATE, EXTRA_NEIGHBOURHOOD_COLOUR)
+        for strength in (0.34, 0.68)
+    )
     property_colours = {
         colour: TYPE_LABELS[kind]
         for kind, style in TYPE_STYLES.items()
