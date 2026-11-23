@@ -92,14 +92,12 @@ def test_city_reference_removes_neighbourhood_filter(source_factory):
 
 def test_map_screen_and_seeded_sample_do_not_change_summary_population(source_factory):
     frame = prepare_transactions(source_factory(9000))
-    scales = map_reference_scales(frame)
-    points, stats = map_points(frame, scales)
+    points, stats = map_points(frame)
     assert stats.candidates == 9000
     assert stats.shown == 8000
     assert len(points) == 8000
     assert points["price_per_m2_brl_real"].between(stats.lower, stats.upper).all()
-    assert (stats.lower, stats.upper) == (scales["price_lower"], scales["price_upper"])
-    pd.testing.assert_frame_equal(points, map_points(frame, scales)[0])
+    pd.testing.assert_frame_equal(points, map_points(frame)[0])
     assert summary(frame, 2016).n == 9000
 
 
@@ -118,7 +116,7 @@ def test_map_reference_scales_use_full_eligible_geocoded_population(snapshot_fra
 
 def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
     scales = map_reference_scales(snapshot_frame)
-    points, _ = map_points(filter_transactions(snapshot_frame, Filters()), scales)
+    points, _ = map_points(filter_transactions(snapshot_frame, Filters()))
     area = points["built_area_m2"]
     reference = scales["area_reference"]
     assert area.gt(reference).any()
@@ -128,6 +126,21 @@ def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
     assert marker.sizeref == reference / 16**2
     assert marker.sizemode == "area"
     assert marker.sizemin == 2.5
+
+
+def test_map_retains_selection_above_the_reference_colour_range(source_factory):
+    frame = prepare_transactions(source_factory(100))
+    scales = map_reference_scales(frame)
+    price = "price_per_m2_brl_real"
+    selected = frame.assign(**{price: frame[price] + scales["price_upper"]})
+    assert selected[price].gt(scales["price_upper"]).all()
+
+    points, stats = map_points(selected)
+    assert stats.shown == stats.screened == len(points)
+    assert stats.shown / stats.candidates >= 0.95
+    marker = map_figure(points, "white-bg", scales).data[0].marker
+    assert marker.cmax == scales["price_upper"]
+    np.testing.assert_array_equal(marker.color, points[price])
 
 
 def test_quantiles_count_non_missing_values_before_suppression():

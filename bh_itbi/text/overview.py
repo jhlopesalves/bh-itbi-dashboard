@@ -132,9 +132,11 @@ def map_caption(shown: int, screened: int) -> str:
     return (
         f"{number(shown)} pontos de {number(screened)} "
         f"registros entre P{cfg.MAP_LOWER_PERCENTILE} e P{cfg.MAP_UPPER_PERCENTILE} "
-        f"do valor real por m² de {cfg.START_YEAR}–{cfg.END_YEAR} (escala fixa), "
-        "após exigir localização de face "
-        f"e área positiva. Amostra de até {number(cfg.MAP_SAMPLE_SIZE)} pontos; "
+        "do valor real por m² do recorte, após exigir localização de face e área positiva. "
+        f"As cores usam uma escala fixa para {cfg.START_YEAR}–{cfg.END_YEAR} "
+        f"(P{cfg.MAP_LOWER_PERCENTILE}–P{cfg.MAP_UPPER_PERCENTILE} do período completo); "
+        "valores fora dela recebem a cor do extremo. "
+        f"Amostra de até {number(cfg.MAP_SAMPLE_SIZE)} pontos; "
         "os indicadores usam todo o recorte elegível."
     )
 

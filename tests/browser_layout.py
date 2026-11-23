@@ -6,7 +6,7 @@ Pass --chromium for a system Chrome or Chromium executable.
 
 import argparse
 import re
-from itertools import combinations
+from itertools import combinations, pairwise
 from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import Browser, Page, expect, sync_playwright
@@ -111,6 +111,19 @@ def click_legend_item(page: Page, identifier: str, label: str, *, double: bool =
         item.click()
     # Wait past Plotly's 300ms doubleClickDelay so single clicks fire and do not merge.
     page.wait_for_timeout(450)
+
+
+def check_map_colourbar(page: Page) -> None:
+    """Check the endpoint labels, round ticks and their rendered spacing."""
+    labels = page.locator("#geo-map .cbaxis text")
+    expect(labels).to_have_text(
+        ["≤ 850", *(f"{i}.000" for i in range(1, 10)), "≥ 9.325"], timeout=45_000
+    )
+    boxes = labels.evaluate_all("""nodes => nodes.map(node => {
+        const box = node.getBoundingClientRect();
+        return {top: box.top, bottom: box.bottom};
+    })""")
+    assert all(upper["bottom"] <= lower["top"] for lower, upper in pairwise(boxes)), boxes
 
 
 def check_overview_legends(page: Page, url: str) -> None:
@@ -517,6 +530,7 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         expect(overview).to_be_focused()
         expect(overview).to_have_attribute("aria-selected", "true")
         wait_for_plot(page, "geo-map")
+        check_map_colourbar(page)
         assert_no_plot_annotations(
             page, "distribution-figure", "trend-figure", "neighbourhood-figure"
         )

@@ -177,6 +177,8 @@ h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 
 /* Keep the previous drawing inside its frame while a responsive resize settles. */
 .plot { width: 100%; min-width: 0; overflow: clip; }
 .js-plotly-plot, .plot-container, .svg-container { max-width: 100%; }
+/* Offset the lower endpoint label from the nearby first round tick. */
+#geo-map .cbaxis > g:first-child:not(:only-child) > text { translate: 0 8px; }
 .map-card .card-heading { min-height: 64px; }
 .map-style-field { min-width: 118px; max-width: 136px; flex-shrink: 0; }
 .distribution-control { margin: 14px 0 4px; }

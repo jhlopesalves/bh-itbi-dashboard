@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from math import ceil, floor, log10
 from typing import TypedDict
 
 import numpy as np
@@ -220,10 +221,23 @@ def _map_hover_data(points: pd.DataFrame) -> list[list[str]]:
     ]
 
 
+def _map_colourbar_ticks(lower: float, upper: float) -> tuple[list[float], list[str]]:
+    """Place open-ended labels around round interior colour-bar ticks."""
+    if lower == upper:
+        return [lower], [number(lower)]
+    step = 10 ** floor(log10(upper - lower))
+    interior = [i * step for i in range(floor(lower / step) + 1, ceil(upper / step))]
+    return (
+        [lower, *interior, upper],
+        [f"≤ {number(lower)}", *(number(tick) for tick in interior), f"≥ {number(upper)}"],
+    )
+
+
 def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure:
     """Draw area-scaled circles coloured by real price per m² on fixed scales."""
     if points.empty:
         return empty_figure(MAP_EMPTY_MESSAGE, 540)
+    tickvals, ticktext = _map_colourbar_ticks(scales["price_lower"], scales["price_upper"])
     fig = go.Figure(
         go.Scattermap(
             lat=points["lat"],
@@ -245,7 +259,9 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
                     "thickness": 8,
                     "len": 0.82,
                     "outlinewidth": 0,
-                    "tickformat": ",.0f",
+                    "tickmode": "array",
+                    "tickvals": tickvals,
+                    "ticktext": ticktext,
                     "tickfont": {"size": 10, "color": MUTED},
                     "xpad": 8,
                 },

@@ -260,7 +260,7 @@ def _register_overview_callback(
     # than keeping sixteen full sets of Plotly figures for arbitrary selections.
     @lru_cache(maxsize=2)
     def overview(filters: Filters, distribution_metric: str, map_style: str) -> OverviewOutput:
-        view = build_overview_view(frame, filters, distribution_metric, scales)
+        view = build_overview_view(frame, filters, distribution_metric)
         return {
             "geo_map": map_figure(view.points, map_style, scales),
             "map_caption": view.map_caption,

@@ -13,6 +13,7 @@ from test_app import post_callback
 from bh_itbi import data, models
 from bh_itbi.app import create_app
 from bh_itbi.config import MODEL_VERSION
+from bh_itbi.filters import Filters, filter_transactions, positive_area
 
 
 @pytest.fixture
@@ -191,6 +192,32 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
     assert age["rows"][-1]["observed"] == 0.0
 
     assert_real_models(app)
+
+
+@pytest.mark.skipif(
+    os.environ.get("BH_ITBI_REAL_DATA") != "1",
+    reason="Run after main.py prepare with BH_ITBI_REAL_DATA=1 (no downloads or fitting)",
+)
+def test_savassi_map_retains_at_least_95_percent_of_candidates() -> None:
+    filters = Filters(neighbourhoods=("SAVASSI",))
+    frame = data.load_transactions(allow_prepare=False)
+    selected = filter_transactions(frame, filters)
+    candidates = int((selected["face_geocoded"] & positive_area(selected)).sum())
+    app = create_app(require_prepared=True)
+    result = post_callback(
+        app,
+        "geo-map.figure",
+        [
+            filters.property_type,
+            [filters.start_year, filters.end_year],
+            list(filters.neighbourhoods),
+            "price_per_m2_brl_real",
+            "white-bg",
+        ],
+    )
+    drawn = len(result["geo-map"]["figure"]["data"][0]["customdata"])
+    assert candidates > 0
+    assert drawn / candidates >= 0.95
 
 
 def assert_real_models(app):

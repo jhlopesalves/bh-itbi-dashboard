@@ -200,8 +200,8 @@ def map_reference_scales(frame: pd.DataFrame) -> MapScales:
     }
 
 
-def map_points(frame: pd.DataFrame, scales: MapScales) -> tuple[pd.DataFrame, MapStats]:
-    """Apply the map screen, fixed real-price limits and seeded sample.
+def map_points(frame: pd.DataFrame) -> tuple[pd.DataFrame, MapStats]:
+    """Trim the eligible selection at its real-price percentiles and sample it.
 
     This sample is *only* for drawing. All summaries and analytical figures use
     the original filtered eligible records. Identical centroids are not jittered
@@ -217,8 +217,9 @@ def map_points(frame: pd.DataFrame, scales: MapScales) -> tuple[pd.DataFrame, Ma
         "price_per_m2_brl_real",
     ]
     candidates = frame.loc[_map_candidate_mask(frame), columns]
-    lower, upper = scales["price_lower"], scales["price_upper"]
-    screened = candidates.loc[candidates["price_per_m2_brl_real"].between(lower, upper)]
+    prices = candidates["price_per_m2_brl_real"]
+    lower, upper = (float(value) for value in prices.quantile(list(MAP_TRIM_QUANTILES)))
+    screened = candidates.loc[prices.between(lower, upper)]
     points = screened.sample(
         n=min(MAP_SAMPLE_SIZE, len(screened)), random_state=MAP_SAMPLE_SEED
     )

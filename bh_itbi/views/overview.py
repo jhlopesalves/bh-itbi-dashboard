@@ -16,7 +16,6 @@ from bh_itbi.config import (
 from bh_itbi.filters import Filters, filter_transactions
 from bh_itbi.formatting import currency, number
 from bh_itbi.overview import (
-    MapScales,
     NeighbourhoodDistribution,
     distribution_quartiles,
     map_points,
@@ -117,7 +116,7 @@ def _comparison_card_copy(
 
 
 def build_overview_view(
-    frame: pd.DataFrame, filters: Filters, distribution_metric: str, scales: MapScales
+    frame: pd.DataFrame, filters: Filters, distribution_metric: str
 ) -> OverviewView:
     """Compute filtered subsets, KPIs, quartiles and explanatory captions for overview."""
     selected = filter_transactions(frame, filters)
@@ -126,7 +125,7 @@ def build_overview_view(
         if filters.neighbourhoods
         else selected
     )
-    points, map_stats = map_points(selected, scales)
+    points, map_stats = map_points(selected)
     values = summary(selected, filters.end_year)
     comparison_names = filters.neighbourhoods or DEFAULT_NEIGHBOURHOODS
     comparison = selected.loc[selected["neighbourhood"].isin(comparison_names)]
