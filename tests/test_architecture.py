@@ -29,6 +29,7 @@ LAYER_RANK: dict[str, int] = {
     "bh_itbi.diagnostics": 5,
     "bh_itbi.cluster": 5,
     "bh_itbi.models": 5,
+    "bh_itbi.sensitivity": 5,
     "bh_itbi.age": 5,
     "bh_itbi.views": 6,
     "bh_itbi.figures": 7,
