@@ -17,6 +17,7 @@ from bh_itbi import models
 from bh_itbi.app import create_app
 from bh_itbi.cluster import ClusteringError, cluster_trajectories, trajectory_stability
 from bh_itbi.config import CLUSTER_K, CLUSTER_YEAR_MINIMUM, START_YEAR, YEARS
+from bh_itbi.text.models import trajectories_subtitle
 
 
 def _transactions(growth_rates: Sequence[int]) -> pd.DataFrame:
@@ -189,7 +190,7 @@ def test_scores_only_requested_label_counts_and_keeps_the_selected_fit(
     np.testing.assert_allclose(terminal, [127.45, 118.45, 109.45, 100.45])
 
 
-def test_prepares_and_displays_a_four_group_fit_with_undefined_silhouette(
+def test_prepares_four_groups_but_displays_neighbourhood_trajectories(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, snapshot_frame: pd.DataFrame
 ) -> None:
     neighbourhoods = ["SAVASSI", "LOURDES", "BURITIS", "CASTELO"]
@@ -210,11 +211,15 @@ def test_prepares_and_displays_a_four_group_fit_with_undefined_silhouette(
     assert prepared.metadata == metadata
 
     app = create_app(frame=frame, models=prepared)
-    response = app.server.test_client().get("/_dash-layout")
+    client = app.server.test_client()
+    response = client.get("/_dash-layout")
     assert response.status_code == 200
-    assert "A silhueta é indefinida com um bairro por grupo." in json.dumps(
-        response.get_json(), ensure_ascii=False
-    )
+    layout = json.dumps(response.get_json(), ensure_ascii=False)
+    assert trajectories_subtitle(len(neighbourhoods)) in layout
+    assert all(term not in layout for term in ("Grupo 1", "cluster-group", "A silhueta"))
+    dependencies = client.get("/_dash-dependencies")
+    assert dependencies.status_code == 200
+    assert b"cluster-group" not in dependencies.data
 
 
 def test_stability_uses_published_labels_and_fixed_resampling(snapshot_frame, snapshot_models):

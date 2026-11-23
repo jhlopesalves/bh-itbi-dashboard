@@ -13,9 +13,9 @@ from bh_itbi.figures.diagnostics import (
 from bh_itbi.figures.distribution import distribution_figure
 from bh_itbi.figures.models import (
     band_traces,
-    clusters_figure,
     hedonic_figure,
     ribbon_grid,
+    trajectories_figure,
 )
 from bh_itbi.figures.overview import (
     ComparisonPlot,
@@ -39,7 +39,6 @@ __all__ = [
     "age_chart_data",
     "age_segments",
     "band_traces",
-    "clusters_figure",
     "distance_figure",
     "distribution_figure",
     "heaping_figure",
@@ -50,4 +49,5 @@ __all__ = [
     "ribbon_grid",
     "tax_base_figure",
     "temporal_figure",
+    "trajectories_figure",
 ]

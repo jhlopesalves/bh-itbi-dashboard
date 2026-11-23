@@ -16,10 +16,6 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 *Índice hedônico, média geométrica bruta e decomposição da diferença por característica observada na amostra de apartamentos e casas (1º tri. 2016 = 100).*
 
-![Trajetórias dos bairros de 2016 a 2025, normalizadas em 100 no ano inicial e reunidas em quatro grupos, com os centros destacados.](docs/images/trajetorias-bairros.png)
-
-*Trajetórias das medianas anuais do valor real por m² de apartamentos, com base 100 em 2016 e os centros dos quatro grupos em destaque.*
-
 ## Executar localmente
 
 Com o [uv](https://docs.astral.sh/uv/) instalado, na pasta do projeto:

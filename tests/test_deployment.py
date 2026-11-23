@@ -194,20 +194,17 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
 
 
 def assert_real_models(app):
-    cluster_colours = {"1": "#6c4fae", "2": "#3d7f4a", "3": "#d77a9a", "4": "#e09a3e"}
-    for group in ("all", *cluster_colours):
-        result = post_callback(app, "hedonic-figure.figure", [group])
-        hedonic_figure = result["hedonic-figure"]["figure"]
-        assert hedonic_figure["layout"]["yaxis"]["type"] == "log"
-        assert hedonic_figure["data"][-1]["name"] == "Índice hedônico · IC 95%"
-        traces = result["clusters-figure"]["figure"]["data"]
-        expected = cluster_colours if group == "all" else {group: cluster_colours[group]}
-        assert {trace["legendgroup"] for trace in traces} == set(expected)
-        for trace in traces:
-            assert trace["line"]["color"] == expected[trace["legendgroup"]]
-            if not trace.get("showlegend", True):
-                assert trace["opacity"] == 0.25
-        assert result["cluster-members"]["children"]
+    result = post_callback(app, "hedonic-figure.figure", ["models"])
+    hedonic_figure = result["hedonic-figure"]["figure"]
+    assert hedonic_figure["layout"]["yaxis"]["type"] == "log"
+    assert hedonic_figure["data"][-1]["name"] == "Índice hedônico · IC 95%"
+    traces = result["trajectories-figure"]["figure"]["data"]
+    assert len(traces) == 95
+    assert [trace["name"] for trace in traces if trace.get("showlegend", True)] == [
+        "Bairros",
+        "Mediana entre os bairros",
+    ]
+    assert all(trace["legendgroup"] == "neighbourhoods" for trace in traces[:-1])
     fitted = models.load_models()
     assert fitted is not None
     assert fitted.metadata["hedonic"]["n"] == 202204

@@ -1,4 +1,4 @@
-"""Models tab Plotly figures: hedonic composition ribbon and trajectory clusters."""
+"""Draw the hedonic composition ribbon and observed neighbourhood trajectories."""
 
 from __future__ import annotations
 
@@ -12,28 +12,30 @@ from bh_itbi.config import INDEX_BASE, YEAR_TICKS
 from bh_itbi.formatting import composition_number, number, quarter_label
 from bh_itbi.models import COMPOSITION_TERMS, PreparedModels
 from bh_itbi.text.models import (
-    CLUSTER_CENTRE_HOVER,
-    CLUSTER_INDEX_AXIS_TITLE,
-    CLUSTER_TRAJECTORY_HOVER,
     HEDONIC_INDEX_TRACE_NAME,
     HEDONIC_RAW_TRACE_NAME,
-    cluster_group_heading,
+    TRAJECTORIES_MEDIAN_LABEL,
+    TRAJECTORIES_NEIGHBOURHOODS_LABEL,
+    TRAJECTORY_HOVER,
+    TRAJECTORY_INDEX_AXIS_TITLE,
+    TRAJECTORY_MEDIAN_HOVER,
     hedonic_hover,
 )
 from bh_itbi.text.shared import (
     COMPOSITION_LABELS,
 )
 from bh_itbi.theme import (
-    CLUSTER_COLORS,
     COMPOSITION_HUES,
     INK,
     MUTED,
     REFERENCE,
+    SLATE,
     SURFACE,
     TEAL,
     composition_tint,
     themed,
 )
+from bh_itbi.views.models import trajectory_median
 
 
 def ribbon_grid(
@@ -255,46 +257,40 @@ def hedonic_figure(table: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def clusters_figure(models: PreparedModels, group: int | None = None) -> go.Figure:
-    """Group selection changes visibility, preserving the offline fitted groups."""
-    members, centres = models.members, models.centres
+def trajectories_figure(models: PreparedModels) -> go.Figure:
+    """Display all neighbourhood indices and their pointwise median."""
     fig = go.Figure()
-    groups = [group] if group else list(CLUSTER_COLORS)
-    for group_id in groups:
-        rows = members.loc[members["group"].eq(group_id)]
-        color = CLUSTER_COLORS[group_id]
-        for name, trajectory in rows.groupby("neighbourhood", observed=True):
-            ordered = trajectory.sort_values("year")
-            fig.add_trace(
-                go.Scatter(
-                    x=ordered["year"],
-                    y=ordered["index"],
-                    name=str(name).title(),
-                    mode="lines",
-                    line={"color": color, "width": 1},
-                    opacity=0.25,
-                    showlegend=False,
-                    legendgroup=str(group_id),
-                    customdata=ordered[["n"]],
-                    hovertemplate=CLUSTER_TRAJECTORY_HOVER,
-                )
-            )
-        centroid = centres.loc[centres["group"].eq(group_id)].sort_values("year")
-        n = rows["neighbourhood"].nunique()
+    grouped = models.members.groupby("neighbourhood", observed=True, sort=True)
+    for i, (name, trajectory) in enumerate(grouped):
+        ordered = trajectory.sort_values("year")
         fig.add_trace(
             go.Scatter(
-                x=centroid["year"],
-                y=centroid["index"],
-                mode="lines+markers",
-                name=cluster_group_heading(group_id, n),
-                legendgroup=str(group_id),
-                line={"color": color, "width": 3},
-                marker={"size": 5},
-                hovertemplate=CLUSTER_CENTRE_HOVER,
+                x=ordered["year"],
+                y=ordered["index"],
+                name=TRAJECTORIES_NEIGHBOURHOODS_LABEL,
+                mode="lines",
+                line={"color": SLATE, "width": 1},
+                opacity=0.35,
+                showlegend=i == 0,
+                legendgroup="neighbourhoods",
+                customdata=[[str(name).title(), count] for count in ordered["n"]],
+                hovertemplate=TRAJECTORY_HOVER,
             )
         )
+    median = trajectory_median(models.members)
+    fig.add_trace(
+        go.Scatter(
+            x=median["year"],
+            y=median["index"],
+            mode="lines+markers",
+            name=TRAJECTORIES_MEDIAN_LABEL,
+            line={"color": INK, "width": 3},
+            marker={"size": 5},
+            hovertemplate=TRAJECTORY_MEDIAN_HOVER,
+        )
+    )
     themed(fig, height=410)
     fig.add_hline(y=INDEX_BASE, line=dict(REFERENCE))
     fig.update_xaxes(tickvals=list(YEAR_TICKS))
-    fig.update_yaxes(title_text=CLUSTER_INDEX_AXIS_TITLE)
+    fig.update_yaxes(title_text=TRAJECTORY_INDEX_AXIS_TITLE)
     return fig

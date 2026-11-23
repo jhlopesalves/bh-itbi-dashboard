@@ -17,13 +17,13 @@ from bh_itbi.text.shared import (
     TYPE_LABELS,
 )
 
-CLUSTER_INDEX_AXIS_TITLE = f"Índice · {cfg.START_YEAR} = {cfg.INDEX_BASE}"
+TRAJECTORY_INDEX_AXIS_TITLE = f"Índice · {cfg.START_YEAR} = {cfg.INDEX_BASE}"
 MODELS_UNAVAILABLE_BANNER = (
     "Os índices ainda não estão disponíveis nesta instalação. "
     "Consulte a preparação descrita no README."
 )
 MODELS_EYEBROW = f"POPULAÇÕES FIXAS · {cfg.START_YEAR}–{cfg.END_YEAR}"
-MODELS_SECTION_TITLE = "Índice hedônico e agrupamento de trajetórias"
+MODELS_SECTION_TITLE = "Índice hedônico e trajetórias por bairro"
 MODELS_DESCRIPTION = (
     "Estimativas sobre a amostra fixa descrita em cada análise. "
     "Os filtros do panorama não alteram estes resultados."
@@ -44,14 +44,23 @@ HEDONIC_INDEX_LABEL = "Índice hedônico"
 _HEDONIC_CI_PERCENT = f"{number(cfg.HEDONIC_CONFIDENCE_LEVEL * 100)}%"
 _HEDONIC_CI = f"IC {_HEDONIC_CI_PERCENT}"
 HEDONIC_INDEX_TRACE_NAME = f"{HEDONIC_INDEX_LABEL} · {_HEDONIC_CI}"
-CLUSTERS_TITLE = "Agrupamento de trajetórias por similaridade"
-CLUSTERS_MEMBERS_SUMMARY = "Composição de cada grupo"
-CLUSTER_GROUP_LABEL = "Grupo de trajetórias"
-CLUSTER_ALL_GROUPS_LABEL = "Todos os grupos"
-CLUSTER_TRAJECTORY_HOVER = (
-    "%{x}<br>Índice: %{y:.1f}<br>Transações: %{customdata[0]:,.0f}" + TRACE_NAME_EXTRA
+TRAJECTORIES_MODEL_TITLE = "Trajetórias anuais por bairro"
+TRAJECTORIES_NEIGHBOURHOODS_LABEL = "Bairros"
+TRAJECTORIES_MEDIAN_LABEL = "Mediana entre os bairros"
+TRAJECTORIES_AUDIT_LINK_TEXT = "Consultar a auditoria"
+TRAJECTORIES_FOOTNOTE = (
+    "Linhas finas: bairros; linha escura: mediana entre os bairros em cada ano. "
+    "As medianas não são ajustadas pela composição das transações: a entrada de imóveis "
+    "novos ou vendidos na planta pode elevar a mediana de um bairro sem que os imóveis "
+    "existentes se valorizem. A base em 2016 transfere a incerteza amostral desse ano para "
+    "toda a trajetória. A classificação dos bairros em quatro grupos foi retirada do painel "
+    "por não se manter estável na auditoria de robustez."
 )
-CLUSTER_CENTRE_HOVER = "%{x}<br>Centro do grupo: %{y:.1f}" + TRACE_NAME_EXTRA
+TRAJECTORY_HOVER = (
+    "<b>%{customdata[0]}</b><br>%{x}<br>Índice: %{y:.1f}"
+    "<br>Transações: %{customdata[1]:,.0f}" + TRACE_NAME_EXTRA
+)
+TRAJECTORY_MEDIAN_HOVER = "%{x}<br>Mediana entre os bairros: %{y:.1f}" + TRACE_NAME_EXTRA
 
 
 def hedonic_note(final_contributions: Mapping[str, float]) -> str:
@@ -95,37 +104,11 @@ def hedonic_hover(groups: Sequence[str]) -> str:
     )
 
 
-def clusters_subtitle(n_neighbourhoods: int) -> str:
-    """Subtitle for the k-means neighbourhood trajectory clusters card."""
+def trajectories_subtitle(n_neighbourhoods: int) -> str:
+    """Describe the coverage, statistic and index base of the trajectories."""
     return (
-        f"{TYPE_LABELS['apartment']} · K-médias, {number_word(cfg.CLUSTER_K)} grupos · "
+        f"{TYPE_LABELS['apartment']} · medianas anuais observadas · "
         f"{number(n_neighbourhoods)} bairros com ao menos {cfg.CLUSTER_YEAR_MINIMUM} "
         f"registros em cada um dos {number_word(len(cfg.YEARS))} anos · "
         f"{cfg.START_YEAR} = {cfg.INDEX_BASE}."
     )
-
-
-def clusters_footnote(silhouette: float | None) -> str:
-    """Describe the trajectory groups and their silhouette when defined."""
-    silhouette_note = (
-        "A silhueta é indefinida com um bairro por grupo. "
-        if silhouette is None
-        else f"Silhueta: {number(silhouette, 2)}; há sobreposição entre trajetórias. "
-    )
-    return (
-        "Linhas finas: bairros; linhas fortes: centros dos grupos. "
-        "O número de grupos é uma escolha analítica, não um ótimo estimado. "
-        f"{silhouette_note}"
-        "Os grupos descrevem a forma da evolução, não o nível de preços "
-        "ou regiões administrativas."
-    )
-
-
-def cluster_group_heading(group_id: int, count: int) -> str:
-    """Heading and trace label for one trajectory cluster group."""
-    return f"{cluster_group_name(group_id)} · {count} bairros"
-
-
-def cluster_group_name(group_id: int) -> str:
-    """Label a numbered group in the selector and in the corresponding figure."""
-    return f"Grupo {group_id}"

@@ -16,7 +16,6 @@ from bh_itbi.figures import (
     AgeChart,
     ComparisonPlot,
     age_chart_data,
-    clusters_figure,
     distance_figure,
     distribution_figure,
     heaping_figure,
@@ -26,16 +25,15 @@ from bh_itbi.figures import (
     neighbourhood_trajectories_figure,
     tax_base_figure,
     temporal_figure,
+    trajectories_figure,
 )
 from bh_itbi.filters import Filters
-from bh_itbi.layout.models import cluster_members
 from bh_itbi.layout.overview import distribution_summary
 from bh_itbi.models import PreparedModels
 from bh_itbi.text.shared import TAB_LABELS, period_text
 from bh_itbi.urls import decode_query, default_controls
 from bh_itbi.views import (
     build_diagnostics_view,
-    build_models_view,
     build_overview_view,
     build_tab_view,
 )
@@ -60,7 +58,7 @@ type SelectionOutput = (
 )
 type OverviewOutput = dict[str, str | go.Figure | ComparisonPlot | list[html.Div] | html.P]
 type DiagnosticsOutput = dict[str, str | go.Figure | AgeChart]
-type ModelsOutput = dict[str, go.Figure | list[html.Div]]
+type ModelsOutput = dict[str, go.Figure]
 
 FILTERS_INPUTS: tuple[Input, ...] = (
     Input("property-type", "value"),
@@ -105,8 +103,7 @@ DIAGNOSTICS_OUTPUTS: dict[str, Output] = {
 
 MODELS_OUTPUTS: dict[str, Output] = {
     "hedonic_figure": Output("hedonic-figure", "figure"),
-    "clusters_figure": Output("clusters-figure", "figure"),
-    "cluster_members": Output("cluster-members", "children"),
+    "trajectories_figure": Output("trajectories-figure", "figure"),
 }
 
 TAB_PROPERTIES = {"class": "className", "selected": "aria-selected", "index": "tabIndex"}
@@ -330,16 +327,14 @@ def _register_diagnostics_callback(
 def _register_models_callback(
     app: Dash, models: PreparedModels, serialise_view: _ViewSerialiser
 ) -> None:
-    """Register the fixed-population figures and group membership."""
+    """Register the fixed-population index and neighbourhood figures."""
 
-    @app.callback(MODELS_OUTPUTS, Input("cluster-group", "value"))
+    @app.callback(MODELS_OUTPUTS, Input("view-tabs", "data"))
     @serialise_view
-    def update_models(group: str) -> ModelsOutput:
-        view = build_models_view(models, group)
+    def update_models(_tab: str) -> ModelsOutput:
         return {
             "hedonic_figure": hedonic_figure(models.hedonic),
-            "clusters_figure": clusters_figure(models, view.group_id),
-            "cluster_members": cluster_members(view.groups),
+            "trajectories_figure": trajectories_figure(models),
         }
 
 
