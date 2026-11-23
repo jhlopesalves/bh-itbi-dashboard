@@ -1,0 +1,5313 @@
+{
+  "adjacent_quarter_noise": {
+    "descriptive_ratio": 0.2209203939,
+    "lag1_autocorrelation": -0.3132749912,
+    "mean_sampling_variance": 0.000190836026,
+    "n_changes": 39,
+    "observed_variance": 0.0008638225864,
+    "white_noise_reference": 0.1601281538
+  },
+  "clustering": {
+    "bootstrap": {
+      "ari_median": 0.4497869273,
+      "ari_p10": 0.2816071694,
+      "ari_p90": 0.5919251653,
+      "draws": 200,
+      "endpoint_se_median": 4.488509642,
+      "endpoint_se_p90": 7.452319158,
+      "neighbourhoods": [
+        {
+          "endpoint_se": 6.10777981,
+          "neighbourhood": "ALTO BARROCA"
+        },
+        {
+          "endpoint_se": 3.442974465,
+          "neighbourhood": "ANCHIETA"
+        },
+        {
+          "endpoint_se": 6.177230482,
+          "neighbourhood": "ARAGUAIA"
+        },
+        {
+          "endpoint_se": 3.239170742,
+          "neighbourhood": "BANDEIRANTES"
+        },
+        {
+          "endpoint_se": 7.860312411,
+          "neighbourhood": "BARREIRO"
+        },
+        {
+          "endpoint_se": 7.217314278,
+          "neighbourhood": "BARRO PRETO"
+        },
+        {
+          "endpoint_se": 7.553035535,
+          "neighbourhood": "BELVEDERE"
+        },
+        {
+          "endpoint_se": 5.306491043,
+          "neighbourhood": "BOA VIAGEM"
+        },
+        {
+          "endpoint_se": 2.046401553,
+          "neighbourhood": "BURITIS"
+        },
+        {
+          "endpoint_se": 3.664179635,
+          "neighbourhood": "CAICARA ADELAIDE"
+        },
+        {
+          "endpoint_se": 4.084849976,
+          "neighbourhood": "CAICARAS"
+        },
+        {
+          "endpoint_se": 5.794914554,
+          "neighbourhood": "CALAFATE"
+        },
+        {
+          "endpoint_se": 2.536152327,
+          "neighbourhood": "CALIFORNIA"
+        },
+        {
+          "endpoint_se": 1.590393442,
+          "neighbourhood": "CAMARGOS"
+        },
+        {
+          "endpoint_se": 3.148032656,
+          "neighbourhood": "CANDELARIA"
+        },
+        {
+          "endpoint_se": 4.049314972,
+          "neighbourhood": "CARDOSO"
+        },
+        {
+          "endpoint_se": 6.375547451,
+          "neighbourhood": "CARLOS PRATES"
+        },
+        {
+          "endpoint_se": 5.573889302,
+          "neighbourhood": "CARMO"
+        },
+        {
+          "endpoint_se": 1.937176882,
+          "neighbourhood": "CASTELO"
+        },
+        {
+          "endpoint_se": 2.813561929,
+          "neighbourhood": "CENTRO"
+        },
+        {
+          "endpoint_se": 5.467051143,
+          "neighbourhood": "CIDADE NOVA"
+        },
+        {
+          "endpoint_se": 2.458469,
+          "neighbourhood": "CINQUENTENARIO"
+        },
+        {
+          "endpoint_se": 6.175528205,
+          "neighbourhood": "COLEGIO BATISTA"
+        },
+        {
+          "endpoint_se": 4.51083853,
+          "neighbourhood": "CONJUNTO CALIFORNIA I"
+        },
+        {
+          "endpoint_se": 8.581432507,
+          "neighbourhood": "COPACABANA"
+        },
+        {
+          "endpoint_se": 6.742933763,
+          "neighbourhood": "CORACAO DE JESUS"
+        },
+        {
+          "endpoint_se": 4.258983457,
+          "neighbourhood": "CORACAO EUCARISTICO"
+        },
+        {
+          "endpoint_se": 3.605982773,
+          "neighbourhood": "CRUZEIRO"
+        },
+        {
+          "endpoint_se": 3.177525796,
+          "neighbourhood": "DIAMANTE"
+        },
+        {
+          "endpoint_se": 4.766757558,
+          "neighbourhood": "DONA CLARA"
+        },
+        {
+          "endpoint_se": 4.483085979,
+          "neighbourhood": "ENGENHO NOGUEIRA"
+        },
+        {
+          "endpoint_se": 3.426494178,
+          "neighbourhood": "ESPLANADA"
+        },
+        {
+          "endpoint_se": 4.582350449,
+          "neighbourhood": "ESTORIL"
+        },
+        {
+          "endpoint_se": 2.920939566,
+          "neighbourhood": "ESTRELA DO ORIENTE"
+        },
+        {
+          "endpoint_se": 3.218350471,
+          "neighbourhood": "FERNAO DIAS"
+        },
+        {
+          "endpoint_se": 4.461519583,
+          "neighbourhood": "FLORESTA"
+        },
+        {
+          "endpoint_se": 5.090903558,
+          "neighbourhood": "FUNCIONARIOS"
+        },
+        {
+          "endpoint_se": 5.729933124,
+          "neighbourhood": "GRACA"
+        },
+        {
+          "endpoint_se": 2.640630297,
+          "neighbourhood": "GRAJAU"
+        },
+        {
+          "endpoint_se": 4.580759161,
+          "neighbourhood": "GUTIERREZ"
+        },
+        {
+          "endpoint_se": 4.037489781,
+          "neighbourhood": "HAVAI"
+        },
+        {
+          "endpoint_se": 3.607004001,
+          "neighbourhood": "HELIOPOLIS"
+        },
+        {
+          "endpoint_se": 6.45689501,
+          "neighbourhood": "INDAIA"
+        },
+        {
+          "endpoint_se": 2.918970901,
+          "neighbourhood": "IPIRANGA"
+        },
+        {
+          "endpoint_se": 4.493933304,
+          "neighbourhood": "ITAPOA"
+        },
+        {
+          "endpoint_se": 3.124552749,
+          "neighbourhood": "JAQUELINE"
+        },
+        {
+          "endpoint_se": 4.80407352,
+          "neighbourhood": "JARAGUA"
+        },
+        {
+          "endpoint_se": 7.9603763,
+          "neighbourhood": "JARDIM AMERICA"
+        },
+        {
+          "endpoint_se": 5.363521257,
+          "neighbourhood": "JARDIM GUANABARA"
+        },
+        {
+          "endpoint_se": 4.37488014,
+          "neighbourhood": "JARDIM MONTANHES"
+        },
+        {
+          "endpoint_se": 3.625320079,
+          "neighbourhood": "LIBERDADE"
+        },
+        {
+          "endpoint_se": 2.712797229,
+          "neighbourhood": "LOURDES"
+        },
+        {
+          "endpoint_se": 6.251880707,
+          "neighbourhood": "LUXEMBURGO"
+        },
+        {
+          "endpoint_se": 4.109214619,
+          "neighbourhood": "MANACAS"
+        },
+        {
+          "endpoint_se": 4.35399809,
+          "neighbourhood": "MINAS BRASIL"
+        },
+        {
+          "endpoint_se": 10.08848202,
+          "neighbourhood": "MONSENHOR MESSIAS"
+        },
+        {
+          "endpoint_se": 6.685406744,
+          "neighbourhood": "NOVA GAMELEIRA"
+        },
+        {
+          "endpoint_se": 3.116596208,
+          "neighbourhood": "NOVA GRANADA"
+        },
+        {
+          "endpoint_se": 3.612105312,
+          "neighbourhood": "NOVA SUISSA"
+        },
+        {
+          "endpoint_se": 13.06396542,
+          "neighbourhood": "NOVO SAO LUCAS"
+        },
+        {
+          "endpoint_se": 3.119707958,
+          "neighbourhood": "OURO PRETO"
+        },
+        {
+          "endpoint_se": 2.870237292,
+          "neighbourhood": "PADRE EUSTAQUIO"
+        },
+        {
+          "endpoint_se": 5.497872322,
+          "neighbourhood": "PALMARES"
+        },
+        {
+          "endpoint_se": 3.59328418,
+          "neighbourhood": "PAQUETA"
+        },
+        {
+          "endpoint_se": 4.40567201,
+          "neighbourhood": "PIRATININGA"
+        },
+        {
+          "endpoint_se": 4.316004466,
+          "neighbourhood": "PLANALTO"
+        },
+        {
+          "endpoint_se": 6.352352168,
+          "neighbourhood": "PRADO"
+        },
+        {
+          "endpoint_se": 6.479966113,
+          "neighbourhood": "RIO BRANCO"
+        },
+        {
+          "endpoint_se": 1.981503404,
+          "neighbourhood": "SAGRADA FAMILIA"
+        },
+        {
+          "endpoint_se": 4.743591046,
+          "neighbourhood": "SALGADO FILHO"
+        },
+        {
+          "endpoint_se": 3.467472585,
+          "neighbourhood": "SANTA AMELIA"
+        },
+        {
+          "endpoint_se": 4.912378618,
+          "neighbourhood": "SANTA BRANCA"
+        },
+        {
+          "endpoint_se": 5.107945652,
+          "neighbourhood": "SANTA CRUZ"
+        },
+        {
+          "endpoint_se": 3.13937895,
+          "neighbourhood": "SANTA EFIGENIA"
+        },
+        {
+          "endpoint_se": 7.209672139,
+          "neighbourhood": "SANTA INES"
+        },
+        {
+          "endpoint_se": 11.95833258,
+          "neighbourhood": "SANTA LUCIA"
+        },
+        {
+          "endpoint_se": 4.14722366,
+          "neighbourhood": "SANTA MONICA"
+        },
+        {
+          "endpoint_se": 6.457128207,
+          "neighbourhood": "SANTA ROSA"
+        },
+        {
+          "endpoint_se": 6.058661716,
+          "neighbourhood": "SANTA TEREZA"
+        },
+        {
+          "endpoint_se": 9.461626169,
+          "neighbourhood": "SANTA TEREZINHA"
+        },
+        {
+          "endpoint_se": 3.585205979,
+          "neighbourhood": "SANTO AGOSTINHO"
+        },
+        {
+          "endpoint_se": 4.041738924,
+          "neighbourhood": "SANTO ANTONIO"
+        },
+        {
+          "endpoint_se": 1.978831922,
+          "neighbourhood": "SAO JOAO BATISTA"
+        },
+        {
+          "endpoint_se": 4.983749812,
+          "neighbourhood": "SAO LUIZ"
+        },
+        {
+          "endpoint_se": 6.664716628,
+          "neighbourhood": "SAO PEDRO"
+        },
+        {
+          "endpoint_se": 2.83603925,
+          "neighbourhood": "SAVASSI"
+        },
+        {
+          "endpoint_se": 6.40355366,
+          "neighbourhood": "SERRA"
+        },
+        {
+          "endpoint_se": 16.74992467,
+          "neighbourhood": "SERRA VERDE"
+        },
+        {
+          "endpoint_se": 2.741862114,
+          "neighbourhood": "SERRANO"
+        },
+        {
+          "endpoint_se": 5.831225147,
+          "neighbourhood": "SILVEIRA"
+        },
+        {
+          "endpoint_se": 2.454360654,
+          "neighbourhood": "SION"
+        },
+        {
+          "endpoint_se": 8.61468406,
+          "neighbourhood": "TEIXEIRA DIAS"
+        },
+        {
+          "endpoint_se": 5.990412373,
+          "neighbourhood": "UNIAO"
+        },
+        {
+          "endpoint_se": 6.289212404,
+          "neighbourhood": "VILA PARIS"
+        }
+      ]
+    },
+    "composition": [
+      {
+        "all_apartments": 93.81729296,
+        "all_n_end": 72,
+        "all_n_start": 56,
+        "all_small_cell": false,
+        "excluding_new": 92.43795556,
+        "excluding_new_n_end": 72,
+        "excluding_new_n_start": 44,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "ALTO BARROCA"
+      },
+      {
+        "all_apartments": 102.5293449,
+        "all_n_end": 260,
+        "all_n_start": 192,
+        "all_small_cell": false,
+        "excluding_new": 92.27862671,
+        "excluding_new_n_end": 203,
+        "excluding_new_n_start": 137,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "ANCHIETA"
+      },
+      {
+        "all_apartments": 100.2544476,
+        "all_n_end": 108,
+        "all_n_start": 31,
+        "all_small_cell": false,
+        "excluding_new": 87.14312632,
+        "excluding_new_n_end": 73,
+        "excluding_new_n_start": 19,
+        "excluding_new_small_cell": true,
+        "group": 3,
+        "neighbourhood": "ARAGUAIA"
+      },
+      {
+        "all_apartments": 93.91733363,
+        "all_n_end": 48,
+        "all_n_start": 72,
+        "all_small_cell": false,
+        "excluding_new": 98.69477116,
+        "excluding_new_n_end": 48,
+        "excluding_new_n_start": 29,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "BANDEIRANTES"
+      },
+      {
+        "all_apartments": 124.3541988,
+        "all_n_end": 101,
+        "all_n_start": 75,
+        "all_small_cell": false,
+        "excluding_new": 115.784309,
+        "excluding_new_n_end": 69,
+        "excluding_new_n_start": 59,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "BARREIRO"
+      },
+      {
+        "all_apartments": 110.5598218,
+        "all_n_end": 202,
+        "all_n_start": 84,
+        "all_small_cell": false,
+        "excluding_new": 93.66614986,
+        "excluding_new_n_end": 142,
+        "excluding_new_n_start": 73,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "BARRO PRETO"
+      },
+      {
+        "all_apartments": 103.9357946,
+        "all_n_end": 89,
+        "all_n_start": 88,
+        "all_small_cell": false,
+        "excluding_new": 103.9357946,
+        "excluding_new_n_end": 89,
+        "excluding_new_n_start": 88,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "BELVEDERE"
+      },
+      {
+        "all_apartments": 124.1938764,
+        "all_n_end": 213,
+        "all_n_start": 94,
+        "all_small_cell": false,
+        "excluding_new": 99.65297053,
+        "excluding_new_n_end": 79,
+        "excluding_new_n_start": 57,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "BOA VIAGEM"
+      },
+      {
+        "all_apartments": 105.7774569,
+        "all_n_end": 899,
+        "all_n_start": 1308,
+        "all_small_cell": false,
+        "excluding_new": 108.5919482,
+        "excluding_new_n_end": 844,
+        "excluding_new_n_start": 690,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "BURITIS"
+      },
+      {
+        "all_apartments": 101.2947867,
+        "all_n_end": 109,
+        "all_n_start": 77,
+        "all_small_cell": false,
+        "excluding_new": 100.7029061,
+        "excluding_new_n_end": 97,
+        "excluding_new_n_start": 67,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CAICARA ADELAIDE"
+      },
+      {
+        "all_apartments": 93.25740514,
+        "all_n_end": 155,
+        "all_n_start": 240,
+        "all_small_cell": false,
+        "excluding_new": 102.1644235,
+        "excluding_new_n_end": 94,
+        "excluding_new_n_start": 65,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CAICARAS"
+      },
+      {
+        "all_apartments": 76.7139377,
+        "all_n_end": 70,
+        "all_n_start": 72,
+        "all_small_cell": false,
+        "excluding_new": 79.4721212,
+        "excluding_new_n_end": 67,
+        "excluding_new_n_start": 46,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CALAFATE"
+      },
+      {
+        "all_apartments": 72.34933611,
+        "all_n_end": 75,
+        "all_n_start": 166,
+        "all_small_cell": false,
+        "excluding_new": 92.87399965,
+        "excluding_new_n_end": 75,
+        "excluding_new_n_start": 31,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CALIFORNIA"
+      },
+      {
+        "all_apartments": 79.31576664,
+        "all_n_end": 302,
+        "all_n_start": 324,
+        "all_small_cell": false,
+        "excluding_new": 78.48080111,
+        "excluding_new_n_end": 297,
+        "excluding_new_n_start": 233,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CAMARGOS"
+      },
+      {
+        "all_apartments": 92.46911088,
+        "all_n_end": 69,
+        "all_n_start": 66,
+        "all_small_cell": false,
+        "excluding_new": 91.79106318,
+        "excluding_new_n_end": 60,
+        "excluding_new_n_start": 59,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CANDELARIA"
+      },
+      {
+        "all_apartments": 89.4706868,
+        "all_n_end": 51,
+        "all_n_start": 78,
+        "all_small_cell": false,
+        "excluding_new": 81.17503399,
+        "excluding_new_n_end": 49,
+        "excluding_new_n_start": 27,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "CARDOSO"
+      },
+      {
+        "all_apartments": 89.73495255,
+        "all_n_end": 120,
+        "all_n_start": 80,
+        "all_small_cell": false,
+        "excluding_new": 85.80496125,
+        "excluding_new_n_end": 108,
+        "excluding_new_n_start": 73,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CARLOS PRATES"
+      },
+      {
+        "all_apartments": 103.0323016,
+        "all_n_end": 83,
+        "all_n_start": 58,
+        "all_small_cell": false,
+        "excluding_new": 101.5669594,
+        "excluding_new_n_end": 73,
+        "excluding_new_n_start": 51,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "CARMO"
+      },
+      {
+        "all_apartments": 107.7483162,
+        "all_n_end": 605,
+        "all_n_start": 1038,
+        "all_small_cell": false,
+        "excluding_new": 113.661845,
+        "excluding_new_n_end": 566,
+        "excluding_new_n_start": 528,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CASTELO"
+      },
+      {
+        "all_apartments": 84.05100454,
+        "all_n_end": 375,
+        "all_n_start": 312,
+        "all_small_cell": false,
+        "excluding_new": 89.97532222,
+        "excluding_new_n_end": 375,
+        "excluding_new_n_start": 217,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CENTRO"
+      },
+      {
+        "all_apartments": 108.2023886,
+        "all_n_end": 328,
+        "all_n_start": 163,
+        "all_small_cell": false,
+        "excluding_new": 93.8855974,
+        "excluding_new_n_end": 238,
+        "excluding_new_n_start": 142,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CIDADE NOVA"
+      },
+      {
+        "all_apartments": 83.78600115,
+        "all_n_end": 99,
+        "all_n_start": 136,
+        "all_small_cell": false,
+        "excluding_new": 82.52882013,
+        "excluding_new_n_end": 99,
+        "excluding_new_n_start": 103,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CINQUENTENARIO"
+      },
+      {
+        "all_apartments": 102.6364878,
+        "all_n_end": 118,
+        "all_n_start": 77,
+        "all_small_cell": false,
+        "excluding_new": 107.3544077,
+        "excluding_new_n_end": 116,
+        "excluding_new_n_start": 58,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "COLEGIO BATISTA"
+      },
+      {
+        "all_apartments": 83.15228396,
+        "all_n_end": 46,
+        "all_n_start": 55,
+        "all_small_cell": false,
+        "excluding_new": 93.85439676,
+        "excluding_new_n_end": 46,
+        "excluding_new_n_start": 22,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "CONJUNTO CALIFORNIA I"
+      },
+      {
+        "all_apartments": 109.7232241,
+        "all_n_end": 71,
+        "all_n_start": 65,
+        "all_small_cell": false,
+        "excluding_new": 114.6045684,
+        "excluding_new_n_end": 59,
+        "excluding_new_n_start": 27,
+        "excluding_new_small_cell": true,
+        "group": 2,
+        "neighbourhood": "COPACABANA"
+      },
+      {
+        "all_apartments": 84.13594677,
+        "all_n_end": 103,
+        "all_n_start": 71,
+        "all_small_cell": false,
+        "excluding_new": 86.93026795,
+        "excluding_new_n_end": 103,
+        "excluding_new_n_start": 60,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "CORACAO DE JESUS"
+      },
+      {
+        "all_apartments": 96.71015967,
+        "all_n_end": 138,
+        "all_n_start": 74,
+        "all_small_cell": false,
+        "excluding_new": 91.69376458,
+        "excluding_new_n_end": 105,
+        "excluding_new_n_start": 67,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CORACAO EUCARISTICO"
+      },
+      {
+        "all_apartments": 88.91488891,
+        "all_n_end": 142,
+        "all_n_start": 91,
+        "all_small_cell": false,
+        "excluding_new": 87.02653773,
+        "excluding_new_n_end": 121,
+        "excluding_new_n_start": 73,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "CRUZEIRO"
+      },
+      {
+        "all_apartments": 91.18587676,
+        "all_n_end": 199,
+        "all_n_start": 121,
+        "all_small_cell": false,
+        "excluding_new": 89.37694918,
+        "excluding_new_n_end": 163,
+        "excluding_new_n_start": 66,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "DIAMANTE"
+      },
+      {
+        "all_apartments": 96.65597972,
+        "all_n_end": 123,
+        "all_n_start": 141,
+        "all_small_cell": false,
+        "excluding_new": 95.69796417,
+        "excluding_new_n_end": 110,
+        "excluding_new_n_start": 102,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "DONA CLARA"
+      },
+      {
+        "all_apartments": 78.30501968,
+        "all_n_end": 37,
+        "all_n_start": 45,
+        "all_small_cell": false,
+        "excluding_new": null,
+        "excluding_new_n_end": 37,
+        "excluding_new_n_start": 0,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "ENGENHO NOGUEIRA"
+      },
+      {
+        "all_apartments": 89.94644351,
+        "all_n_end": 35,
+        "all_n_start": 74,
+        "all_small_cell": false,
+        "excluding_new": 87.13639347,
+        "excluding_new_n_end": 31,
+        "excluding_new_n_start": 62,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "ESPLANADA"
+      },
+      {
+        "all_apartments": 114.5199813,
+        "all_n_end": 213,
+        "all_n_start": 107,
+        "all_small_cell": false,
+        "excluding_new": 105.1466248,
+        "excluding_new_n_end": 162,
+        "excluding_new_n_start": 83,
+        "excluding_new_small_cell": false,
+        "group": 1,
+        "neighbourhood": "ESTORIL"
+      },
+      {
+        "all_apartments": 92.81965067,
+        "all_n_end": 53,
+        "all_n_start": 42,
+        "all_small_cell": false,
+        "excluding_new": 102.8547665,
+        "excluding_new_n_end": 53,
+        "excluding_new_n_start": 18,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "ESTRELA DO ORIENTE"
+      },
+      {
+        "all_apartments": 99.12812067,
+        "all_n_end": 150,
+        "all_n_start": 164,
+        "all_small_cell": false,
+        "excluding_new": 98.88300466,
+        "excluding_new_n_end": 126,
+        "excluding_new_n_start": 72,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "FERNAO DIAS"
+      },
+      {
+        "all_apartments": 97.03264692,
+        "all_n_end": 134,
+        "all_n_start": 121,
+        "all_small_cell": false,
+        "excluding_new": 94.30112466,
+        "excluding_new_n_end": 121,
+        "excluding_new_n_start": 103,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "FLORESTA"
+      },
+      {
+        "all_apartments": 104.7889027,
+        "all_n_end": 228,
+        "all_n_start": 138,
+        "all_small_cell": false,
+        "excluding_new": 97.48626348,
+        "excluding_new_n_end": 177,
+        "excluding_new_n_start": 111,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "FUNCIONARIOS"
+      },
+      {
+        "all_apartments": 78.23180641,
+        "all_n_end": 64,
+        "all_n_start": 67,
+        "all_small_cell": false,
+        "excluding_new": 77.74154627,
+        "excluding_new_n_end": 61,
+        "excluding_new_n_start": 43,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "GRACA"
+      },
+      {
+        "all_apartments": 80.9409206,
+        "all_n_end": 100,
+        "all_n_start": 123,
+        "all_small_cell": false,
+        "excluding_new": 84.90050924,
+        "excluding_new_n_end": 100,
+        "excluding_new_n_start": 94,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "GRAJAU"
+      },
+      {
+        "all_apartments": 86.31451973,
+        "all_n_end": 371,
+        "all_n_start": 236,
+        "all_small_cell": false,
+        "excluding_new": 90.88050959,
+        "excluding_new_n_end": 288,
+        "excluding_new_n_start": 159,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "GUTIERREZ"
+      },
+      {
+        "all_apartments": 98.10625318,
+        "all_n_end": 203,
+        "all_n_start": 150,
+        "all_small_cell": false,
+        "excluding_new": 94.36653702,
+        "excluding_new_n_end": 159,
+        "excluding_new_n_start": 130,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "HAVAI"
+      },
+      {
+        "all_apartments": 90.05034124,
+        "all_n_end": 108,
+        "all_n_start": 112,
+        "all_small_cell": false,
+        "excluding_new": 86.8345151,
+        "excluding_new_n_end": 102,
+        "excluding_new_n_start": 81,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "HELIOPOLIS"
+      },
+      {
+        "all_apartments": 114.4696062,
+        "all_n_end": 136,
+        "all_n_start": 94,
+        "all_small_cell": false,
+        "excluding_new": 87.28108687,
+        "excluding_new_n_end": 67,
+        "excluding_new_n_start": 34,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "INDAIA"
+      },
+      {
+        "all_apartments": 95.60375402,
+        "all_n_end": 135,
+        "all_n_start": 133,
+        "all_small_cell": false,
+        "excluding_new": 93.93609287,
+        "excluding_new_n_end": 121,
+        "excluding_new_n_start": 97,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "IPIRANGA"
+      },
+      {
+        "all_apartments": 104.578855,
+        "all_n_end": 132,
+        "all_n_start": 105,
+        "all_small_cell": false,
+        "excluding_new": 99.74299538,
+        "excluding_new_n_end": 107,
+        "excluding_new_n_start": 90,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "ITAPOA"
+      },
+      {
+        "all_apartments": 81.1252619,
+        "all_n_end": 94,
+        "all_n_start": 53,
+        "all_small_cell": false,
+        "excluding_new": 88.38188973,
+        "excluding_new_n_end": 84,
+        "excluding_new_n_start": 37,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "JAQUELINE"
+      },
+      {
+        "all_apartments": 99.46978647,
+        "all_n_end": 81,
+        "all_n_start": 53,
+        "all_small_cell": false,
+        "excluding_new": 82.32160434,
+        "excluding_new_n_end": 47,
+        "excluding_new_n_start": 25,
+        "excluding_new_small_cell": true,
+        "group": 3,
+        "neighbourhood": "JARAGUA"
+      },
+      {
+        "all_apartments": 101.6784462,
+        "all_n_end": 121,
+        "all_n_start": 116,
+        "all_small_cell": false,
+        "excluding_new": 89.91399383,
+        "excluding_new_n_end": 103,
+        "excluding_new_n_start": 78,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "JARDIM AMERICA"
+      },
+      {
+        "all_apartments": 92.25242406,
+        "all_n_end": 92,
+        "all_n_start": 219,
+        "all_small_cell": false,
+        "excluding_new": 85.12927291,
+        "excluding_new_n_end": 58,
+        "excluding_new_n_start": 30,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "JARDIM GUANABARA"
+      },
+      {
+        "all_apartments": 84.25538821,
+        "all_n_end": 51,
+        "all_n_start": 35,
+        "all_small_cell": false,
+        "excluding_new": 83.66419106,
+        "excluding_new_n_end": 47,
+        "excluding_new_n_start": 35,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "JARDIM MONTANHES"
+      },
+      {
+        "all_apartments": 101.1511066,
+        "all_n_end": 88,
+        "all_n_start": 104,
+        "all_small_cell": false,
+        "excluding_new": 101.9482496,
+        "excluding_new_n_end": 60,
+        "excluding_new_n_start": 54,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "LIBERDADE"
+      },
+      {
+        "all_apartments": 107.2292846,
+        "all_n_end": 542,
+        "all_n_start": 332,
+        "all_small_cell": false,
+        "excluding_new": 111.3045887,
+        "excluding_new_n_end": 378,
+        "excluding_new_n_start": 256,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "LOURDES"
+      },
+      {
+        "all_apartments": 97.88017732,
+        "all_n_end": 125,
+        "all_n_start": 168,
+        "all_small_cell": false,
+        "excluding_new": 98.0502383,
+        "excluding_new_n_end": 125,
+        "excluding_new_n_start": 91,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "LUXEMBURGO"
+      },
+      {
+        "all_apartments": 111.8426951,
+        "all_n_end": 134,
+        "all_n_start": 177,
+        "all_small_cell": false,
+        "excluding_new": 104.7625229,
+        "excluding_new_n_end": 109,
+        "excluding_new_n_start": 102,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "MANACAS"
+      },
+      {
+        "all_apartments": 97.88234289,
+        "all_n_end": 69,
+        "all_n_start": 57,
+        "all_small_cell": false,
+        "excluding_new": 102.7599462,
+        "excluding_new_n_end": 52,
+        "excluding_new_n_start": 33,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "MINAS BRASIL"
+      },
+      {
+        "all_apartments": 87.5453705,
+        "all_n_end": 45,
+        "all_n_start": 39,
+        "all_small_cell": false,
+        "excluding_new": 89.81171744,
+        "excluding_new_n_end": 45,
+        "excluding_new_n_start": 29,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "MONSENHOR MESSIAS"
+      },
+      {
+        "all_apartments": 88.31059342,
+        "all_n_end": 66,
+        "all_n_start": 54,
+        "all_small_cell": false,
+        "excluding_new": 88.82609478,
+        "excluding_new_n_end": 56,
+        "excluding_new_n_start": 51,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "NOVA GAMELEIRA"
+      },
+      {
+        "all_apartments": 90.87249287,
+        "all_n_end": 93,
+        "all_n_start": 150,
+        "all_small_cell": false,
+        "excluding_new": 104.6938443,
+        "excluding_new_n_end": 92,
+        "excluding_new_n_start": 74,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "NOVA GRANADA"
+      },
+      {
+        "all_apartments": 104.0954137,
+        "all_n_end": 338,
+        "all_n_start": 240,
+        "all_small_cell": false,
+        "excluding_new": 101.6959014,
+        "excluding_new_n_end": 253,
+        "excluding_new_n_start": 186,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "NOVA SUISSA"
+      },
+      {
+        "all_apartments": 108.8557947,
+        "all_n_end": 76,
+        "all_n_start": 42,
+        "all_small_cell": false,
+        "excluding_new": 99.49358972,
+        "excluding_new_n_end": 76,
+        "excluding_new_n_start": 28,
+        "excluding_new_small_cell": true,
+        "group": 2,
+        "neighbourhood": "NOVO SAO LUCAS"
+      },
+      {
+        "all_apartments": 107.5612709,
+        "all_n_end": 279,
+        "all_n_start": 330,
+        "all_small_cell": false,
+        "excluding_new": 98.37442008,
+        "excluding_new_n_end": 225,
+        "excluding_new_n_start": 207,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "OURO PRETO"
+      },
+      {
+        "all_apartments": 94.02729437,
+        "all_n_end": 309,
+        "all_n_start": 236,
+        "all_small_cell": false,
+        "excluding_new": 94.92740619,
+        "excluding_new_n_end": 263,
+        "excluding_new_n_start": 182,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "PADRE EUSTAQUIO"
+      },
+      {
+        "all_apartments": 136.9389112,
+        "all_n_end": 206,
+        "all_n_start": 116,
+        "all_small_cell": false,
+        "excluding_new": 89.99296491,
+        "excluding_new_n_end": 89,
+        "excluding_new_n_start": 64,
+        "excluding_new_small_cell": false,
+        "group": 1,
+        "neighbourhood": "PALMARES"
+      },
+      {
+        "all_apartments": 101.6031971,
+        "all_n_end": 151,
+        "all_n_start": 191,
+        "all_small_cell": false,
+        "excluding_new": 99.65144526,
+        "excluding_new_n_end": 139,
+        "excluding_new_n_start": 158,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "PAQUETA"
+      },
+      {
+        "all_apartments": 84.11621623,
+        "all_n_end": 99,
+        "all_n_start": 77,
+        "all_small_cell": false,
+        "excluding_new": 78.49269567,
+        "excluding_new_n_end": 70,
+        "excluding_new_n_start": 21,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "PIRATININGA"
+      },
+      {
+        "all_apartments": 101.3732062,
+        "all_n_end": 216,
+        "all_n_start": 161,
+        "all_small_cell": false,
+        "excluding_new": 106.8632418,
+        "excluding_new_n_end": 160,
+        "excluding_new_n_start": 104,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "PLANALTO"
+      },
+      {
+        "all_apartments": 102.7732042,
+        "all_n_end": 229,
+        "all_n_start": 143,
+        "all_small_cell": false,
+        "excluding_new": 94.41985711,
+        "excluding_new_n_end": 150,
+        "excluding_new_n_start": 97,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "PRADO"
+      },
+      {
+        "all_apartments": 88.38356247,
+        "all_n_end": 63,
+        "all_n_start": 72,
+        "all_small_cell": false,
+        "excluding_new": 86.85732507,
+        "excluding_new_n_end": 47,
+        "excluding_new_n_start": 32,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "RIO BRANCO"
+      },
+      {
+        "all_apartments": 95.79962488,
+        "all_n_end": 448,
+        "all_n_start": 421,
+        "all_small_cell": false,
+        "excluding_new": 90.79549888,
+        "excluding_new_n_end": 363,
+        "excluding_new_n_start": 280,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SAGRADA FAMILIA"
+      },
+      {
+        "all_apartments": 101.9126294,
+        "all_n_end": 133,
+        "all_n_start": 119,
+        "all_small_cell": false,
+        "excluding_new": 96.95813692,
+        "excluding_new_n_end": 105,
+        "excluding_new_n_start": 78,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "SALGADO FILHO"
+      },
+      {
+        "all_apartments": 103.3482317,
+        "all_n_end": 258,
+        "all_n_start": 331,
+        "all_small_cell": false,
+        "excluding_new": 107.9217496,
+        "excluding_new_n_end": 196,
+        "excluding_new_n_start": 125,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTA AMELIA"
+      },
+      {
+        "all_apartments": 93.03921663,
+        "all_n_end": 82,
+        "all_n_start": 78,
+        "all_small_cell": false,
+        "excluding_new": 92.94460001,
+        "excluding_new_n_end": 82,
+        "excluding_new_n_start": 43,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTA BRANCA"
+      },
+      {
+        "all_apartments": 89.96862452,
+        "all_n_end": 93,
+        "all_n_start": 90,
+        "all_small_cell": false,
+        "excluding_new": 92.35802362,
+        "excluding_new_n_end": 91,
+        "excluding_new_n_start": 56,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTA CRUZ"
+      },
+      {
+        "all_apartments": 85.83797639,
+        "all_n_end": 283,
+        "all_n_start": 240,
+        "all_small_cell": false,
+        "excluding_new": 95.93579442,
+        "excluding_new_n_end": 194,
+        "excluding_new_n_start": 141,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "SANTA EFIGENIA"
+      },
+      {
+        "all_apartments": 110.1923758,
+        "all_n_end": 71,
+        "all_n_start": 47,
+        "all_small_cell": false,
+        "excluding_new": 94.84022147,
+        "excluding_new_n_end": 45,
+        "excluding_new_n_start": 40,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "SANTA INES"
+      },
+      {
+        "all_apartments": 96.13143506,
+        "all_n_end": 80,
+        "all_n_start": 59,
+        "all_small_cell": false,
+        "excluding_new": 101.2483937,
+        "excluding_new_n_end": 64,
+        "excluding_new_n_start": 39,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTA LUCIA"
+      },
+      {
+        "all_apartments": 98.66622809,
+        "all_n_end": 203,
+        "all_n_start": 177,
+        "all_small_cell": false,
+        "excluding_new": 87.90940798,
+        "excluding_new_n_end": 150,
+        "excluding_new_n_start": 93,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTA MONICA"
+      },
+      {
+        "all_apartments": 106.3727999,
+        "all_n_end": 52,
+        "all_n_start": 108,
+        "all_small_cell": false,
+        "excluding_new": 109.1655477,
+        "excluding_new_n_end": 47,
+        "excluding_new_n_start": 65,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "SANTA ROSA"
+      },
+      {
+        "all_apartments": 91.94773614,
+        "all_n_end": 116,
+        "all_n_start": 117,
+        "all_small_cell": false,
+        "excluding_new": 88.36824773,
+        "excluding_new_n_end": 93,
+        "excluding_new_n_start": 80,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "SANTA TEREZA"
+      },
+      {
+        "all_apartments": 133.1202953,
+        "all_n_end": 200,
+        "all_n_start": 84,
+        "all_small_cell": false,
+        "excluding_new": 101.1950721,
+        "excluding_new_n_end": 98,
+        "excluding_new_n_start": 67,
+        "excluding_new_small_cell": false,
+        "group": 1,
+        "neighbourhood": "SANTA TEREZINHA"
+      },
+      {
+        "all_apartments": 99.77232042,
+        "all_n_end": 319,
+        "all_n_start": 261,
+        "all_small_cell": false,
+        "excluding_new": 102.8976084,
+        "excluding_new_n_end": 249,
+        "excluding_new_n_start": 171,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTO AGOSTINHO"
+      },
+      {
+        "all_apartments": 93.75252587,
+        "all_n_end": 473,
+        "all_n_start": 309,
+        "all_small_cell": false,
+        "excluding_new": 101.6821105,
+        "excluding_new_n_end": 406,
+        "excluding_new_n_start": 233,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SANTO ANTONIO"
+      },
+      {
+        "all_apartments": 81.61752242,
+        "all_n_end": 182,
+        "all_n_start": 219,
+        "all_small_cell": false,
+        "excluding_new": 87.43252327,
+        "excluding_new_n_end": 173,
+        "excluding_new_n_start": 103,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "SAO JOAO BATISTA"
+      },
+      {
+        "all_apartments": 120.9400667,
+        "all_n_end": 154,
+        "all_n_start": 82,
+        "all_small_cell": false,
+        "excluding_new": 101.8282886,
+        "excluding_new_n_end": 48,
+        "excluding_new_n_start": 17,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "SAO LUIZ"
+      },
+      {
+        "all_apartments": 96.39151026,
+        "all_n_end": 119,
+        "all_n_start": 96,
+        "all_small_cell": false,
+        "excluding_new": 100.0766624,
+        "excluding_new_n_end": 98,
+        "excluding_new_n_start": 67,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SAO PEDRO"
+      },
+      {
+        "all_apartments": 101.9902681,
+        "all_n_end": 377,
+        "all_n_start": 307,
+        "all_small_cell": false,
+        "excluding_new": 107.3178242,
+        "excluding_new_n_end": 346,
+        "excluding_new_n_start": 216,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "SAVASSI"
+      },
+      {
+        "all_apartments": 111.8092974,
+        "all_n_end": 411,
+        "all_n_start": 331,
+        "all_small_cell": false,
+        "excluding_new": 105.2617213,
+        "excluding_new_n_end": 309,
+        "excluding_new_n_start": 212,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "SERRA"
+      },
+      {
+        "all_apartments": 78.59048744,
+        "all_n_end": 70,
+        "all_n_start": 70,
+        "all_small_cell": false,
+        "excluding_new": 97.07128032,
+        "excluding_new_n_end": 70,
+        "excluding_new_n_start": 58,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "SERRA VERDE"
+      },
+      {
+        "all_apartments": 91.80793088,
+        "all_n_end": 139,
+        "all_n_start": 248,
+        "all_small_cell": false,
+        "excluding_new": 104.8728054,
+        "excluding_new_n_end": 123,
+        "excluding_new_n_start": 104,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "SERRANO"
+      },
+      {
+        "all_apartments": 99.44177044,
+        "all_n_end": 103,
+        "all_n_start": 72,
+        "all_small_cell": false,
+        "excluding_new": 96.9592225,
+        "excluding_new_n_end": 93,
+        "excluding_new_n_start": 72,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SILVEIRA"
+      },
+      {
+        "all_apartments": 97.07873391,
+        "all_n_end": 405,
+        "all_n_start": 337,
+        "all_small_cell": false,
+        "excluding_new": 93.6452308,
+        "excluding_new_n_end": 357,
+        "excluding_new_n_start": 254,
+        "excluding_new_small_cell": false,
+        "group": 3,
+        "neighbourhood": "SION"
+      },
+      {
+        "all_apartments": 65.1341116,
+        "all_n_end": 39,
+        "all_n_start": 54,
+        "all_small_cell": false,
+        "excluding_new": 125.3809981,
+        "excluding_new_n_end": 36,
+        "excluding_new_n_start": 18,
+        "excluding_new_small_cell": true,
+        "group": 4,
+        "neighbourhood": "TEIXEIRA DIAS"
+      },
+      {
+        "all_apartments": 113.6478541,
+        "all_n_end": 195,
+        "all_n_start": 110,
+        "all_small_cell": false,
+        "excluding_new": 109.2925208,
+        "excluding_new_n_end": 154,
+        "excluding_new_n_start": 76,
+        "excluding_new_small_cell": false,
+        "group": 2,
+        "neighbourhood": "UNIAO"
+      },
+      {
+        "all_apartments": 83.02606864,
+        "all_n_end": 68,
+        "all_n_start": 50,
+        "all_small_cell": false,
+        "excluding_new": 87.75131,
+        "excluding_new_n_end": 68,
+        "excluding_new_n_start": 37,
+        "excluding_new_small_cell": false,
+        "group": 4,
+        "neighbourhood": "VILA PARIS"
+      }
+    ],
+    "group_composition": [
+      {
+        "group": 1,
+        "median_all_apartments": 133.1202953,
+        "median_excluding_new": 101.1950721
+      },
+      {
+        "group": 2,
+        "median_all_apartments": 106.0751284,
+        "median_excluding_new": 101.6314304
+      },
+      {
+        "group": 3,
+        "median_all_apartments": 97.07873391,
+        "median_excluding_new": 94.30112466
+      },
+      {
+        "group": 4,
+        "median_all_apartments": 84.19566749,
+        "median_excluding_new": 88.38188973
+      }
+    ],
+    "published_members": [
+      {
+        "group": 3,
+        "neighbourhood": "ALTO BARROCA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "ANCHIETA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "ARAGUAIA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "BANDEIRANTES"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "BARREIRO"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "BARRO PRETO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "BELVEDERE"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "BOA VIAGEM"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "BURITIS"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CAICARA ADELAIDE"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CAICARAS"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CALAFATE"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CALIFORNIA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CAMARGOS"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CANDELARIA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CARDOSO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CARLOS PRATES"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "CARMO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CASTELO"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CENTRO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CIDADE NOVA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CINQUENTENARIO"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "COLEGIO BATISTA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CONJUNTO CALIFORNIA I"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "COPACABANA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "CORACAO DE JESUS"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CORACAO EUCARISTICO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "CRUZEIRO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "DIAMANTE"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "DONA CLARA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "ENGENHO NOGUEIRA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "ESPLANADA"
+      },
+      {
+        "group": 1,
+        "neighbourhood": "ESTORIL"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "ESTRELA DO ORIENTE"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "FERNAO DIAS"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "FLORESTA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "FUNCIONARIOS"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "GRACA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "GRAJAU"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "GUTIERREZ"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "HAVAI"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "HELIOPOLIS"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "INDAIA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "IPIRANGA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "ITAPOA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "JAQUELINE"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "JARAGUA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "JARDIM AMERICA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "JARDIM GUANABARA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "JARDIM MONTANHES"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "LIBERDADE"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "LOURDES"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "LUXEMBURGO"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "MANACAS"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "MINAS BRASIL"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "MONSENHOR MESSIAS"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "NOVA GAMELEIRA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "NOVA GRANADA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "NOVA SUISSA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "NOVO SAO LUCAS"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "OURO PRETO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "PADRE EUSTAQUIO"
+      },
+      {
+        "group": 1,
+        "neighbourhood": "PALMARES"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "PAQUETA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "PIRATININGA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "PLANALTO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "PRADO"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "RIO BRANCO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SAGRADA FAMILIA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "SALGADO FILHO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTA AMELIA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTA BRANCA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTA CRUZ"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SANTA EFIGENIA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "SANTA INES"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTA LUCIA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTA MONICA"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "SANTA ROSA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SANTA TEREZA"
+      },
+      {
+        "group": 1,
+        "neighbourhood": "SANTA TEREZINHA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTO AGOSTINHO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SANTO ANTONIO"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SAO JOAO BATISTA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SAO LUIZ"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SAO PEDRO"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "SAVASSI"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "SERRA"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SERRA VERDE"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "SERRANO"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SILVEIRA"
+      },
+      {
+        "group": 3,
+        "neighbourhood": "SION"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "TEIXEIRA DIAS"
+      },
+      {
+        "group": 2,
+        "neighbourhood": "UNIAO"
+      },
+      {
+        "group": 4,
+        "neighbourhood": "VILA PARIS"
+      }
+    ],
+    "published_silhouettes": {
+      "2": 0.3515003761,
+      "3": 0.2453473924,
+      "4": 0.2533595213,
+      "5": 0.2189593971,
+      "6": 0.2024419413
+    },
+    "published_sizes": {
+      "1": 3,
+      "2": 24,
+      "3": 35,
+      "4": 32
+    },
+    "representations": [
+      {
+        "ari": 0.3861472934,
+        "representation": "mean_2016_2017",
+        "silhouette": 0.2211140366
+      },
+      {
+        "ari": 0.2167845776,
+        "representation": "series_mean",
+        "silhouette": 0.1329404001
+      },
+      {
+        "ari": 0.1977821406,
+        "representation": "log_centred",
+        "silhouette": 0.1321587342
+      }
+    ]
+  },
+  "fraction_test": [
+    {
+      "at_fraction": 9,
+      "fraction": "1/2",
+      "mean_beside": 3.0
+    },
+    {
+      "at_fraction": 26,
+      "fraction": "1/3",
+      "mean_beside": 23.5
+    },
+    {
+      "at_fraction": 63,
+      "fraction": "1/4",
+      "mean_beside": 76.0
+    },
+    {
+      "at_fraction": 123,
+      "fraction": "1/5",
+      "mean_beside": 109.5
+    },
+    {
+      "at_fraction": 134,
+      "fraction": "1/6",
+      "mean_beside": 150.0
+    },
+    {
+      "at_fraction": 120,
+      "fraction": "1/8",
+      "mean_beside": 108.0
+    },
+    {
+      "at_fraction": 100,
+      "fraction": "1/10",
+      "mean_beside": 118.0
+    }
+  ],
+  "low_tail_profile": [
+    {
+      "median_area": 103.87,
+      "median_declared": 339800.03,
+      "median_declared_base": 1.0,
+      "median_real_base_per_m2": 4998.897934,
+      "n": 200440,
+      "price_group": "at_or_above_1000",
+      "share_houses": 0.1043254839,
+      "share_ratio_below_half": 0.04104470166
+    },
+    {
+      "median_area": 122.8,
+      "median_declared": 50000.0,
+      "median_declared_base": 0.1799716774,
+      "median_real_base_per_m2": 3406.585615,
+      "n": 4996,
+      "price_group": "below_1000",
+      "share_houses": 0.4003202562,
+      "share_ratio_below_half": 0.9463570857
+    }
+  ],
+  "neighbourhood_quarterly_uncertainty": {
+    "neighbourhoods": [
+      {
+        "max_share_houses": 0.05034324943,
+        "median_block_relative_width": 0.1149463214,
+        "median_record_relative_width": 0.08472242094,
+        "min_share_houses": 0.004219409283,
+        "n_quarters": 40,
+        "neighbourhood": "BURITIS"
+      },
+      {
+        "max_share_houses": 0.07594936709,
+        "median_block_relative_width": 0.1003370392,
+        "median_record_relative_width": 0.0871803616,
+        "min_share_houses": 0.01204819277,
+        "n_quarters": 40,
+        "neighbourhood": "CASTELO"
+      },
+      {
+        "max_share_houses": 0.01538461538,
+        "median_block_relative_width": 0.2069783071,
+        "median_record_relative_width": 0.1965599637,
+        "min_share_houses": 0.0,
+        "n_quarters": 40,
+        "neighbourhood": "CENTRO"
+      },
+      {
+        "max_share_houses": 0.0350877193,
+        "median_block_relative_width": 0.2252287296,
+        "median_record_relative_width": 0.1765041629,
+        "min_share_houses": 0.0,
+        "n_quarters": 40,
+        "neighbourhood": "LOURDES"
+      },
+      {
+        "max_share_houses": 0.1770833333,
+        "median_block_relative_width": 0.2282990497,
+        "median_record_relative_width": 0.1650684531,
+        "min_share_houses": 0.0,
+        "n_quarters": 40,
+        "neighbourhood": "SAVASSI"
+      }
+    ],
+    "quarters": [
+      {
+        "block_p025": 4512.33475,
+        "block_p975": 5234.11,
+        "block_relative_width": 0.1481537112,
+        "median": 4871.8,
+        "n": 289,
+        "n_clusters": 134,
+        "neighbourhood": "BURITIS",
+        "quarter": "2016Q1",
+        "record_p025": 4627.21225,
+        "record_p975": 5080.59,
+        "record_relative_width": 0.09306165072,
+        "share_houses": 0.01384083045
+      },
+      {
+        "block_p025": 4263.36,
+        "block_p975": 5002.91,
+        "block_relative_width": 0.1573718235,
+        "median": 4699.38,
+        "n": 337,
+        "n_clusters": 163,
+        "neighbourhood": "BURITIS",
+        "quarter": "2016Q2",
+        "record_p025": 4466.96,
+        "record_p975": 4932.84,
+        "record_relative_width": 0.09913648183,
+        "share_houses": 0.01483679525
+      },
+      {
+        "block_p025": 1476.92,
+        "block_p975": 4972.6,
+        "block_relative_width": 0.8541318992,
+        "median": 4092.67,
+        "n": 363,
+        "n_clusters": 141,
+        "neighbourhood": "BURITIS",
+        "quarter": "2016Q3",
+        "record_p025": 3916.62,
+        "record_p975": 4333.47,
+        "record_relative_width": 0.1018528247,
+        "share_houses": 0.01101928375
+      },
+      {
+        "block_p025": 4075.70975,
+        "block_p975": 4862.66425,
+        "block_relative_width": 0.176378979,
+        "median": 4461.725,
+        "n": 336,
+        "n_clusters": 172,
+        "neighbourhood": "BURITIS",
+        "quarter": "2016Q4",
+        "record_p025": 4271.945,
+        "record_p975": 4663.42,
+        "record_relative_width": 0.08774072808,
+        "share_houses": 0.0119047619
+      },
+      {
+        "block_p025": 4305.9,
+        "block_p975": 5088.865,
+        "block_relative_width": 0.1721547571,
+        "median": 4548.03,
+        "n": 206,
+        "n_clusters": 120,
+        "neighbourhood": "BURITIS",
+        "quarter": "2017Q1",
+        "record_p025": 4330.25,
+        "record_p975": 4893.825,
+        "record_relative_width": 0.123916289,
+        "share_houses": 0.02427184466
+      },
+      {
+        "block_p025": 4254.16,
+        "block_p975": 4909.02,
+        "block_relative_width": 0.1438449745,
+        "median": 4552.54,
+        "n": 265,
+        "n_clusters": 149,
+        "neighbourhood": "BURITIS",
+        "quarter": "2017Q2",
+        "record_p025": 4328.26,
+        "record_p975": 4731.69,
+        "record_relative_width": 0.08861646465,
+        "share_houses": 0.007547169811
+      },
+      {
+        "block_p025": 4298.74,
+        "block_p975": 4909.9865,
+        "block_relative_width": 0.1333431864,
+        "median": 4584.01,
+        "n": 274,
+        "n_clusters": 130,
+        "neighbourhood": "BURITIS",
+        "quarter": "2017Q3",
+        "record_p025": 4375.22,
+        "record_p975": 4799.69,
+        "record_relative_width": 0.09259796554,
+        "share_houses": 0.01094890511
+      },
+      {
+        "block_p025": 4101.03,
+        "block_p975": 4746.74,
+        "block_relative_width": 0.1481849518,
+        "median": 4357.46,
+        "n": 261,
+        "n_clusters": 107,
+        "neighbourhood": "BURITIS",
+        "quarter": "2017Q4",
+        "record_p025": 4206.26,
+        "record_p975": 4573.2,
+        "record_relative_width": 0.08420960835,
+        "share_houses": 0.007662835249
+      },
+      {
+        "block_p025": 4244.14,
+        "block_p975": 4861.91,
+        "block_relative_width": 0.134722201,
+        "median": 4585.51,
+        "n": 230,
+        "n_clusters": 110,
+        "neighbourhood": "BURITIS",
+        "quarter": "2018Q1",
+        "record_p025": 4333.815,
+        "record_p975": 4787.05,
+        "record_relative_width": 0.09884069602,
+        "share_houses": 0.02608695652
+      },
+      {
+        "block_p025": 4218.9,
+        "block_p975": 4739.054625,
+        "block_relative_width": 0.1134347819,
+        "median": 4585.495,
+        "n": 316,
+        "n_clusters": 153,
+        "neighbourhood": "BURITIS",
+        "quarter": "2018Q2",
+        "record_p025": 4404.535,
+        "record_p975": 4679.25,
+        "record_relative_width": 0.05990956265,
+        "share_houses": 0.03164556962
+      },
+      {
+        "block_p025": 4325.45,
+        "block_p975": 4724.655,
+        "block_relative_width": 0.08628213386,
+        "median": 4626.74,
+        "n": 269,
+        "n_clusters": 113,
+        "neighbourhood": "BURITIS",
+        "quarter": "2018Q3",
+        "record_p025": 4493.42,
+        "record_p975": 4721.04,
+        "record_relative_width": 0.04919662657,
+        "share_houses": 0.02230483271
+      },
+      {
+        "block_p025": 4095.077625,
+        "block_p975": 4570.6235,
+        "block_relative_width": 0.1101787655,
+        "median": 4316.13,
+        "n": 237,
+        "n_clusters": 124,
+        "neighbourhood": "BURITIS",
+        "quarter": "2018Q4",
+        "record_p025": 4194.21,
+        "record_p975": 4540.64675,
+        "record_relative_width": 0.08026559673,
+        "share_houses": 0.004219409283
+      },
+      {
+        "block_p025": 4109.88,
+        "block_p975": 4558.65,
+        "block_relative_width": 0.1027942763,
+        "median": 4365.71,
+        "n": 227,
+        "n_clusters": 107,
+        "neighbourhood": "BURITIS",
+        "quarter": "2019Q1",
+        "record_p025": 4145.28,
+        "record_p975": 4529.6,
+        "record_relative_width": 0.08803150003,
+        "share_houses": 0.004405286344
+      },
+      {
+        "block_p025": 3871.105,
+        "block_p975": 4431.179625,
+        "block_relative_width": 0.1341460764,
+        "median": 4175.11,
+        "n": 312,
+        "n_clusters": 142,
+        "neighbourhood": "BURITIS",
+        "quarter": "2019Q2",
+        "record_p025": 3968.38,
+        "record_p975": 4335.49,
+        "record_relative_width": 0.08792822225,
+        "share_houses": 0.01282051282
+      },
+      {
+        "block_p025": 4136.861375,
+        "block_p975": 4664.9915,
+        "block_relative_width": 0.1190490427,
+        "median": 4436.24,
+        "n": 278,
+        "n_clusters": 130,
+        "neighbourhood": "BURITIS",
+        "quarter": "2019Q3",
+        "record_p025": 4211.05,
+        "record_p975": 4602.564875,
+        "record_relative_width": 0.08825376332,
+        "share_houses": 0.02877697842
+      },
+      {
+        "block_p025": 4040.694,
+        "block_p975": 4496.595,
+        "block_relative_width": 0.1058180046,
+        "median": 4308.35,
+        "n": 307,
+        "n_clusters": 139,
+        "neighbourhood": "BURITIS",
+        "quarter": "2019Q4",
+        "record_p025": 4148.38,
+        "record_p975": 4389.7,
+        "record_relative_width": 0.05601216243,
+        "share_houses": 0.02280130293
+      },
+      {
+        "block_p025": 4006.18,
+        "block_p975": 4642.42,
+        "block_relative_width": 0.1492036096,
+        "median": 4264.24,
+        "n": 261,
+        "n_clusters": 136,
+        "neighbourhood": "BURITIS",
+        "quarter": "2020Q1",
+        "record_p025": 4085.21,
+        "record_p975": 4481.35,
+        "record_relative_width": 0.09289814832,
+        "share_houses": 0.007662835249
+      },
+      {
+        "block_p025": 4281.377125,
+        "block_p975": 4726.18,
+        "block_relative_width": 0.09793300065,
+        "median": 4541.91,
+        "n": 207,
+        "n_clusters": 123,
+        "neighbourhood": "BURITIS",
+        "quarter": "2020Q2",
+        "record_p025": 4364.29,
+        "record_p975": 4669.198,
+        "record_relative_width": 0.06713210962,
+        "share_houses": 0.004830917874
+      },
+      {
+        "block_p025": 4335.07,
+        "block_p975": 4810.61,
+        "block_relative_width": 0.102646237,
+        "median": 4632.805,
+        "n": 386,
+        "n_clusters": 164,
+        "neighbourhood": "BURITIS",
+        "quarter": "2020Q3",
+        "record_p025": 4460.73,
+        "record_p975": 4740.47,
+        "record_relative_width": 0.0603824249,
+        "share_houses": 0.007772020725
+      },
+      {
+        "block_p025": 4298.688875,
+        "block_p975": 4902.63,
+        "block_relative_width": 0.1323616642,
+        "median": 4562.81,
+        "n": 437,
+        "n_clusters": 186,
+        "neighbourhood": "BURITIS",
+        "quarter": "2020Q4",
+        "record_p025": 4411.93,
+        "record_p975": 4712.3,
+        "record_relative_width": 0.06583004771,
+        "share_houses": 0.05034324943
+      },
+      {
+        "block_p025": 4218.46325,
+        "block_p975": 4560.41,
+        "block_relative_width": 0.07855030299,
+        "median": 4353.22,
+        "n": 417,
+        "n_clusters": 195,
+        "neighbourhood": "BURITIS",
+        "quarter": "2021Q1",
+        "record_p025": 4220.1,
+        "record_p975": 4511.17,
+        "record_relative_width": 0.06686314958,
+        "share_houses": 0.01918465228
+      },
+      {
+        "block_p025": 4324.8,
+        "block_p975": 4549.67825,
+        "block_relative_width": 0.05101061368,
+        "median": 4408.46,
+        "n": 488,
+        "n_clusters": 218,
+        "neighbourhood": "BURITIS",
+        "quarter": "2021Q2",
+        "record_p025": 4338.82,
+        "record_p975": 4508.99425,
+        "record_relative_width": 0.03860174528,
+        "share_houses": 0.01024590164
+      },
+      {
+        "block_p025": 4176.63,
+        "block_p975": 4547.96,
+        "block_relative_width": 0.08463660824,
+        "median": 4387.345,
+        "n": 492,
+        "n_clusters": 201,
+        "neighbourhood": "BURITIS",
+        "quarter": "2021Q3",
+        "record_p025": 4274.825,
+        "record_p975": 4461.815,
+        "record_relative_width": 0.04262030909,
+        "share_houses": 0.02032520325
+      },
+      {
+        "block_p025": 4155.38,
+        "block_p975": 4594.5285,
+        "block_relative_width": 0.1005040669,
+        "median": 4369.46,
+        "n": 383,
+        "n_clusters": 171,
+        "neighbourhood": "BURITIS",
+        "quarter": "2021Q4",
+        "record_p025": 4227.54,
+        "record_p975": 4545.35,
+        "record_relative_width": 0.07273438823,
+        "share_houses": 0.01566579634
+      },
+      {
+        "block_p025": 4152.214625,
+        "block_p975": 4600.478375,
+        "block_relative_width": 0.1027589325,
+        "median": 4362.285,
+        "n": 280,
+        "n_clusters": 133,
+        "neighbourhood": "BURITIS",
+        "quarter": "2022Q1",
+        "record_p025": 4176.087625,
+        "record_p975": 4512.11,
+        "record_relative_width": 0.07702898252,
+        "share_houses": 0.01428571429
+      },
+      {
+        "block_p025": 4115.07,
+        "block_p975": 4408.974625,
+        "block_relative_width": 0.06856989458,
+        "median": 4286.205,
+        "n": 268,
+        "n_clusters": 120,
+        "neighbourhood": "BURITIS",
+        "quarter": "2022Q2",
+        "record_p025": 4118.86,
+        "record_p975": 4382.331375,
+        "record_relative_width": 0.0614696159,
+        "share_houses": 0.01119402985
+      },
+      {
+        "block_p025": 4259.1025,
+        "block_p975": 4570.6,
+        "block_relative_width": 0.06942469533,
+        "median": 4486.84,
+        "n": 309,
+        "n_clusters": 156,
+        "neighbourhood": "BURITIS",
+        "quarter": "2022Q3",
+        "record_p025": 4374.35,
+        "record_p975": 4546.83,
+        "record_relative_width": 0.03844130836,
+        "share_houses": 0.01941747573
+      },
+      {
+        "block_p025": 4407.73,
+        "block_p975": 4794.116625,
+        "block_relative_width": 0.08396524036,
+        "median": 4601.745,
+        "n": 242,
+        "n_clusters": 135,
+        "neighbourhood": "BURITIS",
+        "quarter": "2022Q4",
+        "record_p025": 4445.225,
+        "record_p975": 4748.64075,
+        "record_relative_width": 0.06593493338,
+        "share_houses": 0.02479338843
+      },
+      {
+        "block_p025": 4387.80675,
+        "block_p975": 4780.35,
+        "block_relative_width": 0.08478054517,
+        "median": 4630.11,
+        "n": 265,
+        "n_clusters": 139,
+        "neighbourhood": "BURITIS",
+        "quarter": "2023Q1",
+        "record_p025": 4430.94,
+        "record_p975": 4770.89,
+        "record_relative_width": 0.07342158178,
+        "share_houses": 0.03396226415
+      },
+      {
+        "block_p025": 4555.395,
+        "block_p975": 4970.077875,
+        "block_relative_width": 0.08878863386,
+        "median": 4670.45,
+        "n": 250,
+        "n_clusters": 136,
+        "neighbourhood": "BURITIS",
+        "quarter": "2023Q2",
+        "record_p025": 4574.83,
+        "record_p975": 4922.04925,
+        "record_relative_width": 0.07434385338,
+        "share_houses": 0.016
+      },
+      {
+        "block_p025": 4344.665,
+        "block_p975": 4924.629625,
+        "block_relative_width": 0.1242382446,
+        "median": 4668.165,
+        "n": 254,
+        "n_clusters": 124,
+        "neighbourhood": "BURITIS",
+        "quarter": "2023Q3",
+        "record_p025": 4427.525,
+        "record_p975": 4862.085625,
+        "record_relative_width": 0.09309024531,
+        "share_houses": 0.02755905512
+      },
+      {
+        "block_p025": 3973.669625,
+        "block_p975": 4687.31,
+        "block_relative_width": 0.1625863748,
+        "median": 4389.3,
+        "n": 298,
+        "n_clusters": 185,
+        "neighbourhood": "BURITIS",
+        "quarter": "2023Q4",
+        "record_p025": 4008.31,
+        "record_p975": 4645.5,
+        "record_relative_width": 0.1451689335,
+        "share_houses": 0.02013422819
+      },
+      {
+        "block_p025": 4418.04,
+        "block_p975": 5005.16,
+        "block_relative_width": 0.1231825373,
+        "median": 4766.26,
+        "n": 229,
+        "n_clusters": 129,
+        "neighbourhood": "BURITIS",
+        "quarter": "2024Q1",
+        "record_p025": 4467.69,
+        "record_p975": 4956.94275,
+        "record_relative_width": 0.1026491945,
+        "share_houses": 0.01310043668
+      },
+      {
+        "block_p025": 4645.21025,
+        "block_p975": 5106.07825,
+        "block_relative_width": 0.09461524091,
+        "median": 4870.97,
+        "n": 231,
+        "n_clusters": 128,
+        "neighbourhood": "BURITIS",
+        "quarter": "2024Q2",
+        "record_p025": 4646.3705,
+        "record_p975": 5041.79,
+        "record_relative_width": 0.08117880012,
+        "share_houses": 0.008658008658
+      },
+      {
+        "block_p025": 4474.232625,
+        "block_p975": 5031.71,
+        "block_relative_width": 0.1164578609,
+        "median": 4786.945,
+        "n": 274,
+        "n_clusters": 136,
+        "neighbourhood": "BURITIS",
+        "quarter": "2024Q3",
+        "record_p025": 4563.433625,
+        "record_p975": 4971.45,
+        "record_relative_width": 0.08523523354,
+        "share_houses": 0.01459854015
+      },
+      {
+        "block_p025": 4612.13025,
+        "block_p975": 5135.99075,
+        "block_relative_width": 0.1063995881,
+        "median": 4923.52,
+        "n": 225,
+        "n_clusters": 125,
+        "neighbourhood": "BURITIS",
+        "quarter": "2024Q4",
+        "record_p025": 4638.54,
+        "record_p975": 5088.15,
+        "record_relative_width": 0.09131881256,
+        "share_houses": 0.02222222222
+      },
+      {
+        "block_p025": 4248.95,
+        "block_p975": 4790.71275,
+        "block_relative_width": 0.1181498936,
+        "median": 4585.385,
+        "n": 240,
+        "n_clusters": 127,
+        "neighbourhood": "BURITIS",
+        "quarter": "2025Q1",
+        "record_p025": 4349.585,
+        "record_p975": 4752.305,
+        "record_relative_width": 0.08782686732,
+        "share_houses": 0.0125
+      },
+      {
+        "block_p025": 4490.65,
+        "block_p975": 5149.33525,
+        "block_relative_width": 0.1342493931,
+        "median": 4906.43,
+        "n": 217,
+        "n_clusters": 126,
+        "neighbourhood": "BURITIS",
+        "quarter": "2025Q2",
+        "record_p025": 4555.05,
+        "record_p975": 5107.38,
+        "record_relative_width": 0.1125726852,
+        "share_houses": 0.03225806452
+      },
+      {
+        "block_p025": 4490.11175,
+        "block_p975": 4965.985,
+        "block_relative_width": 0.1023564934,
+        "median": 4649.175,
+        "n": 224,
+        "n_clusters": 142,
+        "neighbourhood": "BURITIS",
+        "quarter": "2025Q3",
+        "record_p025": 4506.35,
+        "record_p975": 4962.733375,
+        "record_relative_width": 0.09816437863,
+        "share_houses": 0.02232142857
+      },
+      {
+        "block_p025": 4697.01,
+        "block_p975": 5490.21,
+        "block_relative_width": 0.1524261938,
+        "median": 5203.83,
+        "n": 235,
+        "n_clusters": 139,
+        "neighbourhood": "BURITIS",
+        "quarter": "2025Q4",
+        "record_p025": 4933.48,
+        "record_p975": 5322.78975,
+        "record_relative_width": 0.07481215758,
+        "share_houses": 0.008510638298
+      },
+      {
+        "block_p025": 4531.32,
+        "block_p975": 5166.85675,
+        "block_relative_width": 0.1292002651,
+        "median": 4919.005,
+        "n": 254,
+        "n_clusters": 159,
+        "neighbourhood": "CASTELO",
+        "quarter": "2016Q1",
+        "record_p025": 4630.05,
+        "record_p975": 5084.65,
+        "record_relative_width": 0.09241706402,
+        "share_houses": 0.02362204724
+      },
+      {
+        "block_p025": 4643.498375,
+        "block_p975": 4888.15,
+        "block_relative_width": 0.05139588857,
+        "median": 4760.14,
+        "n": 277,
+        "n_clusters": 161,
+        "neighbourhood": "CASTELO",
+        "quarter": "2016Q2",
+        "record_p025": 4670.12,
+        "record_p975": 4857.48,
+        "record_relative_width": 0.03936018689,
+        "share_houses": 0.03610108303
+      },
+      {
+        "block_p025": 4755.98,
+        "block_p975": 5229.27325,
+        "block_relative_width": 0.09396677265,
+        "median": 5036.815,
+        "n": 278,
+        "n_clusters": 174,
+        "neighbourhood": "CASTELO",
+        "quarter": "2016Q3",
+        "record_p025": 4781.0,
+        "record_p975": 5130.82,
+        "record_relative_width": 0.06945262036,
+        "share_houses": 0.03237410072
+      },
+      {
+        "block_p025": 4979.32,
+        "block_p975": 5299.17325,
+        "block_relative_width": 0.06184001415,
+        "median": 5172.27,
+        "n": 259,
+        "n_clusters": 190,
+        "neighbourhood": "CASTELO",
+        "quarter": "2016Q4",
+        "record_p025": 4979.32,
+        "record_p975": 5281.14,
+        "record_relative_width": 0.05835348889,
+        "share_houses": 0.01930501931
+      },
+      {
+        "block_p025": 4845.7,
+        "block_p975": 5168.236875,
+        "block_relative_width": 0.06521653965,
+        "median": 4945.63,
+        "n": 286,
+        "n_clusters": 191,
+        "neighbourhood": "CASTELO",
+        "quarter": "2017Q1",
+        "record_p025": 4882.9155,
+        "record_p975": 5120.4,
+        "record_relative_width": 0.04801905925,
+        "share_houses": 0.01398601399
+      },
+      {
+        "block_p025": 4649.38,
+        "block_p975": 5211.399875,
+        "block_relative_width": 0.1129965288,
+        "median": 4973.78,
+        "n": 216,
+        "n_clusters": 139,
+        "neighbourhood": "CASTELO",
+        "quarter": "2017Q2",
+        "record_p025": 4706.61,
+        "record_p975": 5143.375,
+        "record_relative_width": 0.08781349396,
+        "share_houses": 0.03240740741
+      },
+      {
+        "block_p025": 4688.11,
+        "block_p975": 5147.88,
+        "block_relative_width": 0.09506480563,
+        "median": 4836.385,
+        "n": 166,
+        "n_clusters": 118,
+        "neighbourhood": "CASTELO",
+        "quarter": "2017Q3",
+        "record_p025": 4688.11,
+        "record_p975": 5082.53825,
+        "record_relative_width": 0.0815543531,
+        "share_houses": 0.01204819277
+      },
+      {
+        "block_p025": 4221.4,
+        "block_p975": 4910.929625,
+        "block_relative_width": 0.1475990498,
+        "median": 4671.64,
+        "n": 145,
+        "n_clusters": 97,
+        "neighbourhood": "CASTELO",
+        "quarter": "2017Q4",
+        "record_p025": 4228.01,
+        "record_p975": 4830.92,
+        "record_relative_width": 0.1290574616,
+        "share_houses": 0.04137931034
+      },
+      {
+        "block_p025": 4268.665,
+        "block_p975": 4901.3,
+        "block_relative_width": 0.1372962427,
+        "median": 4607.81,
+        "n": 167,
+        "n_clusters": 115,
+        "neighbourhood": "CASTELO",
+        "quarter": "2018Q1",
+        "record_p025": 4370.83,
+        "record_p975": 4848.63,
+        "record_relative_width": 0.1036935117,
+        "share_houses": 0.02994011976
+      },
+      {
+        "block_p025": 4233.47,
+        "block_p975": 4695.245875,
+        "block_relative_width": 0.1053955564,
+        "median": 4381.36,
+        "n": 143,
+        "n_clusters": 100,
+        "neighbourhood": "CASTELO",
+        "quarter": "2018Q2",
+        "record_p025": 4246.63,
+        "record_p975": 4696.84,
+        "record_relative_width": 0.1027557653,
+        "share_houses": 0.03496503497
+      },
+      {
+        "block_p025": 4186.39,
+        "block_p975": 4737.55,
+        "block_relative_width": 0.1228036559,
+        "median": 4488.14,
+        "n": 194,
+        "n_clusters": 116,
+        "neighbourhood": "CASTELO",
+        "quarter": "2018Q3",
+        "record_p025": 4188.765,
+        "record_p975": 4702.87,
+        "record_relative_width": 0.1145474517,
+        "share_houses": 0.03608247423
+      },
+      {
+        "block_p025": 4317.87475,
+        "block_p975": 4727.515,
+        "block_relative_width": 0.09056045355,
+        "median": 4523.39,
+        "n": 210,
+        "n_clusters": 126,
+        "neighbourhood": "CASTELO",
+        "quarter": "2018Q4",
+        "record_p025": 4350.25,
+        "record_p975": 4704.0225,
+        "record_relative_width": 0.07820959502,
+        "share_houses": 0.02857142857
+      },
+      {
+        "block_p025": 4180.695,
+        "block_p975": 4780.76,
+        "block_relative_width": 0.1356335037,
+        "median": 4424.165,
+        "n": 158,
+        "n_clusters": 107,
+        "neighbourhood": "CASTELO",
+        "quarter": "2019Q1",
+        "record_p025": 4189.496875,
+        "record_p975": 4752.27,
+        "record_relative_width": 0.1272043708,
+        "share_houses": 0.07594936709
+      },
+      {
+        "block_p025": 4119.325625,
+        "block_p975": 4565.53,
+        "block_relative_width": 0.1030437978,
+        "median": 4330.24,
+        "n": 207,
+        "n_clusters": 124,
+        "neighbourhood": "CASTELO",
+        "quarter": "2019Q2",
+        "record_p025": 4136.65,
+        "record_p975": 4568.45,
+        "record_relative_width": 0.09971733668,
+        "share_houses": 0.038647343
+      },
+      {
+        "block_p025": 4276.46,
+        "block_p975": 4612.36875,
+        "block_relative_width": 0.07593208787,
+        "median": 4423.805,
+        "n": 198,
+        "n_clusters": 118,
+        "neighbourhood": "CASTELO",
+        "quarter": "2019Q3",
+        "record_p025": 4281.31,
+        "record_p975": 4570.921875,
+        "record_relative_width": 0.065466691,
+        "share_houses": 0.06060606061
+      },
+      {
+        "block_p025": 4292.33,
+        "block_p975": 4655.74875,
+        "block_relative_width": 0.08077560809,
+        "median": 4499.115,
+        "n": 196,
+        "n_clusters": 122,
+        "neighbourhood": "CASTELO",
+        "quarter": "2019Q4",
+        "record_p025": 4296.93775,
+        "record_p975": 4655.53,
+        "record_relative_width": 0.07970284156,
+        "share_houses": 0.0612244898
+      },
+      {
+        "block_p025": 4345.06575,
+        "block_p975": 4750.31,
+        "block_relative_width": 0.08887110711,
+        "median": 4559.91,
+        "n": 151,
+        "n_clusters": 102,
+        "neighbourhood": "CASTELO",
+        "quarter": "2020Q1",
+        "record_p025": 4378.47,
+        "record_p975": 4714.32,
+        "record_relative_width": 0.07365276946,
+        "share_houses": 0.07284768212
+      },
+      {
+        "block_p025": 4346.78,
+        "block_p975": 4855.73,
+        "block_relative_width": 0.1091769097,
+        "median": 4661.7,
+        "n": 141,
+        "n_clusters": 92,
+        "neighbourhood": "CASTELO",
+        "quarter": "2020Q2",
+        "record_p025": 4366.38,
+        "record_p975": 4792.3,
+        "record_relative_width": 0.09136581076,
+        "share_houses": 0.07092198582
+      },
+      {
+        "block_p025": 4499.06,
+        "block_p975": 5223.86,
+        "block_relative_width": 0.1504417982,
+        "median": 4817.81,
+        "n": 261,
+        "n_clusters": 139,
+        "neighbourhood": "CASTELO",
+        "quarter": "2020Q3",
+        "record_p025": 4574.79,
+        "record_p975": 5060.91,
+        "record_relative_width": 0.1009006167,
+        "share_houses": 0.04597701149
+      },
+      {
+        "block_p025": 4421.94,
+        "block_p975": 4852.92,
+        "block_relative_width": 0.09134454387,
+        "median": 4718.18,
+        "n": 238,
+        "n_clusters": 134,
+        "neighbourhood": "CASTELO",
+        "quarter": "2020Q4",
+        "record_p025": 4471.81825,
+        "record_p975": 4845.31,
+        "record_relative_width": 0.07916013166,
+        "share_houses": 0.04201680672
+      },
+      {
+        "block_p025": 4277.8,
+        "block_p975": 4642.71,
+        "block_relative_width": 0.08161288952,
+        "median": 4471.23,
+        "n": 298,
+        "n_clusters": 156,
+        "neighbourhood": "CASTELO",
+        "quarter": "2021Q1",
+        "record_p025": 4311.86325,
+        "record_p975": 4593.989,
+        "record_relative_width": 0.06309801777,
+        "share_houses": 0.03020134228
+      },
+      {
+        "block_p025": 4319.460125,
+        "block_p975": 4849.3,
+        "block_relative_width": 0.1160875598,
+        "median": 4564.14,
+        "n": 321,
+        "n_clusters": 172,
+        "neighbourhood": "CASTELO",
+        "quarter": "2021Q2",
+        "record_p025": 4391.79,
+        "record_p975": 4737.86825,
+        "record_relative_width": 0.07582551149,
+        "share_houses": 0.06542056075
+      },
+      {
+        "block_p025": 4276.725625,
+        "block_p975": 4674.2945,
+        "block_relative_width": 0.0886909861,
+        "median": 4482.63,
+        "n": 297,
+        "n_clusters": 160,
+        "neighbourhood": "CASTELO",
+        "quarter": "2021Q3",
+        "record_p025": 4315.82,
+        "record_p975": 4663.2,
+        "record_relative_width": 0.07749468504,
+        "share_houses": 0.06060606061
+      },
+      {
+        "block_p025": 4191.08375,
+        "block_p975": 4513.83,
+        "block_relative_width": 0.07402725565,
+        "median": 4359.83,
+        "n": 301,
+        "n_clusters": 178,
+        "neighbourhood": "CASTELO",
+        "quarter": "2021Q4",
+        "record_p025": 4191.19,
+        "record_p975": 4513.83,
+        "record_relative_width": 0.07400288543,
+        "share_houses": 0.04318936877
+      },
+      {
+        "block_p025": 4283.897875,
+        "block_p975": 4738.38,
+        "block_relative_width": 0.101283222,
+        "median": 4487.24,
+        "n": 228,
+        "n_clusters": 125,
+        "neighbourhood": "CASTELO",
+        "quarter": "2022Q1",
+        "record_p025": 4305.04,
+        "record_p975": 4660.93,
+        "record_relative_width": 0.079311559,
+        "share_houses": 0.06578947368
+      },
+      {
+        "block_p025": 4391.879875,
+        "block_p975": 4800.945,
+        "block_relative_width": 0.0900538531,
+        "median": 4542.45,
+        "n": 225,
+        "n_clusters": 124,
+        "neighbourhood": "CASTELO",
+        "quarter": "2022Q2",
+        "record_p025": 4425.29,
+        "record_p975": 4746.58,
+        "record_relative_width": 0.0707305529,
+        "share_houses": 0.03555555556
+      },
+      {
+        "block_p025": 4562.305,
+        "block_p975": 4915.24,
+        "block_relative_width": 0.07465013204,
+        "median": 4727.855,
+        "n": 220,
+        "n_clusters": 131,
+        "neighbourhood": "CASTELO",
+        "quarter": "2022Q3",
+        "record_p025": 4567.24,
+        "record_p975": 4922.625,
+        "record_relative_width": 0.07516833744,
+        "share_houses": 0.05
+      },
+      {
+        "block_p025": 4409.66,
+        "block_p975": 4800.69,
+        "block_relative_width": 0.08429241836,
+        "median": 4638.97,
+        "n": 182,
+        "n_clusters": 120,
+        "neighbourhood": "CASTELO",
+        "quarter": "2022Q4",
+        "record_p025": 4409.66,
+        "record_p975": 4811.15,
+        "record_relative_width": 0.08654722923,
+        "share_houses": 0.04395604396
+      },
+      {
+        "block_p025": 4489.500125,
+        "block_p975": 4896.03,
+        "block_relative_width": 0.08633627152,
+        "median": 4708.68,
+        "n": 189,
+        "n_clusters": 118,
+        "neighbourhood": "CASTELO",
+        "quarter": "2023Q1",
+        "record_p025": 4489.66,
+        "record_p975": 4862.02,
+        "record_relative_width": 0.07907948724,
+        "share_houses": 0.03174603175
+      },
+      {
+        "block_p025": 4613.19,
+        "block_p975": 5068.24,
+        "block_relative_width": 0.09395909409,
+        "median": 4843.065,
+        "n": 156,
+        "n_clusters": 114,
+        "neighbourhood": "CASTELO",
+        "quarter": "2023Q2",
+        "record_p025": 4624.285,
+        "record_p975": 5033.282375,
+        "record_relative_width": 0.08445011062,
+        "share_houses": 0.05769230769
+      },
+      {
+        "block_p025": 4696.26,
+        "block_p975": 5213.43,
+        "block_relative_width": 0.1025081464,
+        "median": 5045.16,
+        "n": 196,
+        "n_clusters": 121,
+        "neighbourhood": "CASTELO",
+        "quarter": "2023Q3",
+        "record_p025": 4763.301375,
+        "record_p975": 5207.03,
+        "record_relative_width": 0.08795134842,
+        "share_houses": 0.0612244898
+      },
+      {
+        "block_p025": 4539.21,
+        "block_p975": 5280.416,
+        "block_relative_width": 0.1492580954,
+        "median": 4965.935,
+        "n": 146,
+        "n_clusters": 87,
+        "neighbourhood": "CASTELO",
+        "quarter": "2023Q4",
+        "record_p025": 4619.2,
+        "record_p975": 5277.9,
+        "record_relative_width": 0.1326437015,
+        "share_houses": 0.02054794521
+      },
+      {
+        "block_p025": 4709.5935,
+        "block_p975": 5193.32,
+        "block_relative_width": 0.09699146434,
+        "median": 4987.31,
+        "n": 160,
+        "n_clusters": 108,
+        "neighbourhood": "CASTELO",
+        "quarter": "2024Q1",
+        "record_p025": 4722.975,
+        "record_p975": 5189.83,
+        "record_relative_width": 0.09360857857,
+        "share_houses": 0.05
+      },
+      {
+        "block_p025": 4784.968375,
+        "block_p975": 5552.61,
+        "block_relative_width": 0.1468810751,
+        "median": 5226.28,
+        "n": 179,
+        "n_clusters": 118,
+        "neighbourhood": "CASTELO",
+        "quarter": "2024Q2",
+        "record_p025": 4820.17,
+        "record_p975": 5552.59,
+        "record_relative_width": 0.1401417452,
+        "share_houses": 0.06145251397
+      },
+      {
+        "block_p025": 4705.480125,
+        "block_p975": 5201.685,
+        "block_relative_width": 0.09939085641,
+        "median": 4992.46,
+        "n": 211,
+        "n_clusters": 136,
+        "neighbourhood": "CASTELO",
+        "quarter": "2024Q3",
+        "record_p025": 4715.03025,
+        "record_p975": 5197.99375,
+        "record_relative_width": 0.09673858178,
+        "share_houses": 0.04265402844
+      },
+      {
+        "block_p025": 5033.62,
+        "block_p975": 5634.91,
+        "block_relative_width": 0.1133707283,
+        "median": 5303.75,
+        "n": 166,
+        "n_clusters": 117,
+        "neighbourhood": "CASTELO",
+        "quarter": "2024Q4",
+        "record_p025": 5002.12,
+        "record_p975": 5634.91,
+        "record_relative_width": 0.1193099222,
+        "share_houses": 0.05421686747
+      },
+      {
+        "block_p025": 4774.35,
+        "block_p975": 5757.16,
+        "block_relative_width": 0.1880713317,
+        "median": 5225.73,
+        "n": 173,
+        "n_clusters": 101,
+        "neighbourhood": "CASTELO",
+        "quarter": "2025Q1",
+        "record_p025": 4803.15,
+        "record_p975": 5673.56,
+        "record_relative_width": 0.166562375,
+        "share_houses": 0.04046242775
+      },
+      {
+        "block_p025": 5140.54,
+        "block_p975": 5785.04,
+        "block_relative_width": 0.1168772997,
+        "median": 5514.33,
+        "n": 139,
+        "n_clusters": 101,
+        "neighbourhood": "CASTELO",
+        "quarter": "2025Q2",
+        "record_p025": 5174.9,
+        "record_p975": 5772.1,
+        "record_relative_width": 0.1082996484,
+        "share_houses": 0.06474820144
+      },
+      {
+        "block_p025": 4906.61,
+        "block_p975": 5494.69,
+        "block_relative_width": 0.1131522566,
+        "median": 5197.245,
+        "n": 186,
+        "n_clusters": 122,
+        "neighbourhood": "CASTELO",
+        "quarter": "2025Q3",
+        "record_p025": 4935.065,
+        "record_p975": 5471.6585,
+        "record_relative_width": 0.1032457581,
+        "share_houses": 0.05376344086
+      },
+      {
+        "block_p025": 5148.637125,
+        "block_p975": 5848.24,
+        "block_relative_width": 0.129458275,
+        "median": 5404.08,
+        "n": 142,
+        "n_clusters": 100,
+        "neighbourhood": "CASTELO",
+        "quarter": "2025Q4",
+        "record_p025": 5223.64,
+        "record_p975": 5809.534375,
+        "record_relative_width": 0.1084170432,
+        "share_houses": 0.06338028169
+      },
+      {
+        "block_p025": 4407.195,
+        "block_p975": 6518.67,
+        "block_relative_width": 0.3705795167,
+        "median": 5697.765,
+        "n": 118,
+        "n_clusters": 80,
+        "neighbourhood": "CENTRO",
+        "quarter": "2016Q1",
+        "record_p025": 5060.75,
+        "record_p975": 6052.21,
+        "record_relative_width": 0.1740085806,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4001.33,
+        "block_p975": 4960.73,
+        "block_relative_width": 0.2103089529,
+        "median": 4561.86,
+        "n": 59,
+        "n_clusters": 48,
+        "neighbourhood": "CENTRO",
+        "quarter": "2016Q2",
+        "record_p025": 4001.33,
+        "record_p975": 4960.73,
+        "record_relative_width": 0.2103089529,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3295.9365,
+        "block_p975": 4518.94,
+        "block_relative_width": 0.2986577534,
+        "median": 4095.0,
+        "n": 71,
+        "n_clusters": 50,
+        "neighbourhood": "CENTRO",
+        "quarter": "2016Q3",
+        "record_p025": 3354.73,
+        "record_p975": 4488.14,
+        "record_relative_width": 0.2767789988,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4400.94,
+        "block_p975": 5116.975,
+        "block_relative_width": 0.1470041163,
+        "median": 4870.85,
+        "n": 65,
+        "n_clusters": 52,
+        "neighbourhood": "CENTRO",
+        "quarter": "2016Q4",
+        "record_p025": 4400.94,
+        "record_p975": 5102.72,
+        "record_relative_width": 0.1440775224,
+        "share_houses": 0.01538461538
+      },
+      {
+        "block_p025": 4591.93,
+        "block_p975": 5853.325,
+        "block_relative_width": 0.2436616617,
+        "median": 5176.83,
+        "n": 51,
+        "n_clusters": 38,
+        "neighbourhood": "CENTRO",
+        "quarter": "2017Q1",
+        "record_p025": 4591.93,
+        "record_p975": 5829.24,
+        "record_relative_width": 0.2390092006,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4572.66,
+        "block_p975": 5498.01,
+        "block_relative_width": 0.1891053184,
+        "median": 4893.305,
+        "n": 56,
+        "n_clusters": 46,
+        "neighbourhood": "CENTRO",
+        "quarter": "2017Q2",
+        "record_p025": 4414.355,
+        "record_p975": 5498.01,
+        "record_relative_width": 0.2214566637,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4089.63,
+        "block_p975": 5412.89,
+        "block_relative_width": 0.2822481995,
+        "median": 4688.285,
+        "n": 56,
+        "n_clusters": 43,
+        "neighbourhood": "CENTRO",
+        "quarter": "2017Q3",
+        "record_p025": 4302.671375,
+        "record_p975": 5274.935,
+        "record_relative_width": 0.2073815105,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3935.98,
+        "block_p975": 4974.01,
+        "block_relative_width": 0.2397117999,
+        "median": 4330.325,
+        "n": 40,
+        "n_clusters": 36,
+        "neighbourhood": "CENTRO",
+        "quarter": "2017Q4",
+        "record_p025": 3848.575,
+        "record_p975": 4974.392625,
+        "record_relative_width": 0.2599845566,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3728.39,
+        "block_p975": 5106.77,
+        "block_relative_width": 0.3466558691,
+        "median": 3976.22,
+        "n": 51,
+        "n_clusters": 45,
+        "neighbourhood": "CENTRO",
+        "quarter": "2018Q1",
+        "record_p025": 3728.39,
+        "record_p975": 5106.77,
+        "record_relative_width": 0.3466558691,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3864.2,
+        "block_p975": 4881.55,
+        "block_relative_width": 0.2332553026,
+        "median": 4361.53,
+        "n": 55,
+        "n_clusters": 46,
+        "neighbourhood": "CENTRO",
+        "quarter": "2018Q2",
+        "record_p025": 3846.48,
+        "record_p975": 4785.69,
+        "record_relative_width": 0.2153395712,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3989.65,
+        "block_p975": 4631.66,
+        "block_relative_width": 0.1522353588,
+        "median": 4217.22,
+        "n": 65,
+        "n_clusters": 53,
+        "neighbourhood": "CENTRO",
+        "quarter": "2018Q3",
+        "record_p025": 3989.65,
+        "record_p975": 4605.05,
+        "record_relative_width": 0.1459255149,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3888.67,
+        "block_p975": 4543.077625,
+        "block_relative_width": 0.15530733,
+        "median": 4213.63,
+        "n": 60,
+        "n_clusters": 50,
+        "neighbourhood": "CENTRO",
+        "quarter": "2018Q4",
+        "record_p025": 3893.55,
+        "record_p975": 4606.67075,
+        "record_relative_width": 0.169241426,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3877.58,
+        "block_p975": 5398.3,
+        "block_relative_width": 0.3338309157,
+        "median": 4555.36,
+        "n": 43,
+        "n_clusters": 36,
+        "neighbourhood": "CENTRO",
+        "quarter": "2019Q1",
+        "record_p025": 3993.1,
+        "record_p975": 5388.67,
+        "record_relative_width": 0.3063577851,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3638.11,
+        "block_p975": 4961.33,
+        "block_relative_width": 0.3092762783,
+        "median": 4278.44,
+        "n": 61,
+        "n_clusters": 47,
+        "neighbourhood": "CENTRO",
+        "quarter": "2019Q2",
+        "record_p025": 4076.0,
+        "record_p975": 4916.21,
+        "record_relative_width": 0.1963823263,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4204.27,
+        "block_p975": 4787.21,
+        "block_relative_width": 0.127632835,
+        "median": 4567.32,
+        "n": 70,
+        "n_clusters": 49,
+        "neighbourhood": "CENTRO",
+        "quarter": "2019Q3",
+        "record_p025": 4373.78,
+        "record_p975": 4798.49,
+        "record_relative_width": 0.09298888626,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4031.41,
+        "block_p975": 4821.72,
+        "block_relative_width": 0.1815823636,
+        "median": 4352.35,
+        "n": 59,
+        "n_clusters": 45,
+        "neighbourhood": "CENTRO",
+        "quarter": "2019Q4",
+        "record_p025": 4031.41,
+        "record_p975": 4785.88,
+        "record_relative_width": 0.1733477317,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3772.77,
+        "block_p975": 5288.385,
+        "block_relative_width": 0.3346600218,
+        "median": 4528.82,
+        "n": 54,
+        "n_clusters": 43,
+        "neighbourhood": "CENTRO",
+        "quarter": "2020Q1",
+        "record_p025": 3791.055,
+        "record_p975": 5288.385,
+        "record_relative_width": 0.3306225463,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3961.35,
+        "block_p975": 5079.573625,
+        "block_relative_width": 0.2538924567,
+        "median": 4404.32,
+        "n": 33,
+        "n_clusters": 30,
+        "neighbourhood": "CENTRO",
+        "quarter": "2020Q2",
+        "record_p025": 3971.35,
+        "record_p975": 5027.48,
+        "record_relative_width": 0.2397941112,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3805.21,
+        "block_p975": 5143.54,
+        "block_relative_width": 0.3015669503,
+        "median": 4437.92,
+        "n": 59,
+        "n_clusters": 47,
+        "neighbourhood": "CENTRO",
+        "quarter": "2020Q3",
+        "record_p025": 3855.79,
+        "record_p975": 4963.41,
+        "record_relative_width": 0.2495808847,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4109.932,
+        "block_p975": 4783.315375,
+        "block_relative_width": 0.1528872253,
+        "median": 4404.445,
+        "n": 90,
+        "n_clusters": 73,
+        "neighbourhood": "CENTRO",
+        "quarter": "2020Q4",
+        "record_p025": 4078.195,
+        "record_p975": 4731.37425,
+        "record_relative_width": 0.1483000128,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3500.12,
+        "block_p975": 4330.47,
+        "block_relative_width": 0.2176200566,
+        "median": 3815.595,
+        "n": 64,
+        "n_clusters": 48,
+        "neighbourhood": "CENTRO",
+        "quarter": "2021Q1",
+        "record_p025": 3501.6,
+        "record_p975": 4303.94,
+        "record_relative_width": 0.2102791308,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3858.67,
+        "block_p975": 4815.01,
+        "block_relative_width": 0.219049626,
+        "median": 4365.86,
+        "n": 85,
+        "n_clusters": 64,
+        "neighbourhood": "CENTRO",
+        "quarter": "2021Q2",
+        "record_p025": 3947.96,
+        "record_p975": 4792.31,
+        "record_relative_width": 0.1933983224,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3671.486,
+        "block_p975": 5511.27,
+        "block_relative_width": 0.400573497,
+        "median": 4592.875,
+        "n": 110,
+        "n_clusters": 66,
+        "neighbourhood": "CENTRO",
+        "quarter": "2021Q3",
+        "record_p025": 3954.04,
+        "record_p975": 5030.19925,
+        "record_relative_width": 0.2343105898,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 4045.39,
+        "block_p975": 4738.109125,
+        "block_relative_width": 0.157181281,
+        "median": 4407.135,
+        "n": 80,
+        "n_clusters": 64,
+        "neighbourhood": "CENTRO",
+        "quarter": "2021Q4",
+        "record_p025": 4100.27,
+        "record_p975": 4685.244125,
+        "record_relative_width": 0.1327334255,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3598.04,
+        "block_p975": 4506.985,
+        "block_relative_width": 0.2174254693,
+        "median": 4180.49,
+        "n": 80,
+        "n_clusters": 66,
+        "neighbourhood": "CENTRO",
+        "quarter": "2022Q1",
+        "record_p025": 3713.997,
+        "record_p975": 4465.42,
+        "record_relative_width": 0.1797451973,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3298.44,
+        "block_p975": 4022.88,
+        "block_relative_width": 0.2006142156,
+        "median": 3611.11,
+        "n": 65,
+        "n_clusters": 50,
+        "neighbourhood": "CENTRO",
+        "quarter": "2022Q2",
+        "record_p025": 3272.88,
+        "record_p975": 4052.6,
+        "record_relative_width": 0.215922528,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3536.13,
+        "block_p975": 4297.147625,
+        "block_relative_width": 0.1900925899,
+        "median": 4003.405,
+        "n": 84,
+        "n_clusters": 66,
+        "neighbourhood": "CENTRO",
+        "quarter": "2022Q3",
+        "record_p025": 3549.58025,
+        "record_p975": 4296.06,
+        "record_relative_width": 0.1864612124,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3380.53,
+        "block_p975": 4071.96,
+        "block_relative_width": 0.1864949427,
+        "median": 3707.5,
+        "n": 61,
+        "n_clusters": 51,
+        "neighbourhood": "CENTRO",
+        "quarter": "2022Q4",
+        "record_p025": 3285.11,
+        "record_p975": 4072.554,
+        "record_relative_width": 0.212392178,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3970.69,
+        "block_p975": 4706.49,
+        "block_relative_width": 0.1727416575,
+        "median": 4259.54,
+        "n": 64,
+        "n_clusters": 51,
+        "neighbourhood": "CENTRO",
+        "quarter": "2023Q1",
+        "record_p025": 4085.93,
+        "record_p975": 4690.11,
+        "record_relative_width": 0.1418416073,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3148.94,
+        "block_p975": 3856.001625,
+        "block_relative_width": 0.2036476612,
+        "median": 3471.985,
+        "n": 68,
+        "n_clusters": 56,
+        "neighbourhood": "CENTRO",
+        "quarter": "2023Q2",
+        "record_p025": 3148.94,
+        "record_p975": 3832.01,
+        "record_relative_width": 0.1967376011,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3277.5695,
+        "block_p975": 3840.48,
+        "block_relative_width": 0.1596046675,
+        "median": 3526.905,
+        "n": 84,
+        "n_clusters": 65,
+        "neighbourhood": "CENTRO",
+        "quarter": "2023Q3",
+        "record_p025": 3301.574,
+        "record_p975": 3838.36675,
+        "record_relative_width": 0.1521993788,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3239.96875,
+        "block_p975": 3778.87,
+        "block_relative_width": 0.1559284652,
+        "median": 3456.08,
+        "n": 71,
+        "n_clusters": 56,
+        "neighbourhood": "CENTRO",
+        "quarter": "2023Q4",
+        "record_p025": 3246.58,
+        "record_p975": 3778.87,
+        "record_relative_width": 0.154015532,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3394.99,
+        "block_p975": 4318.58,
+        "block_relative_width": 0.2366777627,
+        "median": 3902.31,
+        "n": 82,
+        "n_clusters": 58,
+        "neighbourhood": "CENTRO",
+        "quarter": "2024Q1",
+        "record_p025": 3408.275,
+        "record_p975": 4296.755125,
+        "record_relative_width": 0.2276805597,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3403.99525,
+        "block_p975": 4554.81,
+        "block_relative_width": 0.2858123244,
+        "median": 4026.47,
+        "n": 103,
+        "n_clusters": 67,
+        "neighbourhood": "CENTRO",
+        "quarter": "2024Q2",
+        "record_p025": 3485.42,
+        "record_p975": 4406.71,
+        "record_relative_width": 0.2288083607,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3516.70375,
+        "block_p975": 4287.772375,
+        "block_relative_width": 0.2004540686,
+        "median": 3846.61,
+        "n": 93,
+        "n_clusters": 60,
+        "neighbourhood": "CENTRO",
+        "quarter": "2024Q3",
+        "record_p025": 3659.83,
+        "record_p975": 4117.04,
+        "record_relative_width": 0.1188605031,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3779.5195,
+        "block_p975": 4736.11,
+        "block_relative_width": 0.232619168,
+        "median": 4112.26,
+        "n": 100,
+        "n_clusters": 70,
+        "neighbourhood": "CENTRO",
+        "quarter": "2024Q4",
+        "record_p025": 3794.39,
+        "record_p975": 4684.12,
+        "record_relative_width": 0.2163603469,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3722.26,
+        "block_p975": 4396.98,
+        "block_relative_width": 0.1678656418,
+        "median": 4019.405,
+        "n": 88,
+        "n_clusters": 56,
+        "neighbourhood": "CENTRO",
+        "quarter": "2025Q1",
+        "record_p025": 3768.405,
+        "record_p975": 4339.055,
+        "record_relative_width": 0.1419737498,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3643.9,
+        "block_p975": 4219.51,
+        "block_relative_width": 0.1475060734,
+        "median": 3902.28,
+        "n": 102,
+        "n_clusters": 80,
+        "neighbourhood": "CENTRO",
+        "quarter": "2025Q2",
+        "record_p025": 3657.03,
+        "record_p975": 4163.642375,
+        "record_relative_width": 0.1298247115,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3937.49,
+        "block_p975": 4571.09,
+        "block_relative_width": 0.1512319821,
+        "median": 4189.59,
+        "n": 91,
+        "n_clusters": 64,
+        "neighbourhood": "CENTRO",
+        "quarter": "2025Q3",
+        "record_p025": 3937.49,
+        "record_p975": 4570.36,
+        "record_relative_width": 0.1510577407,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 3731.5,
+        "block_p975": 4530.69,
+        "block_relative_width": 0.2020003134,
+        "median": 3956.38,
+        "n": 94,
+        "n_clusters": 65,
+        "neighbourhood": "CENTRO",
+        "quarter": "2025Q4",
+        "record_p025": 3772.585,
+        "record_p975": 4447.645,
+        "record_relative_width": 0.170625673,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6234.89,
+        "block_p975": 7831.43,
+        "block_relative_width": 0.2200473024,
+        "median": 7255.44,
+        "n": 98,
+        "n_clusters": 61,
+        "neighbourhood": "LOURDES",
+        "quarter": "2016Q1",
+        "record_p025": 6520.81,
+        "record_p975": 7665.065,
+        "record_relative_width": 0.157709939,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5716.385375,
+        "block_p975": 8017.731875,
+        "block_relative_width": 0.3624769942,
+        "median": 6348.945,
+        "n": 88,
+        "n_clusters": 57,
+        "neighbourhood": "LOURDES",
+        "quarter": "2016Q2",
+        "record_p025": 5810.822125,
+        "record_p975": 7212.995,
+        "record_relative_width": 0.2208513186,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5876.6,
+        "block_p975": 7954.645,
+        "block_relative_width": 0.3033726483,
+        "median": 6849.81,
+        "n": 69,
+        "n_clusters": 46,
+        "neighbourhood": "LOURDES",
+        "quarter": "2016Q3",
+        "record_p025": 6392.42,
+        "record_p975": 7624.03,
+        "record_relative_width": 0.1798020675,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5866.69,
+        "block_p975": 7879.97,
+        "block_relative_width": 0.2901391624,
+        "median": 6939.015,
+        "n": 78,
+        "n_clusters": 55,
+        "neighbourhood": "LOURDES",
+        "quarter": "2016Q4",
+        "record_p025": 6072.08,
+        "record_p975": 7766.885,
+        "record_relative_width": 0.2442428789,
+        "share_houses": 0.01282051282
+      },
+      {
+        "block_p025": 5534.3,
+        "block_p975": 6970.03,
+        "block_relative_width": 0.2252348075,
+        "median": 6374.37,
+        "n": 57,
+        "n_clusters": 45,
+        "neighbourhood": "LOURDES",
+        "quarter": "2017Q1",
+        "record_p025": 5809.89,
+        "record_p975": 6884.29,
+        "record_relative_width": 0.16854999,
+        "share_houses": 0.0350877193
+      },
+      {
+        "block_p025": 5884.91,
+        "block_p975": 8216.68,
+        "block_relative_width": 0.3244301043,
+        "median": 7187.28,
+        "n": 81,
+        "n_clusters": 59,
+        "neighbourhood": "LOURDES",
+        "quarter": "2017Q2",
+        "record_p025": 6272.44,
+        "record_p975": 8073.54,
+        "record_relative_width": 0.2505954965,
+        "share_houses": 0.01234567901
+      },
+      {
+        "block_p025": 5619.22,
+        "block_p975": 7733.56,
+        "block_relative_width": 0.3241348914,
+        "median": 6523.025,
+        "n": 52,
+        "n_clusters": 40,
+        "neighbourhood": "LOURDES",
+        "quarter": "2017Q3",
+        "record_p025": 5685.405,
+        "record_p975": 7706.975,
+        "record_relative_width": 0.3099129622,
+        "share_houses": 0.01923076923
+      },
+      {
+        "block_p025": 5471.345,
+        "block_p975": 7156.28,
+        "block_relative_width": 0.2656321066,
+        "median": 6343.115,
+        "n": 58,
+        "n_clusters": 45,
+        "neighbourhood": "LOURDES",
+        "quarter": "2017Q4",
+        "record_p025": 5502.98,
+        "record_p975": 7026.4,
+        "record_relative_width": 0.2401690652,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6342.77,
+        "block_p975": 8372.67,
+        "block_relative_width": 0.2717319279,
+        "median": 7470.23,
+        "n": 62,
+        "n_clusters": 47,
+        "neighbourhood": "LOURDES",
+        "quarter": "2018Q1",
+        "record_p025": 6342.564625,
+        "record_p975": 8248.7,
+        "record_relative_width": 0.2551642152,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6238.39025,
+        "block_p975": 7344.57,
+        "block_relative_width": 0.1620116275,
+        "median": 6827.78,
+        "n": 75,
+        "n_clusters": 58,
+        "neighbourhood": "LOURDES",
+        "quarter": "2018Q2",
+        "record_p025": 6259.51,
+        "record_p975": 7344.57,
+        "record_relative_width": 0.1589184186,
+        "share_houses": 0.01333333333
+      },
+      {
+        "block_p025": 6226.085,
+        "block_p975": 7966.33,
+        "block_relative_width": 0.2443412771,
+        "median": 7122.19,
+        "n": 62,
+        "n_clusters": 43,
+        "neighbourhood": "LOURDES",
+        "quarter": "2018Q3",
+        "record_p025": 6704.31,
+        "record_p975": 7956.44,
+        "record_relative_width": 0.1758068796,
+        "share_houses": 0.01612903226
+      },
+      {
+        "block_p025": 5972.6,
+        "block_p975": 7213.187625,
+        "block_relative_width": 0.1936723531,
+        "median": 6405.6,
+        "n": 103,
+        "n_clusters": 74,
+        "neighbourhood": "LOURDES",
+        "quarter": "2018Q4",
+        "record_p025": 5972.6,
+        "record_p975": 7059.56,
+        "record_relative_width": 0.1696890221,
+        "share_houses": 0.01941747573
+      },
+      {
+        "block_p025": 6293.86,
+        "block_p975": 7578.534375,
+        "block_relative_width": 0.1827352335,
+        "median": 7030.25,
+        "n": 78,
+        "n_clusters": 61,
+        "neighbourhood": "LOURDES",
+        "quarter": "2019Q1",
+        "record_p025": 6296.20975,
+        "record_p975": 7460.9,
+        "record_relative_width": 0.1656683973,
+        "share_houses": 0.01282051282
+      },
+      {
+        "block_p025": 6072.28775,
+        "block_p975": 7513.27,
+        "block_relative_width": 0.2061777171,
+        "median": 6989.03,
+        "n": 82,
+        "n_clusters": 63,
+        "neighbourhood": "LOURDES",
+        "quarter": "2019Q2",
+        "record_p025": 6077.3,
+        "record_p975": 7499.055,
+        "record_relative_width": 0.2034266558,
+        "share_houses": 0.0243902439
+      },
+      {
+        "block_p025": 3387.52,
+        "block_p975": 7527.61,
+        "block_relative_width": 0.7006508804,
+        "median": 5908.92,
+        "n": 85,
+        "n_clusters": 54,
+        "neighbourhood": "LOURDES",
+        "quarter": "2019Q3",
+        "record_p025": 4793.2,
+        "record_p975": 6561.52,
+        "record_relative_width": 0.2992628094,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6106.05,
+        "block_p975": 7305.63,
+        "block_relative_width": 0.1753356661,
+        "median": 6841.62,
+        "n": 91,
+        "n_clusters": 71,
+        "neighbourhood": "LOURDES",
+        "quarter": "2019Q4",
+        "record_p025": 6173.36,
+        "record_p975": 7305.63,
+        "record_relative_width": 0.165497353,
+        "share_houses": 0.02197802198
+      },
+      {
+        "block_p025": 6157.377375,
+        "block_p975": 7809.954125,
+        "block_relative_width": 0.225576952,
+        "median": 7326.0,
+        "n": 73,
+        "n_clusters": 60,
+        "neighbourhood": "LOURDES",
+        "quarter": "2020Q1",
+        "record_p025": 6193.16,
+        "record_p975": 7773.621,
+        "record_relative_width": 0.2157331422,
+        "share_houses": 0.01369863014
+      },
+      {
+        "block_p025": 5684.06,
+        "block_p975": 8138.486,
+        "block_relative_width": 0.3449945814,
+        "median": 7114.39,
+        "n": 53,
+        "n_clusters": 46,
+        "neighbourhood": "LOURDES",
+        "quarter": "2020Q2",
+        "record_p025": 5685.64,
+        "record_p975": 8138.27,
+        "record_relative_width": 0.3447421353,
+        "share_houses": 0.01886792453
+      },
+      {
+        "block_p025": 5739.81,
+        "block_p975": 8897.62,
+        "block_relative_width": 0.4240902596,
+        "median": 7446.08,
+        "n": 93,
+        "n_clusters": 58,
+        "neighbourhood": "LOURDES",
+        "quarter": "2020Q3",
+        "record_p025": 6551.69,
+        "record_p975": 7902.94,
+        "record_relative_width": 0.1814713245,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6240.24,
+        "block_p975": 7895.89,
+        "block_relative_width": 0.2252226516,
+        "median": 7351.17,
+        "n": 84,
+        "n_clusters": 68,
+        "neighbourhood": "LOURDES",
+        "quarter": "2020Q4",
+        "record_p025": 6370.875,
+        "record_p975": 7887.385,
+        "record_relative_width": 0.2062950524,
+        "share_houses": 0.0119047619
+      },
+      {
+        "block_p025": 6456.65,
+        "block_p975": 7626.91,
+        "block_relative_width": 0.1629575374,
+        "median": 7181.38,
+        "n": 97,
+        "n_clusters": 74,
+        "neighbourhood": "LOURDES",
+        "quarter": "2021Q1",
+        "record_p025": 6484.87,
+        "record_p975": 7594.41,
+        "record_relative_width": 0.154502338,
+        "share_houses": 0.0206185567
+      },
+      {
+        "block_p025": 5952.454625,
+        "block_p975": 7865.10875,
+        "block_relative_width": 0.2843793002,
+        "median": 6725.715,
+        "n": 84,
+        "n_clusters": 63,
+        "neighbourhood": "LOURDES",
+        "quarter": "2021Q2",
+        "record_p025": 6110.005,
+        "record_p975": 7825.29,
+        "record_relative_width": 0.2550338514,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6421.81325,
+        "block_p975": 7167.6,
+        "block_relative_width": 0.1090323536,
+        "median": 6840.05,
+        "n": 123,
+        "n_clusters": 93,
+        "neighbourhood": "LOURDES",
+        "quarter": "2021Q3",
+        "record_p025": 6471.16,
+        "record_p975": 7042.06,
+        "record_relative_width": 0.08346430216,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6173.0,
+        "block_p975": 7507.84325,
+        "block_relative_width": 0.1858499701,
+        "median": 7182.37,
+        "n": 113,
+        "n_clusters": 74,
+        "neighbourhood": "LOURDES",
+        "quarter": "2021Q4",
+        "record_p025": 6448.01,
+        "record_p975": 7385.26,
+        "record_relative_width": 0.1304931381,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5631.231125,
+        "block_p975": 6797.74475,
+        "block_relative_width": 0.18451509,
+        "median": 6322.05,
+        "n": 93,
+        "n_clusters": 65,
+        "neighbourhood": "LOURDES",
+        "quarter": "2022Q1",
+        "record_p025": 5804.15,
+        "record_p975": 6615.62,
+        "record_relative_width": 0.1283555176,
+        "share_houses": 0.02150537634
+      },
+      {
+        "block_p025": 5716.67,
+        "block_p975": 7108.59,
+        "block_relative_width": 0.2225743676,
+        "median": 6253.73,
+        "n": 107,
+        "n_clusters": 72,
+        "neighbourhood": "LOURDES",
+        "quarter": "2022Q2",
+        "record_p025": 5852.16,
+        "record_p975": 6960.33,
+        "record_relative_width": 0.1772014462,
+        "share_houses": 0.009345794393
+      },
+      {
+        "block_p025": 5609.12,
+        "block_p975": 6932.21,
+        "block_relative_width": 0.2094753024,
+        "median": 6316.21,
+        "n": 117,
+        "n_clusters": 74,
+        "neighbourhood": "LOURDES",
+        "quarter": "2022Q3",
+        "record_p025": 5736.85,
+        "record_p975": 6708.73,
+        "record_relative_width": 0.1538707548,
+        "share_houses": 0.008547008547
+      },
+      {
+        "block_p025": 5911.165,
+        "block_p975": 8036.74025,
+        "block_relative_width": 0.3000464064,
+        "median": 7084.155,
+        "n": 100,
+        "n_clusters": 66,
+        "neighbourhood": "LOURDES",
+        "quarter": "2022Q4",
+        "record_p025": 6356.115,
+        "record_p975": 7803.62,
+        "record_relative_width": 0.2043299448,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5692.552125,
+        "block_p975": 7140.6,
+        "block_relative_width": 0.2176384863,
+        "median": 6653.455,
+        "n": 128,
+        "n_clusters": 69,
+        "neighbourhood": "LOURDES",
+        "quarter": "2023Q1",
+        "record_p025": 6232.925,
+        "record_p975": 7130.64,
+        "record_relative_width": 0.1349246369,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6035.48,
+        "block_p975": 7522.0015,
+        "block_relative_width": 0.2169702114,
+        "median": 6851.27,
+        "n": 105,
+        "n_clusters": 70,
+        "neighbourhood": "LOURDES",
+        "quarter": "2023Q2",
+        "record_p025": 6456.89625,
+        "record_p975": 7435.48,
+        "record_relative_width": 0.1428324603,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 2670.22075,
+        "block_p975": 7522.13,
+        "block_relative_width": 0.7995196942,
+        "median": 6068.53,
+        "n": 133,
+        "n_clusters": 65,
+        "neighbourhood": "LOURDES",
+        "quarter": "2023Q3",
+        "record_p025": 5499.7585,
+        "record_p975": 6826.85,
+        "record_relative_width": 0.2186841789,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6738.555,
+        "block_p975": 7901.84,
+        "block_relative_width": 0.1579217807,
+        "median": 7366.21,
+        "n": 107,
+        "n_clusters": 75,
+        "neighbourhood": "LOURDES",
+        "quarter": "2023Q4",
+        "record_p025": 6803.62,
+        "record_p975": 7871.81,
+        "record_relative_width": 0.1450121569,
+        "share_houses": 0.02803738318
+      },
+      {
+        "block_p025": 6131.96075,
+        "block_p975": 7715.6,
+        "block_relative_width": 0.2390009251,
+        "median": 6626.08,
+        "n": 89,
+        "n_clusters": 68,
+        "neighbourhood": "LOURDES",
+        "quarter": "2024Q1",
+        "record_p025": 6254.5,
+        "record_p975": 7611.29,
+        "record_relative_width": 0.20476511,
+        "share_houses": 0.01123595506
+      },
+      {
+        "block_p025": 6047.6055,
+        "block_p975": 8082.23,
+        "block_relative_width": 0.2929506802,
+        "median": 6945.28,
+        "n": 130,
+        "n_clusters": 76,
+        "neighbourhood": "LOURDES",
+        "quarter": "2024Q2",
+        "record_p025": 6308.56,
+        "record_p975": 7669.833875,
+        "record_relative_width": 0.1959998553,
+        "share_houses": 0.007692307692
+      },
+      {
+        "block_p025": 6269.41,
+        "block_p975": 7575.9905,
+        "block_relative_width": 0.191079485,
+        "median": 6837.89,
+        "n": 134,
+        "n_clusters": 92,
+        "neighbourhood": "LOURDES",
+        "quarter": "2024Q3",
+        "record_p025": 6364.105,
+        "record_p975": 7510.80975,
+        "record_relative_width": 0.1676986249,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5598.15,
+        "block_p975": 7321.6535,
+        "block_relative_width": 0.2612437664,
+        "median": 6597.3,
+        "n": 135,
+        "n_clusters": 88,
+        "neighbourhood": "LOURDES",
+        "quarter": "2024Q4",
+        "record_p025": 5948.09,
+        "record_p975": 7259.69,
+        "record_relative_width": 0.1988086035,
+        "share_houses": 0.007407407407
+      },
+      {
+        "block_p025": 6234.78,
+        "block_p975": 7788.982875,
+        "block_relative_width": 0.2201227194,
+        "median": 7060.62,
+        "n": 141,
+        "n_clusters": 80,
+        "neighbourhood": "LOURDES",
+        "quarter": "2025Q1",
+        "record_p025": 6489.71,
+        "record_p975": 7488.18,
+        "record_relative_width": 0.1414139268,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6439.55075,
+        "block_p975": 8461.61,
+        "block_relative_width": 0.268410966,
+        "median": 7533.445,
+        "n": 134,
+        "n_clusters": 83,
+        "neighbourhood": "LOURDES",
+        "quarter": "2025Q2",
+        "record_p025": 6960.0,
+        "record_p975": 7992.141875,
+        "record_relative_width": 0.1370079525,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 7340.92,
+        "block_p975": 8882.52,
+        "block_relative_width": 0.1928544041,
+        "median": 7993.595,
+        "n": 142,
+        "n_clusters": 90,
+        "neighbourhood": "LOURDES",
+        "quarter": "2025Q3",
+        "record_p025": 7556.765,
+        "record_p975": 8726.89275,
+        "record_relative_width": 0.1463831668,
+        "share_houses": 0.01408450704
+      },
+      {
+        "block_p025": 6840.87225,
+        "block_p975": 7843.2225,
+        "block_relative_width": 0.1350980129,
+        "median": 7419.43,
+        "n": 127,
+        "n_clusters": 90,
+        "neighbourhood": "LOURDES",
+        "quarter": "2025Q4",
+        "record_p025": 7137.56,
+        "record_p975": 7765.58,
+        "record_relative_width": 0.08464531642,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6100.46,
+        "block_p975": 8341.782625,
+        "block_relative_width": 0.3152849148,
+        "median": 7108.88,
+        "n": 95,
+        "n_clusters": 55,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2016Q1",
+        "record_p025": 6665.47,
+        "record_p975": 7740.06,
+        "record_relative_width": 0.1511616457,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5541.78,
+        "block_p975": 7146.23,
+        "block_relative_width": 0.2515486126,
+        "median": 6378.29,
+        "n": 63,
+        "n_clusters": 43,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2016Q2",
+        "record_p025": 5630.85,
+        "record_p975": 7026.54,
+        "record_relative_width": 0.218818837,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6828.115,
+        "block_p975": 7743.565,
+        "block_relative_width": 0.1245597481,
+        "median": 7349.485,
+        "n": 66,
+        "n_clusters": 52,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2016Q3",
+        "record_p025": 6828.054875,
+        "record_p975": 7740.91,
+        "record_relative_width": 0.1242066791,
+        "share_houses": 0.01515151515
+      },
+      {
+        "block_p025": 6638.04,
+        "block_p975": 8514.57,
+        "block_relative_width": 0.2501771477,
+        "median": 7500.805,
+        "n": 84,
+        "n_clusters": 59,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2016Q4",
+        "record_p025": 6957.09,
+        "record_p975": 8185.55,
+        "record_relative_width": 0.1637770879,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6232.0,
+        "block_p975": 7401.72,
+        "block_relative_width": 0.1674331789,
+        "median": 6986.19,
+        "n": 97,
+        "n_clusters": 76,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2017Q1",
+        "record_p025": 6695.53,
+        "record_p975": 7370.72,
+        "record_relative_width": 0.09664638379,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 7492.030125,
+        "block_p975": 9007.36,
+        "block_relative_width": 0.1888082717,
+        "median": 8025.76,
+        "n": 86,
+        "n_clusters": 68,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2017Q2",
+        "record_p025": 7531.39,
+        "record_p975": 8817.867375,
+        "record_relative_width": 0.1602935267,
+        "share_houses": 0.01162790698
+      },
+      {
+        "block_p025": 6458.28,
+        "block_p975": 7466.12,
+        "block_relative_width": 0.1429130531,
+        "median": 7052.12,
+        "n": 54,
+        "n_clusters": 40,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2017Q3",
+        "record_p025": 6465.535,
+        "record_p975": 7419.875,
+        "record_relative_width": 0.1353266819,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6382.500875,
+        "block_p975": 8925.32,
+        "block_relative_width": 0.3306966485,
+        "median": 7689.28,
+        "n": 59,
+        "n_clusters": 43,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2017Q4",
+        "record_p025": 6609.25,
+        "record_p975": 8698.89,
+        "record_relative_width": 0.2717601648,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5921.345,
+        "block_p975": 8063.50225,
+        "block_relative_width": 0.3079371736,
+        "median": 6956.475,
+        "n": 90,
+        "n_clusters": 53,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2018Q1",
+        "record_p025": 6096.060625,
+        "record_p975": 7742.74,
+        "record_relative_width": 0.2367117506,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5953.08,
+        "block_p975": 7594.99,
+        "block_relative_width": 0.2594682663,
+        "median": 6327.98,
+        "n": 88,
+        "n_clusters": 77,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2018Q2",
+        "record_p025": 6029.23,
+        "record_p975": 7479.97,
+        "record_relative_width": 0.2292579939,
+        "share_houses": 0.01136363636
+      },
+      {
+        "block_p025": 6793.057125,
+        "block_p975": 8548.01,
+        "block_relative_width": 0.2244199611,
+        "median": 7819.95,
+        "n": 89,
+        "n_clusters": 63,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2018Q3",
+        "record_p025": 7009.37,
+        "record_p975": 8422.2,
+        "record_relative_width": 0.1806699531,
+        "share_houses": 0.01123595506
+      },
+      {
+        "block_p025": 5880.41,
+        "block_p975": 9433.44,
+        "block_relative_width": 0.4488665363,
+        "median": 7915.56,
+        "n": 130,
+        "n_clusters": 63,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2018Q4",
+        "record_p025": 7188.475375,
+        "record_p975": 9146.375,
+        "record_relative_width": 0.2473482135,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6602.14,
+        "block_p975": 10127.56,
+        "block_relative_width": 0.4126423227,
+        "median": 8543.525,
+        "n": 96,
+        "n_clusters": 47,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2019Q1",
+        "record_p025": 7660.41,
+        "record_p975": 9098.86,
+        "record_relative_width": 0.1683672723,
+        "share_houses": 0.1770833333
+      },
+      {
+        "block_p025": 5461.75,
+        "block_p975": 8982.71,
+        "block_relative_width": 0.5023889071,
+        "median": 7008.435,
+        "n": 90,
+        "n_clusters": 51,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2019Q2",
+        "record_p025": 6053.42,
+        "record_p975": 7902.28,
+        "record_relative_width": 0.2638049722,
+        "share_houses": 0.02222222222
+      },
+      {
+        "block_p025": 6775.74,
+        "block_p975": 8530.9,
+        "block_relative_width": 0.2336135997,
+        "median": 7513.09,
+        "n": 101,
+        "n_clusters": 66,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2019Q3",
+        "record_p025": 7055.74,
+        "record_p975": 8213.18,
+        "record_relative_width": 0.1540564535,
+        "share_houses": 0.009900990099
+      },
+      {
+        "block_p025": 6768.123875,
+        "block_p975": 8598.42875,
+        "block_relative_width": 0.2461473431,
+        "median": 7435.81,
+        "n": 95,
+        "n_clusters": 56,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2019Q4",
+        "record_p025": 6822.88,
+        "record_p975": 8059.9,
+        "record_relative_width": 0.1663598182,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6284.555,
+        "block_p975": 8584.5,
+        "block_relative_width": 0.3085687568,
+        "median": 7453.59,
+        "n": 58,
+        "n_clusters": 42,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2020Q1",
+        "record_p025": 6733.09,
+        "record_p975": 8413.92,
+        "record_relative_width": 0.2255060984,
+        "share_houses": 0.03448275862
+      },
+      {
+        "block_p025": 5624.04,
+        "block_p975": 7549.69,
+        "block_relative_width": 0.3019599603,
+        "median": 6377.17,
+        "n": 39,
+        "n_clusters": 32,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2020Q2",
+        "record_p025": 5793.72,
+        "record_p975": 7549.69,
+        "record_relative_width": 0.2753525467,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 7188.25,
+        "block_p975": 8891.3,
+        "block_relative_width": 0.2083789621,
+        "median": 8172.85,
+        "n": 85,
+        "n_clusters": 55,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2020Q3",
+        "record_p025": 7333.84,
+        "record_p975": 8517.429,
+        "record_relative_width": 0.1448196162,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6992.23,
+        "block_p975": 8417.8515,
+        "block_relative_width": 0.1904164763,
+        "median": 7486.86,
+        "n": 93,
+        "n_clusters": 65,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2020Q4",
+        "record_p025": 7094.08,
+        "record_p975": 8100.16,
+        "record_relative_width": 0.1343794328,
+        "share_houses": 0.01075268817
+      },
+      {
+        "block_p025": 6794.449,
+        "block_p975": 8306.48,
+        "block_relative_width": 0.1950329531,
+        "median": 7752.695,
+        "n": 112,
+        "n_clusters": 67,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2021Q1",
+        "record_p025": 6967.82,
+        "record_p975": 8208.98,
+        "record_relative_width": 0.160094006,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6903.535,
+        "block_p975": 8165.22,
+        "block_relative_width": 0.171494495,
+        "median": 7357.0,
+        "n": 97,
+        "n_clusters": 74,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2021Q2",
+        "record_p025": 6937.73,
+        "record_p975": 8022.24625,
+        "record_relative_width": 0.1474128381,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6005.861375,
+        "block_p975": 7850.88,
+        "block_relative_width": 0.2693813745,
+        "median": 6849.095,
+        "n": 138,
+        "n_clusters": 104,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2021Q3",
+        "record_p025": 6306.47,
+        "record_p975": 7329.1,
+        "record_relative_width": 0.1493087773,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 5180.988,
+        "block_p975": 7780.48,
+        "block_relative_width": 0.3727645174,
+        "median": 6973.55,
+        "n": 191,
+        "n_clusters": 121,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2021Q4",
+        "record_p025": 6020.16,
+        "record_p975": 7307.41,
+        "record_relative_width": 0.1845903449,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6897.28,
+        "block_p975": 8361.1275,
+        "block_relative_width": 0.1920118551,
+        "median": 7623.735,
+        "n": 138,
+        "n_clusters": 109,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2022Q1",
+        "record_p025": 6974.91,
+        "record_p975": 8185.395,
+        "record_relative_width": 0.1587784728,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6290.99,
+        "block_p975": 7895.285,
+        "block_relative_width": 0.2271780442,
+        "median": 7061.84,
+        "n": 105,
+        "n_clusters": 76,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2022Q2",
+        "record_p025": 6359.4,
+        "record_p975": 7889.25,
+        "record_relative_width": 0.2166361741,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6191.6,
+        "block_p975": 7508.49,
+        "block_relative_width": 0.1905353739,
+        "median": 6911.525,
+        "n": 114,
+        "n_clusters": 82,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2022Q3",
+        "record_p025": 6326.725,
+        "record_p975": 7345.735,
+        "record_relative_width": 0.1474363473,
+        "share_houses": 0.008771929825
+      },
+      {
+        "block_p025": 6475.2,
+        "block_p975": 8363.4,
+        "block_relative_width": 0.2514652827,
+        "median": 7508.79,
+        "n": 89,
+        "n_clusters": 69,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2022Q4",
+        "record_p025": 6726.71,
+        "record_p975": 8205.26,
+        "record_relative_width": 0.1969092224,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6372.866625,
+        "block_p975": 7885.748,
+        "block_relative_width": 0.2111968773,
+        "median": 7163.37,
+        "n": 97,
+        "n_clusters": 77,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2023Q1",
+        "record_p025": 6499.82,
+        "record_p975": 7742.19,
+        "record_relative_width": 0.173433733,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6004.82,
+        "block_p975": 7151.95,
+        "block_relative_width": 0.1771840049,
+        "median": 6474.23,
+        "n": 97,
+        "n_clusters": 77,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2023Q2",
+        "record_p025": 6158.34,
+        "record_p975": 7109.69,
+        "record_relative_width": 0.1469441154,
+        "share_houses": 0.01030927835
+      },
+      {
+        "block_p025": 6297.330375,
+        "block_p975": 8327.9,
+        "block_relative_width": 0.2711196537,
+        "median": 7489.57,
+        "n": 108,
+        "n_clusters": 74,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2023Q3",
+        "record_p025": 6642.01,
+        "record_p975": 8159.25525,
+        "record_relative_width": 0.2025810894,
+        "share_houses": 0.009259259259
+      },
+      {
+        "block_p025": 6280.31,
+        "block_p975": 8173.73,
+        "block_relative_width": 0.2530352821,
+        "median": 7482.83,
+        "n": 139,
+        "n_clusters": 92,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2023Q4",
+        "record_p025": 6574.54,
+        "record_p975": 8152.12,
+        "record_relative_width": 0.2108266525,
+        "share_houses": 0.007194244604
+      },
+      {
+        "block_p025": 6294.84,
+        "block_p975": 8118.41,
+        "block_relative_width": 0.261207798,
+        "median": 6981.3,
+        "n": 105,
+        "n_clusters": 75,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2024Q1",
+        "record_p025": 6480.13,
+        "record_p975": 7663.3,
+        "record_relative_width": 0.1694770315,
+        "share_houses": 0.009523809524
+      },
+      {
+        "block_p025": 6372.9735,
+        "block_p975": 7547.496375,
+        "block_relative_width": 0.1749872058,
+        "median": 6712.05,
+        "n": 105,
+        "n_clusters": 81,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2024Q2",
+        "record_p025": 6422.28,
+        "record_p975": 7476.08,
+        "record_relative_width": 0.1570012142,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6121.6,
+        "block_p975": 7783.59,
+        "block_relative_width": 0.2294200552,
+        "median": 7244.31,
+        "n": 91,
+        "n_clusters": 62,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2024Q3",
+        "record_p025": 6276.53,
+        "record_p975": 7783.59,
+        "record_relative_width": 0.2080336153,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6688.407,
+        "block_p975": 7833.35,
+        "block_relative_width": 0.1589386258,
+        "median": 7203.68,
+        "n": 96,
+        "n_clusters": 75,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2024Q4",
+        "record_p025": 6689.1025,
+        "record_p975": 7748.16,
+        "record_relative_width": 0.1470161778,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6485.265,
+        "block_p975": 7793.11,
+        "block_relative_width": 0.1788536556,
+        "median": 7312.375,
+        "n": 100,
+        "n_clusters": 78,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2025Q1",
+        "record_p025": 6743.85,
+        "record_p975": 7711.30875,
+        "record_relative_width": 0.1323043129,
+        "share_houses": 0.01
+      },
+      {
+        "block_p025": 6449.9,
+        "block_p975": 7664.985,
+        "block_relative_width": 0.1670649363,
+        "median": 7273.13,
+        "n": 95,
+        "n_clusters": 65,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2025Q2",
+        "record_p025": 6616.62,
+        "record_p975": 7660.95,
+        "record_relative_width": 0.1435874238,
+        "share_houses": 0.0
+      },
+      {
+        "block_p025": 6479.29,
+        "block_p975": 8007.581125,
+        "block_relative_width": 0.2166178791,
+        "median": 7055.24,
+        "n": 84,
+        "n_clusters": 71,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2025Q3",
+        "record_p025": 6479.29,
+        "record_p975": 7995.265125,
+        "record_relative_width": 0.2148722262,
+        "share_houses": 0.0119047619
+      },
+      {
+        "block_p025": 7025.9465,
+        "block_p975": 7803.81,
+        "block_relative_width": 0.1044644218,
+        "median": 7446.205,
+        "n": 100,
+        "n_clusters": 85,
+        "neighbourhood": "SAVASSI",
+        "quarter": "2025Q4",
+        "record_p025": 6968.135,
+        "record_p975": 7795.59,
+        "record_relative_width": 0.1111243916,
+        "share_houses": 0.0
+      }
+    ]
+  },
+  "ratio_screen_reach": [
+    {
+      "low_tail_median_ratio": 0.1706206946,
+      "low_tail_share_ratio_ge_0999": 0.02007083825,
+      "share_flags_at_or_above_1000": 0.6845010616,
+      "share_ratio_below_half": 0.1218376533,
+      "year": 2016
+    },
+    {
+      "low_tail_median_ratio": 0.1572486223,
+      "low_tail_share_ratio_ge_0999": 0.0,
+      "share_flags_at_or_above_1000": 0.6960680128,
+      "share_ratio_below_half": 0.1156019656,
+      "year": 2017
+    },
+    {
+      "low_tail_median_ratio": 0.1691720197,
+      "low_tail_share_ratio_ge_0999": 0.001828153565,
+      "share_flags_at_or_above_1000": 0.6698113208,
+      "share_ratio_below_half": 0.09323325906,
+      "year": 2018
+    },
+    {
+      "low_tail_median_ratio": 0.1634993915,
+      "low_tail_share_ratio_ge_0999": 0.0,
+      "share_flags_at_or_above_1000": 0.6545079147,
+      "share_ratio_below_half": 0.07949447423,
+      "year": 2019
+    },
+    {
+      "low_tail_median_ratio": 0.1872132805,
+      "low_tail_share_ratio_ge_0999": 0.0,
+      "share_flags_at_or_above_1000": 0.6684322034,
+      "share_ratio_below_half": 0.05113205503,
+      "year": 2020
+    },
+    {
+      "low_tail_median_ratio": 0.1883907335,
+      "low_tail_share_ratio_ge_0999": 0.005747126437,
+      "share_flags_at_or_above_1000": 0.6207418622,
+      "share_ratio_below_half": 0.04718699768,
+      "year": 2021
+    },
+    {
+      "low_tail_median_ratio": 0.203092492,
+      "low_tail_share_ratio_ge_0999": 0.002192982456,
+      "share_flags_at_or_above_1000": 0.5526859504,
+      "share_ratio_below_half": 0.04418275595,
+      "year": 2022
+    },
+    {
+      "low_tail_median_ratio": 0.2045475774,
+      "low_tail_share_ratio_ge_0999": 0.0,
+      "share_flags_at_or_above_1000": 0.5095011876,
+      "share_ratio_below_half": 0.0397751429,
+      "year": 2023
+    },
+    {
+      "low_tail_median_ratio": 0.204882295,
+      "low_tail_share_ratio_ge_0999": 0.005319148936,
+      "share_flags_at_or_above_1000": 0.5322580645,
+      "share_ratio_below_half": 0.03332437517,
+      "year": 2024
+    },
+    {
+      "low_tail_median_ratio": 0.17508954,
+      "low_tail_share_ratio_ge_0999": 0.005089058524,
+      "share_flags_at_or_above_1000": 0.558411215,
+      "share_ratio_below_half": 0.03781921004,
+      "year": 2025
+    }
+  ],
+  "residual_dispersion": [
+    {
+      "all_records": 0.2852962711,
+      "excluding_low_tail": 0.2653574914,
+      "year": 2016
+    },
+    {
+      "all_records": 0.2848259457,
+      "excluding_low_tail": 0.2739818017,
+      "year": 2017
+    },
+    {
+      "all_records": 0.2650540807,
+      "excluding_low_tail": 0.2538803012,
+      "year": 2018
+    },
+    {
+      "all_records": 0.2457102075,
+      "excluding_low_tail": 0.2358333136,
+      "year": 2019
+    },
+    {
+      "all_records": 0.2313147825,
+      "excluding_low_tail": 0.2260613683,
+      "year": 2020
+    },
+    {
+      "all_records": 0.2282425898,
+      "excluding_low_tail": 0.2226673357,
+      "year": 2021
+    },
+    {
+      "all_records": 0.2334118116,
+      "excluding_low_tail": 0.2280708485,
+      "year": 2022
+    },
+    {
+      "all_records": 0.2373798178,
+      "excluding_low_tail": 0.2318570279,
+      "year": 2023
+    },
+    {
+      "all_records": 0.252427385,
+      "excluding_low_tail": 0.2455706174,
+      "year": 2024
+    },
+    {
+      "all_records": 0.250868971,
+      "excluding_low_tail": 0.2442262131,
+      "year": 2025
+    }
+  ],
+  "round_numbers": {
+    "bin_widths": [
+      {
+        "share": 0.2337134392,
+        "uniform_baseline": 0.05,
+        "width_brl": 2500
+      },
+      {
+        "share": 0.2533158783,
+        "uniform_baseline": 0.1,
+        "width_brl": 5000
+      },
+      {
+        "share": 0.3021324973,
+        "uniform_baseline": 0.2,
+        "width_brl": 10000
+      }
+    ],
+    "exact_10000_share": 0.5857994281,
+    "exact_50000_share": 0.2223963896,
+    "n": 58054,
+    "ratio_to_one_fifth_share": 1.898229828
+  },
+  "tails": {
+    "by_year": [
+      {
+        "share_above_30000": 0.0002069429355,
+        "share_below_1000": 0.04382016659,
+        "year": 2016
+      },
+      {
+        "share_above_30000": 0.0002457002457,
+        "share_below_1000": 0.03581081081,
+        "year": 2017
+      },
+      {
+        "share_above_30000": 0.0003518236191,
+        "share_below_1000": 0.03207458661,
+        "year": 2018
+      },
+      {
+        "share_above_30000": 5.471058103e-05,
+        "share_below_1000": 0.02823065981,
+        "year": 2019
+      },
+      {
+        "share_above_30000": 0.0001083306251,
+        "share_below_1000": 0.01749539595,
+        "year": 2020
+      },
+      {
+        "share_above_30000": 3.57206644e-05,
+        "share_below_1000": 0.01864618682,
+        "year": 2021
+      },
+      {
+        "share_above_30000": 9.128668584e-05,
+        "share_below_1000": 0.02081336437,
+        "year": 2022
+      },
+      {
+        "share_above_30000": 4.723888705e-05,
+        "share_below_1000": 0.02045443809,
+        "year": 2023
+      },
+      {
+        "share_above_30000": 0.0,
+        "share_below_1000": 0.01684135089,
+        "year": 2024
+      },
+      {
+        "share_above_30000": 0.0,
+        "share_below_1000": 0.01736325881,
+        "year": 2025
+      }
+    ],
+    "eligible_n": 205436,
+    "quantiles": [
+      {
+        "price_real": 194.6727,
+        "probability": 0.001
+      },
+      {
+        "price_real": 572.7845,
+        "probability": 0.01
+      },
+      {
+        "price_real": 874.981,
+        "probability": 0.02
+      },
+      {
+        "price_real": 4543.565,
+        "probability": 0.5
+      },
+      {
+        "price_real": 9483.73,
+        "probability": 0.98
+      },
+      {
+        "price_real": 10459.5885,
+        "probability": 0.99
+      },
+      {
+        "price_real": 15079.61055,
+        "probability": 0.999
+      }
+    ]
+  },
+  "tax_base": {
+    "annual": [
+      {
+        "median_declared_base": 0.9137712701,
+        "share_below": 0.6899994826,
+        "year": 2016
+      },
+      {
+        "median_declared_base": 0.9055070539,
+        "share_below": 0.7264742015,
+        "year": 2017
+      },
+      {
+        "median_declared_base": 0.9140239136,
+        "share_below": 0.6956725695,
+        "year": 2018
+      },
+      {
+        "median_declared_base": 0.9281260368,
+        "share_below": 0.6640223219,
+        "year": 2019
+      },
+      {
+        "median_declared_base": 0.9783558947,
+        "share_below": 0.5457155238,
+        "year": 2020
+      },
+      {
+        "median_declared_base": 1.0,
+        "share_below": 0.4569387391,
+        "year": 2021
+      },
+      {
+        "median_declared_base": 1.0,
+        "share_below": 0.3544662011,
+        "year": 2022
+      },
+      {
+        "median_declared_base": 1.0,
+        "share_below": 0.2732769616,
+        "year": 2023
+      },
+      {
+        "median_declared_base": 1.0,
+        "share_below": 0.244961032,
+        "year": 2024
+      },
+      {
+        "median_declared_base": 1.0,
+        "share_below": 0.4209596183,
+        "year": 2025
+      }
+    ],
+    "declared_above_base": 4,
+    "n": 205436,
+    "quarterly": [
+      {
+        "quarter": "2016Q1",
+        "share_below": 0.6908983452
+      },
+      {
+        "quarter": "2016Q2",
+        "share_below": 0.6907388137
+      },
+      {
+        "quarter": "2016Q3",
+        "share_below": 0.6937704918
+      },
+      {
+        "quarter": "2016Q4",
+        "share_below": 0.6847937615
+      },
+      {
+        "quarter": "2017Q1",
+        "share_below": 0.7472419711
+      },
+      {
+        "quarter": "2017Q2",
+        "share_below": 0.7179428044
+      },
+      {
+        "quarter": "2017Q3",
+        "share_below": 0.7157348431
+      },
+      {
+        "quarter": "2017Q4",
+        "share_below": 0.7258687259
+      },
+      {
+        "quarter": "2018Q1",
+        "share_below": 0.7127659574
+      },
+      {
+        "quarter": "2018Q2",
+        "share_below": 0.6971563981
+      },
+      {
+        "quarter": "2018Q3",
+        "share_below": 0.6886964448
+      },
+      {
+        "quarter": "2018Q4",
+        "share_below": 0.6866289199
+      },
+      {
+        "quarter": "2019Q1",
+        "share_below": 0.6836528759
+      },
+      {
+        "quarter": "2019Q2",
+        "share_below": 0.6926272066
+      },
+      {
+        "quarter": "2019Q3",
+        "share_below": 0.6508838384
+      },
+      {
+        "quarter": "2019Q4",
+        "share_below": 0.6317674321
+      },
+      {
+        "quarter": "2020Q1",
+        "share_below": 0.5861442657
+      },
+      {
+        "quarter": "2020Q2",
+        "share_below": 0.5488958991
+      },
+      {
+        "quarter": "2020Q3",
+        "share_below": 0.5449010654
+      },
+      {
+        "quarter": "2020Q4",
+        "share_below": 0.5179880648
+      },
+      {
+        "quarter": "2021Q1",
+        "share_below": 0.505623317
+      },
+      {
+        "quarter": "2021Q2",
+        "share_below": 0.4647753495
+      },
+      {
+        "quarter": "2021Q3",
+        "share_below": 0.4235102484
+      },
+      {
+        "quarter": "2021Q4",
+        "share_below": 0.4398388025
+      },
+      {
+        "quarter": "2022Q1",
+        "share_below": 0.3887829073
+      },
+      {
+        "quarter": "2022Q2",
+        "share_below": 0.3524877365
+      },
+      {
+        "quarter": "2022Q3",
+        "share_below": 0.3480417308
+      },
+      {
+        "quarter": "2022Q4",
+        "share_below": 0.3288341158
+      },
+      {
+        "quarter": "2023Q1",
+        "share_below": 0.2951073293
+      },
+      {
+        "quarter": "2023Q2",
+        "share_below": 0.2806278714
+      },
+      {
+        "quarter": "2023Q3",
+        "share_below": 0.2691743119
+      },
+      {
+        "quarter": "2023Q4",
+        "share_below": 0.2490608565
+      },
+      {
+        "quarter": "2024Q1",
+        "share_below": 0.1494044014
+      },
+      {
+        "quarter": "2024Q2",
+        "share_below": 0.178350343
+      },
+      {
+        "quarter": "2024Q3",
+        "share_below": 0.2716763006
+      },
+      {
+        "quarter": "2024Q4",
+        "share_below": 0.3778318667
+      },
+      {
+        "quarter": "2025Q1",
+        "share_below": 0.3269948463
+      },
+      {
+        "quarter": "2025Q2",
+        "share_below": 0.4254552352
+      },
+      {
+        "quarter": "2025Q3",
+        "share_below": 0.4720708447
+      },
+      {
+        "quarter": "2025Q4",
+        "share_below": 0.4559099437
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "audit_version": "v1",
+  "cached_table_verified": true,
+  "cluster_draws": 200,
+  "dirty": false,
+  "git_commit": "0c3244684ade377ccd0474715c171ab50c113ebf",
+  "median_draws": 1000,
+  "model_version": "v3",
+  "protocol_id": "hedonic-sensitivity-v1",
+  "protocol_settings": true,
+  "protocol_sha256": "f053d9ea55d47b3e16b95734ab8114c1fece0c706865f7d1460f352aaf1a9724",
+  "revision": "5908d77ed56fc9adb6dbafaf2cb38f34245bcd76",
+  "seed": 20261122,
+  "source_sha256": "386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86",
+  "thread_limit": 2,
+  "transactions_sha256": "e4e88d72de40bb708cec4e9bd5134482fa7a928f638619d468f584b768c894fc",
+  "versions": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "python": "3.14.7",
+    "scikit-learn": "1.9.1",
+    "statsmodels": "0.15.0"
+  }
+}

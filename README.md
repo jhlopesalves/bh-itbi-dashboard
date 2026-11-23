@@ -28,6 +28,15 @@ uv run python main.py
 
 Acesse [http://127.0.0.1:8050/](http://127.0.0.1:8050/) no navegador.
 
+## Auditoria de robustez
+
+A pasta [`docs/robustness`](docs/robustness/report.md) reúne uma auditoria reprodutível dos resultados analíticos (relatório em inglês): a reprodução do índice hedônico publicado, um protocolo de sensibilidade fixado antes da execução, estimadores robustos com inferência agrupada por bairro, a estabilidade do agrupamento de trajetórias e diagnósticos descritivos. A auditoria não substitui o índice publicado; ela mostra quanto as estimativas dependem das escolhas de população e de estimador.
+
+```bash
+uv run python main.py prepare
+uv run python main.py audit --output docs/robustness
+```
+
 ## Dados
 
 Os dados são provenientes dos registros oficiais de ITBI da Prefeitura de Belo Horizonte (CC BY 4.0), tratados e disponibilizados no conjunto de dados [pracadata/brazil-itbi](https://huggingface.co/datasets/pracadata/brazil-itbi), no Hugging Face.
