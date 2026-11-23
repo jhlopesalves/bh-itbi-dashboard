@@ -64,7 +64,7 @@ def audit_inputs(snapshot_frame, snapshot_models) -> AuditInputs:
     )
 
 
-def test_audit_writes_exactly_eight_byte_identical_outputs(
+def test_audit_writes_exactly_the_required_outputs_deterministically(
     tmp_path: Path, audit_inputs: AuditInputs
 ) -> None:
     settings = AuditSettings(cluster_draws=4, median_draws=8)

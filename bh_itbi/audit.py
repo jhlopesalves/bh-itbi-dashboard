@@ -620,7 +620,7 @@ def run_audit(
     inputs: AuditInputs | None = None,
     settings: AuditSettings | None = None,
 ) -> AuditManifest:
-    """Verify the baseline, compute the frozen protocol and publish eight evidence files."""
+    """Verify the baseline, compute the frozen protocol and publish the evidence files."""
     settings = settings if settings is not None else AuditSettings()
     print("Verifying audit inputs…", flush=True)
     inputs = inputs if inputs is not None else _verified_audit_inputs()

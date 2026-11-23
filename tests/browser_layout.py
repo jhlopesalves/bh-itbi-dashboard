@@ -210,7 +210,9 @@ def check_models_legends(page: Page) -> None:
     page.locator("#tab-models").click()
     wait_for_plot(page, "hedonic-figure", min_traces=10)
     subtitle = page.locator(".chart-card:has(#trajectories-figure) .chart-subtitle")
-    coverage = re.search(r"([\d.]+) bairros com ao menos", subtitle.inner_text())
+    coverage_text = re.compile(r"([\d.]+) bairros com ao menos")
+    expect(subtitle).to_contain_text(coverage_text)
+    coverage = coverage_text.search(subtitle.text_content() or "")
     assert coverage is not None
     count = int(coverage.group(1).replace(".", ""))
     wait_for_plot(page, "trajectories-figure", min_traces=count + 1)
