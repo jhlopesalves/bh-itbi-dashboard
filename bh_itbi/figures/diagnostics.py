@@ -20,6 +20,7 @@ from bh_itbi.config import (
     HEAPING_BAR_WIDTH,
     HEAPING_MINIMUM,
     QUARTER_VISIBILITY,
+    TAX_MILESTONE_DATES,
 )
 from bh_itbi.filters import Filters, quarter_range
 from bh_itbi.formatting import age_percent, number, quarter_label
@@ -37,6 +38,7 @@ from bh_itbi.text.diagnostics import (
     NOMINAL_DECLARED_AXIS_TITLE,
     TAX_BASE_EMPTY_MESSAGE,
     TAX_HOVER,
+    TAX_MILESTONE_LABELS,
     TAX_SHARE_AXIS_TITLE,
     age_row_tooltip,
 )
@@ -52,6 +54,7 @@ from bh_itbi.theme import (
     DISTANCE_PERIOD_STYLES,
     INK,
     NEUTRAL_BAR,
+    REFERENCE,
     SURFACE,
     TEAL,
     TYPE_STYLES,
@@ -224,9 +227,54 @@ def tax_base_figure(table: pd.DataFrame, filters: Filters) -> go.Figure:
             )
         )
     themed(fig)
-    fig.update_xaxes(tickformat="%Y", dtick="M24")
+    start, end = f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"
+    fig.update_xaxes(tickformat="%Y", dtick="M24", range=[start, end])
     fig.update_yaxes(range=[0, 1], tickformat=".0%", title_text=TAX_SHARE_AXIS_TITLE)
+    _tax_milestone_lines(fig, start, end)
     return fig
+
+
+def _tax_milestone_lines(fig: go.Figure, start: str, end: str) -> None:
+    """Mark in-range dates with disjoint label rows above the plotting area."""
+    shifts = (20, 4, 36)
+    milestones = [
+        (date, label, shift)
+        for date, label, shift in zip(
+            TAX_MILESTONE_DATES, TAX_MILESTONE_LABELS, shifts, strict=True
+        )
+        if start <= date <= end
+    ]
+    if not milestones:
+        return
+    left = pd.Timestamp(start)
+    span = pd.Timestamp(end) - left
+    for date, label, shift in milestones:
+        position = (pd.Timestamp(date) - left) / span
+        anchor = "left" if position < 1 / 3 else "right" if position > 2 / 3 else "center"
+        fig.add_shape(
+            type="line",
+            xref="x",
+            x0=date,
+            x1=date,
+            yref="paper",
+            y0=0,
+            y1=1,
+            line=dict(REFERENCE),
+            layer="below",
+        )
+        fig.add_annotation(
+            x=date,
+            y=1,
+            xref="x",
+            yref="paper",
+            text=label,
+            showarrow=False,
+            xanchor=anchor,
+            yanchor="bottom",
+            yshift=shift,
+            font={"size": 11, "color": INK},
+        )
+    fig.update_layout(margin={"t": 60})
 
 
 def heaping_figure(table: pd.DataFrame) -> go.Figure:

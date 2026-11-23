@@ -73,6 +73,13 @@ DISTANCE_MINIMUM = 50
 TAX_BASE_MINIMUM = 100
 HEDONIC_NEIGHBOURHOOD_MINIMUM = 100
 
+TAX_MILESTONE_DATES = (
+    "2022-02-24",  # STJ judgement in REsp 1.937.821/SP (Tema 1113).
+    # Law 11.530, Art. 4: DOM publication on 29 June plus 180 days, excluding publication day.
+    "2023-12-26",
+    "2024-06-18",  # DOM publication of Decree 18.735, amending the ITBI regulation.
+)
+
 COMPARISON_RIDGE_LIMIT = 8
 MAP_SAMPLE_SIZE = 8000
 MAP_SAMPLE_SEED = 42

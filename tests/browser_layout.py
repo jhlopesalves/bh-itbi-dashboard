@@ -6,6 +6,7 @@ Pass --chromium for a system Chrome or Chromium executable.
 
 import argparse
 import re
+from itertools import combinations
 from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import Browser, Page, expect, sync_playwright
@@ -54,6 +55,11 @@ def assert_no_plot_annotations(page: Page, *identifiers: str) -> None:
         list(identifiers),
     )
     assert all(count == 0 for count in counts.values()), counts
+    assert_plot_legend_layout(page, *identifiers)
+
+
+def assert_plot_legend_layout(page: Page, *identifiers: str) -> None:
+    """Check that legends fit inside their cards and outside the plotting area."""
     violations = page.evaluate(
         """(ids) => ids.flatMap(id => {
             const host = document.getElementById(id);
@@ -283,13 +289,40 @@ def check_models_legends(page: Page) -> None:
     check_diagnostics_legends(page)
 
 
+def check_tax_milestone_labels(page: Page) -> None:
+    """Measure the rendered labels and check the selected end-year tick bound."""
+    wait_for_plot(page, "tax-figure", min_traces=2)
+    labels = page.locator("#tax-figure .annotation-text")
+    expect(labels).to_have_text(["Tema 1113 (STJ)", "Lei 11.530", "Dec. 18.735"])
+    box = page.locator("#tax-figure").bounding_box()
+    assert box is not None
+    bounds = []
+    for label in labels.all():
+        rect = label.bounding_box()
+        assert rect is not None
+        assert box["x"] <= rect["x"] and rect["x"] + rect["width"] <= box["x"] + box["width"]
+        bounds.append(rect)
+    for first, second in combinations(bounds, 2):
+        horizontal = (
+            first["x"] < second["x"] + second["width"]
+            and second["x"] < first["x"] + first["width"]
+        )
+        vertical = (
+            first["y"] < second["y"] + second["height"]
+            and second["y"] < first["y"] + first["height"]
+        )
+        assert not (horizontal and vertical), (first, second)
+    assert "2026" not in page.locator("#tax-figure .xtick").all_text_contents()
+
+
 def check_diagnostics_legends(page: Page) -> None:
     """Verify tax-base, round-number histogram and distance-axis rescaling."""
     page.locator("#tab-diagnostics").click()
     wait_for_plot(page, "tax-figure", min_traces=2)
     wait_for_plot(page, "heaping-figure", min_traces=2)
     wait_for_plot(page, "distance-figure", min_traces=3)
-    assert_no_plot_annotations(page, "tax-figure", "heaping-figure", "distance-figure")
+    assert_no_plot_annotations(page, "heaping-figure", "distance-figure")
+    assert_plot_legend_layout(page, "tax-figure")
 
     click_legend_item(page, "tax-figure", "Apartamentos")
     page.wait_for_function(
@@ -446,6 +479,24 @@ def check_masthead(page: Page) -> None:
         expect(fact).to_be_visible()
 
 
+def check_diagnostics_viewport(page: Page, width: int) -> None:
+    """Activate diagnostics via the tablist and verify chart layout."""
+    diagnostics = page.locator("#tab-diagnostics")
+    models = page.locator("#tab-models")
+    models.focus()
+    models.press("ArrowLeft")
+    expect(diagnostics).to_be_focused()
+    expect(diagnostics).to_have_attribute("aria-selected", "true")
+    expect(page.locator("#age-plot svg")).to_be_visible(timeout=45_000)
+    wait_for_plot(page, "distance-figure")
+    wait_for_plot(page, "tax-figure", min_traces=2)
+    assert_no_plot_annotations(page, "heaping-figure", "distance-figure")
+    assert_plot_legend_layout(page, "tax-figure")
+    if width in (320, 1440):
+        check_tax_milestone_labels(page)
+    diagnostics.press("Home")
+
+
 def check_viewport(browser: Browser, url: str, width: int) -> None:
     """Exercise first activation, every tab and a viewport change."""
     mobile = width < 600
@@ -457,22 +508,12 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(url, wait_until="domcontentloaded")
         overview = page.locator("#tab-overview")
-        diagnostics = page.locator("#tab-diagnostics")
-        models = page.locator("#tab-models")
         expect(overview).to_have_attribute("aria-selected", "true")
         expect(page.get_by_role("tab")).to_have_count(3)
         check_masthead(page)
         wait_for_plot(page, "distribution-figure", min_traces=2)
         check_models_viewport(page, width)
-
-        models.focus()
-        models.press("ArrowLeft")
-        expect(diagnostics).to_be_focused()
-        expect(diagnostics).to_have_attribute("aria-selected", "true")
-        expect(page.locator("#age-plot svg")).to_be_visible(timeout=45_000)
-        wait_for_plot(page, "distance-figure")
-        assert_no_plot_annotations(page, "tax-figure", "heaping-figure", "distance-figure")
-        diagnostics.press("Home")
+        check_diagnostics_viewport(page, width)
         expect(overview).to_be_focused()
         expect(overview).to_have_attribute("aria-selected", "true")
         wait_for_plot(page, "geo-map")

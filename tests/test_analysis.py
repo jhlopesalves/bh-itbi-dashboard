@@ -9,7 +9,7 @@ import pytest
 
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
 from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
-from bh_itbi.figures import distribution_figure, map_figure, temporal_figure
+from bh_itbi.figures import distribution_figure, map_figure, tax_base_figure, temporal_figure
 from bh_itbi.filters import Filters, filter_transactions, positive_area
 from bh_itbi.formatting import number
 from bh_itbi.models import model_population
@@ -185,6 +185,28 @@ def test_latest_real_median_uses_only_selected_end_year(source_factory):
     missing = summary(frame, 2024)
     assert missing.latest_year == 2024
     assert pd.isna(missing.latest_real)
+
+
+@pytest.mark.parametrize(
+    ("start_year", "end_year", "expected"),
+    [
+        (2016, 2025, ("2022-02-24", "2023-12-26", "2024-06-18")),
+        (2023, 2023, ("2023-12-26",)),
+        (2024, 2025, ("2024-06-18",)),
+        (2016, 2018, ()),
+    ],
+)
+def test_tax_figure_marks_only_milestones_in_selected_range(
+    snapshot_frame, start_year, end_year, expected
+):
+    filters = Filters(start_year=start_year, end_year=end_year)
+    table = tax_base_table(filter_transactions(snapshot_frame, filters))
+    figure = tax_base_figure(table, filters)
+    axis = figure.layout.xaxis
+    assert axis.range == (f"{start_year}-01-01", f"{end_year}-12-31")
+    assert tuple(line.x0 for line in figure.layout.shapes) == expected
+    assert tuple(line.x1 for line in figure.layout.shapes) == expected
+    assert tuple(label.x for label in figure.layout.annotations) == expected
 
 
 def test_tax_share_denominator_and_quarter_minimum(source_factory):
