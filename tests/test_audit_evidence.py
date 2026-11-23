@@ -8,10 +8,19 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.api.types import is_numeric_dtype
+from test_patterns import BORDERLINE_NEIGHBOURHOODS, assert_pinned_patterns
 
 from bh_itbi.audit import AuditSettings, run_audit
-from bh_itbi.config import IDENTITY_TOLERANCE, REVISION, ROOT, SOURCE_SHA256
+from bh_itbi.config import (
+    IDENTITY_TOLERANCE,
+    MODEL_VERSION,
+    PATTERN_ORDER,
+    REVISION,
+    ROOT,
+    SOURCE_SHA256,
+)
 from bh_itbi.data import file_sha256
+from bh_itbi.patterns import pattern_settings
 from bh_itbi.robust import FIXED_POINT_TOLERANCE, SCORE_TOLERANCE
 from bh_itbi.sensitivity import PROTOCOL, QUARTERS
 
@@ -89,6 +98,37 @@ def test_manifest_matches_the_pinned_default_protocol(evidence_dir) -> None:
         settings.cluster_draws,
         settings.median_draws,
     )
+    assert manifest["model_version"] == MODEL_VERSION
+    assert manifest["patterns_id"] == "trajectory-patterns-v1"
+    assert manifest["pattern_settings"] == pattern_settings()
+
+
+def test_reference_trajectory_patterns(evidence_dir) -> None:
+    evidence = _load_json(evidence_dir / "trajectory_patterns.json")
+    metadata = evidence["metadata"]
+    members = pd.DataFrame(evidence["membership"])
+    centres = pd.DataFrame(evidence["centres"])
+    assert_pinned_patterns(metadata, members, centres)
+    assert len(members) == members["neighbourhood"].nunique() == metadata["n_neighbourhoods"]
+    assert members["membership_share"].between(0, 1).all()
+    assert members["firm"].eq(members["membership_share"].ge(metadata["firm_share"])).all()
+    alternative = evidence["alternative"]
+    assert alternative["sizes"] == {"falling": 34, "stable": 47, "rising": 22}
+    assert alternative["inertia"] == pytest.approx(0.6478202965, abs=1e-8, rel=0)
+    assert alternative["inertia"] > metadata["inertia"]
+    assert set(alternative["stable_rising_switches"]) == BORDERLINE_NEIGHBOURHOODS
+    assert alternative["other_switches"] == ["LUXEMBURGO"]
+
+
+def test_block_face_pattern_stability_structure(evidence_dir) -> None:
+    evidence = _load_json(evidence_dir / "trajectory_patterns.json")
+    block = evidence["block_face"]
+    assert set(block) == {"firm", "ari_p10", "ari_median", "ari_p90"}
+    assert -1 <= block["ari_p10"] <= block["ari_median"] <= block["ari_p90"] <= 1
+    assert block["firm"].keys() == set(PATTERN_ORDER)
+    for name, count in block["firm"].items():
+        assert isinstance(count, int)
+        assert 0 <= count <= evidence["metadata"]["patterns"][name]["size"]
 
 
 @pytest.mark.parametrize("spec_id", REFERENCE_SPECIFICATIONS)
@@ -311,6 +351,9 @@ def test_audit_reproduces_committed_evidence(tmp_path) -> None:
                 "cluster_draws",
                 "median_draws",
                 "thread_limit",
+                "model_version",
+                "patterns_id",
+                "pattern_settings",
             }
             actual, expected = _load_json(fresh), _load_json(reference)
             assert {key: actual[key] for key in fields} == {
