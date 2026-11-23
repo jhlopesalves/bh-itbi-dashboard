@@ -5,7 +5,6 @@ from typing import TypedDict
 import numpy as np
 import pandas as pd
 
-from bh_itbi.audit_checks import block_face_pattern_medians
 from bh_itbi.config import CLUSTER_N_INIT, PATTERN_ORDER
 from bh_itbi.patterns import (
     PatternMetadata,
@@ -14,6 +13,7 @@ from bh_itbi.patterns import (
     pattern_sample,
     trajectory_patterns,
 )
+from bh_itbi.resampling import block_face_pattern_medians
 
 
 class PatternAlternative(TypedDict):

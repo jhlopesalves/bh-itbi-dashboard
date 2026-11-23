@@ -20,8 +20,8 @@ from bh_itbi.audit import (
     AuditSettings,
     run_audit,
 )
-from bh_itbi.audit_checks import _block_face_codes, _block_face_medians
 from bh_itbi.config import REVISION, ROOT, SOURCE_SHA256
+from bh_itbi.resampling import _block_face_codes, _block_face_medians
 from bh_itbi.sensitivity import PROTOCOL
 
 FILES = {
