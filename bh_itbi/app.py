@@ -11,7 +11,7 @@ from bh_itbi.callbacks import register_callbacks
 from bh_itbi.config import ROOT, SITE_URL
 from bh_itbi.data import DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
-from bh_itbi.models import PreparedModels, load_models
+from bh_itbi.models import AuditEndpoint, PreparedModels, load_audit_endpoint, load_models
 from bh_itbi.text import shared as text
 from bh_itbi.theme import PAPER
 
@@ -32,12 +32,14 @@ def create_app(
     *,
     frame: pd.DataFrame | None = None,
     models: PreparedModels | None = None,
+    audit_endpoint: AuditEndpoint | None = None,
     require_prepared: bool = False,
 ) -> Dash:
     """Build a server; explicit frame injection keeps unit tests fully offline."""
     if frame is None:
         frame = load_transactions(allow_prepare=not require_prepared)
         models = load_models()
+        audit_endpoint = load_audit_endpoint()
         provenance = load_source_metadata(allow_prepare=not require_prepared)
         source_rows = provenance["source_rows"]
     else:
@@ -55,7 +57,7 @@ def create_app(
         serve_locally=True,
     )
     app.index_string = INDEX_TEMPLATE
-    app.layout = build_layout(neighbourhoods, models, source_rows)
+    app.layout = build_layout(neighbourhoods, models, source_rows, audit_endpoint)
     register_callbacks(app, frame, models)
 
     @app.server.get("/healthz")

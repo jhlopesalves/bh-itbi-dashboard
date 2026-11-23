@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 from dash import dcc, html
 
-from bh_itbi.layout.components import card, dropdown, graph, html_attributes, metric
+from bh_itbi.layout.components import boxed_note, card, dropdown, graph, html_attributes, metric
 from bh_itbi.text import overview as text
 from bh_itbi.urls import DEFAULT_MAP_STYLE, DEFAULT_METRIC
 
@@ -119,13 +119,7 @@ def _distribution_card() -> html.Section:
             graph("distribution-figure", height=330),
             html.Div(id="distribution-summary", className="distribution-summary"),
             html.P(text.DISTRIBUTION_FOOTNOTE, className="card-footnote"),
-            html.Div(
-                [
-                    html.P(text.GEOGRAPHY_NOTE_EYEBROW, className="eyebrow"),
-                    html.P(text.GEOGRAPHY_NOTE_BODY),
-                ],
-                className="geography-note",
-            ),
+            boxed_note(text.GEOGRAPHY_NOTE_EYEBROW, text.GEOGRAPHY_NOTE_BODY),
         ],
         class_name="distribution-card",
     )

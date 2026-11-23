@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+import pandas as pd
+
 from bh_itbi import config as cfg
+from bh_itbi.config import AuditEndpoint
 from bh_itbi.formatting import (
     composition_number,
     number,
     number_word,
+    quarter_label,
 )
 from bh_itbi.text.shared import (
     ALL_TYPES_LABEL,
@@ -44,10 +48,12 @@ HEDONIC_INDEX_LABEL = "Índice hedônico"
 _HEDONIC_CI_PERCENT = f"{number(cfg.HEDONIC_CONFIDENCE_LEVEL * 100)}%"
 _HEDONIC_CI = f"IC {_HEDONIC_CI_PERCENT}"
 HEDONIC_INDEX_TRACE_NAME = f"{HEDONIC_INDEX_LABEL} · {_HEDONIC_CI}"
+SENSITIVITY_NOTE_EYEBROW = "SENSIBILIDADE"
 TRAJECTORIES_MODEL_TITLE = "Trajetórias anuais por bairro"
 TRAJECTORIES_NEIGHBOURHOODS_LABEL = "Bairros"
 TRAJECTORIES_MEDIAN_LABEL = "Mediana entre os bairros"
-TRAJECTORIES_AUDIT_LINK_TEXT = "Consultar a auditoria"
+AUDIT_LINK_TEXT = "Consultar a auditoria"
+AUDIT_REPORT_URL = f"{cfg.REPOSITORY_URL}/blob/main/docs/robustness/report.md"
 TRAJECTORIES_FOOTNOTE = (
     "Linhas finas: bairros; linha escura: mediana entre os bairros em cada ano. "
     "As medianas não são ajustadas pela composição das transações: a entrada de imóveis "
@@ -101,6 +107,20 @@ def hedonic_hover(groups: Sequence[str]) -> str:
         f"<br>{_HEDONIC_CI}: %{{customdata[2]}} a %{{customdata[3]}}"
         f"<br>{HEDONIC_RAW_TRACE_NAME}: %{{customdata[4]}}<br><br>Composição (log × 100)"
         f"{contributions}<extra></extra>"
+    )
+
+
+def sensitivity_note(endpoint: AuditEndpoint) -> str:
+    """Format the year-scale Huber endpoint and its interval beside the published index."""
+    quarter = quarter_label(pd.Period(endpoint["quarter"], freq="Q").start_time)
+    return (
+        f"Com estimador robusto (Huber, escala anual), o índice no "
+        f"{quarter} é {number(endpoint['robust'], 1)} "
+        f"(IC 95%: {number(endpoint['robust_lower'], 1)} a "
+        f"{number(endpoint['robust_upper'], 1)}), contra "
+        f"{number(endpoint['published'], 1)} no modelo publicado. A diferença está associada "
+        "sobretudo a registros com valor declarado muito abaixo da avaliação municipal, "
+        "mais frequentes em 2016–2019."
     )
 
 

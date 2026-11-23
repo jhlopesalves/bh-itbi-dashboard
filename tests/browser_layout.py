@@ -205,6 +205,17 @@ def check_overview_legends(page: Page, url: str) -> None:
     expect(page).to_have_url(re.compile(re.escape(url) + r"/$"))
 
 
+def check_sensitivity_note(page: Page) -> None:
+    """Verify the committed endpoint and audit link below the hedonic chart."""
+    note = page.locator(".chart-card:has(#hedonic-figure) .boxed-note")
+    expect(note.get_by_text("SENSIBILIDADE", exact=True)).to_be_visible()
+    expect(note).to_contain_text("4º tri. 2025 é 105,4 (IC 95%: 102,6 a 108,4), contra 110,0")
+    expect(note.get_by_role("link", name="Consultar a auditoria")).to_have_attribute(
+        "href",
+        "https://github.com/jhlopesalves/bh-itbi-dashboard/blob/main/docs/robustness/report.md",
+    )
+
+
 def check_models_legends(page: Page) -> None:
     """Verify trajectory and hedonic composition legend interactions."""
     page.locator("#tab-models").click()
@@ -219,7 +230,11 @@ def check_models_legends(page: Page) -> None:
     assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
     legend = page.locator("#trajectories-figure .legend .traces")
     expect(legend).to_have_count(2)
-    expect(page.get_by_role("link", name="Consultar a auditoria")).to_be_visible()
+    expect(
+        page.locator(".chart-card:has(#trajectories-figure)").get_by_role(
+            "link", name="Consultar a auditoria"
+        )
+    ).to_be_visible()
 
     for label in ("Bairros", "Mediana entre os bairros"):
         for hidden in (True, False):
@@ -364,6 +379,35 @@ def check_selection(page: Page, url: str) -> None:
     assert page.evaluate("history.length") == history_size
 
 
+def check_models_viewport(page: Page, width: int) -> None:
+    """Activate the models tab and verify its first paint and resize."""
+    overview = page.locator("#tab-overview")
+    models = page.locator("#tab-models")
+    # Both models render while their tab is inactive. Wait for this so
+    # the check includes the first paint of an already-initialised chart.
+    page.wait_for_function(
+        """() => [...document.querySelectorAll('#models-panel .js-plotly-plot')]
+            .filter(plot => plot._fullData?.length > 1).length === 2""",
+        timeout=45_000,
+    )
+    if width < 600:
+        models.tap()
+    else:
+        overview.focus()
+        overview.press("End")
+        expect(models).to_be_focused()
+    expect(models).to_have_attribute("aria-selected", "true")
+    check_sensitivity_note(page)
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+    wait_for_plot(page, "trajectories-figure", min_traces=2)
+    page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+    wait_for_plot(page, "trajectories-figure", min_traces=2)
+    assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
+    page.set_viewport_size({"width": width, "height": 900})
+    wait_for_plot(page, "hedonic-figure", min_traces=2)
+
+
 def check_viewport(browser: Browser, url: str, width: int) -> None:
     """Exercise first activation, every tab and a viewport change."""
     mobile = width < 600
@@ -380,28 +424,7 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         expect(overview).to_have_attribute("aria-selected", "true")
         expect(page.get_by_role("tab")).to_have_count(3)
         wait_for_plot(page, "distribution-figure", min_traces=2)
-        # Both models render while their tab is inactive. Wait for this so
-        # the check includes the first paint of an already-initialised chart.
-        page.wait_for_function(
-            """() => [...document.querySelectorAll('#models-panel .js-plotly-plot')]
-                .filter(plot => plot._fullData?.length > 1).length === 2""",
-            timeout=45_000,
-        )
-        if mobile:
-            models.tap()
-        else:
-            overview.focus()
-            overview.press("End")
-            expect(models).to_be_focused()
-        expect(models).to_have_attribute("aria-selected", "true")
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "trajectories-figure", min_traces=2)
-        page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
-        wait_for_plot(page, "trajectories-figure", min_traces=2)
-        assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
-        page.set_viewport_size(viewport)
-        wait_for_plot(page, "hedonic-figure", min_traces=2)
+        check_models_viewport(page, width)
 
         models.focus()
         models.press("ArrowLeft")

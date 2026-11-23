@@ -100,3 +100,11 @@ def metric(label: str, identifier: str, unit: str, note: str | None = None) -> h
         ],
         className="metric",
     )
+
+
+def boxed_note(eyebrow: str, body: str | list[str | Component]) -> html.Div:
+    """Render a short qualification beneath a figure and its footnote."""
+    return html.Div(
+        [html.P(eyebrow, className="eyebrow"), html.P(body)],
+        className="boxed-note",
+    )

@@ -374,7 +374,17 @@ def snapshot_failures(
 
 @pytest.fixture(scope="session")
 def snapshot_app(snapshot_frame: pd.DataFrame, snapshot_models: Any) -> Dash:
-    return create_app(frame=snapshot_frame, models=snapshot_models)
+    return create_app(
+        frame=snapshot_frame,
+        models=snapshot_models,
+        audit_endpoint={
+            "quarter": "2025Q4",
+            "published": 110.04,
+            "robust": 105.44,
+            "robust_lower": 102.57,
+            "robust_upper": 108.38,
+        },
+    )
 
 
 def test_synthetic_dataset_covers_all_required_populations(

@@ -13,7 +13,7 @@ from bh_itbi.layout.masthead import masthead
 from bh_itbi.layout.methodology import footer, methodology
 from bh_itbi.layout.models import models_panel
 from bh_itbi.layout.overview import overview_panel
-from bh_itbi.models import PreparedModels
+from bh_itbi.models import AuditEndpoint, PreparedModels
 from bh_itbi.text import shared as text
 from bh_itbi.text.models import (
     hedonic_note,
@@ -49,7 +49,10 @@ __all__ = [
 
 
 def build_layout(
-    neighbourhoods: Sequence[str], models: PreparedModels | None, raw_rows: int
+    neighbourhoods: Sequence[str],
+    models: PreparedModels | None,
+    raw_rows: int,
+    endpoint: AuditEndpoint | None,
 ) -> html.Div:
     """Construct the root Dash component tree for the application shell."""
     return html.Div(
@@ -81,7 +84,7 @@ def build_layout(
                         delay_show=250,
                         delay_hide=80,
                     ),
-                    models_panel(models),
+                    models_panel(models, endpoint),
                 ],
                 id="conteudo",
             ),

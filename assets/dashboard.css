@@ -186,9 +186,9 @@ h2 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 
 .distribution-summary span { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .distribution-summary strong { font-family: var(--serif); font-size: clamp(17px, 1.6vw, 21px); font-weight: 400; color: var(--ink); white-space: nowrap; letter-spacing: -.015em; margin-top: 3px; font-variant-numeric: lining-nums tabular-nums; }
 .distribution-summary > p { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
-.geography-note { background: var(--paper-2); padding: 16px 18px; margin-top: 20px; border-left: 2px solid var(--teal); }
-.geography-note .eyebrow { margin-bottom: 7px; color: var(--ink-2); }
-.geography-note p:last-child { font-size: 12px; line-height: 1.65; color: var(--muted); }
+.boxed-note { background: var(--paper-2); padding: 16px 18px; margin-top: 20px; border-left: 2px solid var(--teal); }
+.boxed-note .eyebrow { margin-bottom: 7px; color: var(--ink-2); }
+.boxed-note p:last-child { font-size: 12px; line-height: 1.65; color: var(--muted); }
 .comparison-scroll-active { max-height: 475px; overflow-y: auto; }
 #comparison-plot { position: relative; }
 #comparison-note:empty { display: none; }
@@ -278,7 +278,7 @@ h3 { font-size: 12px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px;
 @media (max-width: 900px) {
   .spatial-grid, .analysis-grid { grid-template-columns: 1fr; }
   .map-card .card-heading { min-height: auto; flex-wrap: nowrap; }
-  .distribution-card .geography-note { margin-top: 16px; }
+  .distribution-card .boxed-note { margin-top: 16px; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 0; }
   .metric:nth-child(3) { padding-left: 0; border: none; }
   .masthead-main { grid-template-columns: 1fr; gap: 18px; }
