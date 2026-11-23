@@ -470,6 +470,16 @@ def test_map_scales_are_identical_across_callback_filters(
     assert default["color"] != selected["color"]
 
 
+def test_price_time_axes_follow_the_plotted_values(view_snapshots: dict[str, Any]) -> None:
+    outputs = view_snapshots["overview__defaults"]["overview"]
+    for chart in ("trend-figure", "neighbourhood-figure"):
+        axis = outputs[chart]["figure"]["layout"]["yaxis"]
+        assert "rangemode" not in axis
+        lower, upper = axis["range"]
+        assert 0 < lower < upper
+        assert lower % 500 == upper % 500 == 0
+
+
 @pytest.mark.parametrize("case", VIEW_MATRIX)
 def test_neighbourhood_cards_share_colours_and_labels(
     view_snapshots: dict[str, Any], case: str

@@ -50,6 +50,7 @@ from bh_itbi.theme import (
     composition_tint,
     empty_figure,
     neighbourhood_colours,
+    padded_price_range,
     rgba,
     themed,
 )
@@ -76,14 +77,16 @@ class ComparisonPlot(TypedDict):
     axis_title: str
 
 
-def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> None:
+def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> list[pd.Series]:
     """Draw each contiguous observed band separately; never fill across a gap."""
     valid = rows["p25"].notna() & rows["p75"].notna()
     segments = (~valid).cumsum()
     fill = rgba(TYPE_STYLES[group]["line"]["color"], 0.09)
+    bounds: list[pd.Series] = []
     for _, segment in rows.loc[valid].groupby(segments[valid], sort=False):
         if len(segment) < BAND_MINIMUM_POINTS:
             continue
+        bounds.extend((segment["p25"], segment["p75"]))
         fig.add_trace(
             go.Scatter(
                 x=segment["month"],
@@ -108,9 +111,10 @@ def _band(fig: go.Figure, rows: pd.DataFrame, group: str) -> None:
                 legendgroup=group,
             )
         )
+    return bounds
 
 
-def _apply_time_axis(fig: go.Figure, filters: Filters) -> None:
+def _apply_time_axis(fig: go.Figure, filters: Filters, plotted: Sequence[pd.Series]) -> None:
     """Configure the shared date x-axis and real-price y-axis for time series."""
     span = filters.end_year - filters.start_year
     fig.update_xaxes(
@@ -118,7 +122,10 @@ def _apply_time_axis(fig: go.Figure, filters: Filters) -> None:
         tickformat="%Y" if span > 0 else "%b",
         range=[f"{filters.start_year}-01-01", f"{filters.end_year}-12-31"],
     )
-    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE, rangemode="tozero")
+    fig.update_yaxes(title_text=REAL_PRICE_AXIS_TITLE)
+    values = pd.concat(plotted).dropna()
+    if not values.empty:
+        fig.update_yaxes(range=padded_price_range(float(values.min()), float(values.max())))
 
 
 def _monthly_reference_trace(rows: pd.DataFrame, label: str) -> go.Scatter:
@@ -176,10 +183,13 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
     ):
         return empty_figure(TEMPORAL_EMPTY_MESSAGE)
     fig = go.Figure()
+    plotted = [monthly["median"]]
+    if reference is not None:
+        plotted.append(reference["median"])
     series = {kind: monthly.loc[monthly["property_type"].eq(kind)] for kind in TYPE_LABELS}
     # Paint both bands before the medians so an overlapping fill cannot wash out a line.
     for property_type, rows in series.items():
-        _band(fig, rows, property_type)
+        plotted.extend(_band(fig, rows, property_type))
     for property_type, label in TYPE_LABELS.items():
         rows = series[property_type]
         if rows.empty:
@@ -189,7 +199,7 @@ def temporal_figure(selected: pd.DataFrame, city: pd.DataFrame, filters: Filters
             ref = reference.loc[reference["property_type"] == property_type]
             fig.add_trace(_monthly_reference_trace(ref, label))
     themed(fig)
-    _apply_time_axis(fig, filters)
+    _apply_time_axis(fig, filters, plotted)
     return fig
 
 
@@ -306,8 +316,10 @@ def neighbourhood_trajectories_figure(
     """Compare source neighbourhoods with a city median pooled from raw records."""
     quarterly = temporal_table(rows, filters, neighbourhood=True)
     fig = go.Figure()
+    plotted: list[pd.Series] = []
     for name, colour in neighbourhood_colours(filters.neighbourhoods).items():
         subset = quarterly.loc[quarterly["neighbourhood"].eq(name)]
+        plotted.append(subset["median"])
         label = name.title()
         fig.add_trace(
             go.Scatter(
@@ -328,6 +340,7 @@ def neighbourhood_trajectories_figure(
     # Same type and dates, but no geographical restriction. A pooled city median
     # is recomputed from transactions, never by averaging neighbourhood medians.
     ref = city_quarterly_table(city, filters.city_reference())
+    plotted.append(ref["median"])
     fig.add_trace(
         go.Scatter(
             x=ref["quarter"],
@@ -344,7 +357,7 @@ def neighbourhood_trajectories_figure(
         )
     )
     themed(fig, height=370)
-    _apply_time_axis(fig, filters)
+    _apply_time_axis(fig, filters, plotted)
     # Show up to six rows before scrolling, preserving room for the trajectories.
     fig.update_layout(legend={"maxheight": 124})
     return fig

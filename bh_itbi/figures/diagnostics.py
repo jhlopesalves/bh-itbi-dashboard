@@ -56,6 +56,7 @@ from bh_itbi.theme import (
     TEAL,
     TYPE_STYLES,
     empty_figure,
+    padded_price_range,
     themed,
 )
 
@@ -304,13 +305,7 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
     plotted = _distance_traces(fig, table)
     # Keep this y-axis range calculation synchronised with fitVisiblePeriods
     # in assets/distance-labels.js.
-    low, high = min(plotted), max(plotted)
-    pad = DISTANCE_PAD_FRACTION * (high - low)
-    step = DISTANCE_PRICE_STEP
-    floor = step * np.floor((low - pad) / step)
-    ceiling = step * np.ceil((high + pad) / step)
-    if floor == ceiling:
-        floor, ceiling = floor - step, ceiling + step
+    lower, upper = padded_price_range(min(plotted), max(plotted))
     themed(fig).update_layout(showlegend=True, meta={"pad_fraction": DISTANCE_PAD_FRACTION})
     fig.update_xaxes(
         title_text=DISTANCE_AXIS_TITLE,
@@ -319,9 +314,9 @@ def distance_figure(table: pd.DataFrame) -> go.Figure:
     )
     fig.update_yaxes(
         title_text=REAL_PRICE_AXIS_TITLE,
-        range=[floor, ceiling],
+        range=[lower, upper],
         tick0=0,
-        dtick=step,
+        dtick=DISTANCE_PRICE_STEP,
         showgrid=True,
         separatethousands=True,
     )

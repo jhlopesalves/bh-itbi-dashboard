@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from math import ceil, floor
 from typing import TypedDict
 
 import plotly.graph_objects as go
 
-from bh_itbi.config import DEFAULT_NEIGHBOURHOODS, DISTANCE_PERIODS
+from bh_itbi.config import (
+    DEFAULT_NEIGHBOURHOODS,
+    DISTANCE_PAD_FRACTION,
+    DISTANCE_PERIODS,
+    DISTANCE_PRICE_STEP,
+)
 
 # Surface and ink tokens mirrored in assets/dashboard.css :root.
 PAPER = "#fafaf8"
@@ -137,6 +143,17 @@ AGE_FILLS: dict[str, str] = {
         "quarter": SLATE,
     }.items()
 }
+
+
+def padded_price_range(low: float, high: float) -> tuple[float, float]:
+    """Pad a price axis and round its bounds outwards to the reference step."""
+    pad = DISTANCE_PAD_FRACTION * (high - low)
+    step = DISTANCE_PRICE_STEP
+    lower = float(step * floor((low - pad) / step))
+    upper = float(step * ceil((high + pad) / step))
+    if lower == upper:
+        return lower - step, upper + step
+    return lower, upper
 
 
 def themed(fig: go.Figure, *, height: int = 360) -> go.Figure:
