@@ -248,7 +248,7 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
                 "size": points["built_area_m2"].clip(upper=scales["area_reference"]),
                 "sizemode": "area",
                 "sizeref": scales["area_reference"] / 8**2,
-                "sizemin": 2.5,
+                "sizemin": 1.85,  # Plotly applies the minimum to the circle radius.
                 "opacity": 0.60,
                 "color": points["price_per_m2_brl_real"],
                 "colorscale": "Viridis",

@@ -128,7 +128,7 @@ def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
     np.testing.assert_array_equal(marker.color, points["price_per_m2_brl_real"])
     assert marker.sizeref == reference / 8**2
     assert marker.sizemode == "area"
-    assert marker.sizemin == 2.5
+    assert marker.sizemin == 1.85
     assert marker.opacity == 0.60
     positions, colours = zip(*marker.colorscale, strict=True)
     expected_positions, expected_colours = zip(*get_colorscale("Viridis"), strict=True)

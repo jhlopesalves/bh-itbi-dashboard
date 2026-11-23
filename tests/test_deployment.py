@@ -229,11 +229,19 @@ def test_savassi_map_retains_at_least_95_percent_of_candidates() -> None:
 def test_default_map_marker_diameters() -> None:
     frame = data.load_transactions(allow_prepare=False)
     points, _ = map_points(filter_transactions(frame, Filters()))
-    figure = map_figure(points, "open-street-map", map_reference_scales(frame))
+    scales = map_reference_scales(frame)
+    figure = map_figure(points, "open-street-map", scales)
     marker = figure.data[0].marker
-    diameters = np.maximum(np.sqrt(np.asarray(marker.size) / marker.sizeref), marker.sizemin)
+    sizes = np.asarray(marker.size)
+    # P98 refers to the full-period area reference, which caps the sampled sizes.
+    assert sizes.max() == scales["area_reference"]
+    radii = np.maximum(np.sqrt(sizes / (2 * marker.sizeref)), marker.sizemin)
+    diameters = 2 * radii
     np.testing.assert_allclose(
-        np.quantile(diameters, [0.5, 0.9]), [4.3, 6.2], atol=0.15, rtol=0
+        [diameters.min(), np.median(diameters), diameters.max()],
+        [3.7, 6.1, 11.3],
+        atol=0.15,
+        rtol=0,
     )
 
 
