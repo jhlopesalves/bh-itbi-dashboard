@@ -13,7 +13,9 @@ from test_app import post_callback
 from bh_itbi import data, models
 from bh_itbi.app import create_app
 from bh_itbi.config import MODEL_VERSION
+from bh_itbi.figures import map_figure
 from bh_itbi.filters import Filters, filter_transactions, positive_area
+from bh_itbi.overview import map_points, map_reference_scales
 
 
 @pytest.fixture
@@ -218,6 +220,21 @@ def test_savassi_map_retains_at_least_95_percent_of_candidates() -> None:
     drawn = len(result["geo-map"]["figure"]["data"][0]["customdata"])
     assert candidates > 0
     assert drawn / candidates >= 0.95
+
+
+@pytest.mark.skipif(
+    os.environ.get("BH_ITBI_REAL_DATA") != "1",
+    reason="Run after main.py prepare with BH_ITBI_REAL_DATA=1",
+)
+def test_default_map_marker_diameters() -> None:
+    frame = data.load_transactions(allow_prepare=False)
+    points, _ = map_points(filter_transactions(frame, Filters()))
+    figure = map_figure(points, "open-street-map", map_reference_scales(frame))
+    marker = figure.data[0].marker
+    diameters = np.maximum(np.sqrt(np.asarray(marker.size) / marker.sizeref), marker.sizemin)
+    np.testing.assert_allclose(
+        np.quantile(diameters, [0.5, 0.9]), [4.3, 6.2], atol=0.15, rtol=0
+    )
 
 
 def assert_real_models(app):

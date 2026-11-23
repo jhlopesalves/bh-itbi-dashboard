@@ -237,6 +237,7 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
     """Draw area-scaled circles coloured by real price per m² on fixed scales."""
     if points.empty:
         return empty_figure(MAP_EMPTY_MESSAGE, 540)
+    points = points.sort_values("built_area_m2", ascending=False, kind="stable")
     tickvals, ticktext = _map_colourbar_ticks(scales["price_lower"], scales["price_upper"])
     fig = go.Figure(
         go.Scattermap(
@@ -246,11 +247,11 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
             marker={
                 "size": points["built_area_m2"].clip(upper=scales["area_reference"]),
                 "sizemode": "area",
-                "sizeref": scales["area_reference"] / 16**2,
+                "sizeref": scales["area_reference"] / 8**2,
                 "sizemin": 2.5,
-                "opacity": 0.70,
+                "opacity": 0.60,
                 "color": points["price_per_m2_brl_real"],
-                "colorscale": "Cividis",
+                "colorscale": "Viridis",
                 "cmin": scales["price_lower"],
                 "cmax": scales["price_upper"],
                 "showscale": True,
