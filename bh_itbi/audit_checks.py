@@ -349,6 +349,15 @@ def _block_face_medians(
     return (values[order[left]] + values[order[right]]) / 2
 
 
+def block_face_pattern_medians(
+    cell: pd.DataFrame, rng: np.random.Generator, draws: int
+) -> NDArray[np.float64]:
+    """Resample adjusted prices by approximate block face within one pattern cell."""
+    return _block_face_medians(
+        cell["adjusted_log_price"].to_numpy(dtype=float), _block_face_codes(cell), rng, draws
+    )
+
+
 def _median_intervals(
     rows: pd.DataFrame,
     records_rng: np.random.Generator,

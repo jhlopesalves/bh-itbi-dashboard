@@ -11,9 +11,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from bh_itbi import data, models
+from bh_itbi import data, models, patterns
 from bh_itbi.audit import (
     TARGET_AND_POPULATION,
+    TRAJECTORY_PATTERNS_CONTEXT,
     AuditError,
     AuditInputs,
     AuditSettings,
@@ -33,11 +34,13 @@ FILES = {
     "huber_weights.csv",
     "diagnostics.json",
     "report.md",
+    "trajectory_patterns.json",
 }
 
 
 @pytest.fixture
-def audit_inputs(snapshot_frame, snapshot_models) -> AuditInputs:
+def audit_inputs(snapshot_frame, monkeypatch) -> AuditInputs:
+    monkeypatch.setattr(patterns, "PATTERN_DRAWS", 8)
     frame = snapshot_frame.copy()
     # The dashboard fixture deliberately has invalid tax bases and sparse
     # late-quarter house cells. Give the audit a feasible synthetic population.
@@ -60,7 +63,6 @@ def audit_inputs(snapshot_frame, snapshot_models) -> AuditInputs:
             "transactions_sha256": "synthetic-table",
             "cached_table_verified": False,
         },
-        trajectories=(snapshot_models.members, snapshot_models.metadata["clusters"]),
     )
 
 
@@ -85,7 +87,8 @@ def test_audit_writes_exactly_the_required_outputs_deterministically(
     report = (a / "report.md").read_text(encoding="utf-8")
     fixed = TARGET_AND_POPULATION.strip()
     assert fixed in report
-    other = report.replace(fixed, "").lower()
+    assert f"> {TRAJECTORY_PATTERNS_CONTEXT}" in report
+    other = report.replace(fixed, "").replace(TRAJECTORY_PATTERNS_CONTEXT, "").lower()
     for prohibited in ("preferred", "best", "corrected", "true index", "arm's-length sales"):
         assert prohibited not in other
 

@@ -11,6 +11,8 @@ from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import Browser, Page, expect, sync_playwright
 
+PATTERN_PLOTS = tuple(f"pattern-figure-{name}" for name in ("falling", "stable", "rising"))
+
 # Observe every animation frame so a resize that eventually settles still fails
 # if a chart expands the page during the transition.
 _MONITOR_WIDTH = """
@@ -236,40 +238,10 @@ def check_sensitivity_note(page: Page) -> None:
 
 
 def check_models_legends(page: Page) -> None:
-    """Verify trajectory and hedonic composition legend interactions."""
+    """Verify the hedonic index and composition legend interactions."""
     page.locator("#tab-models").click()
     wait_for_plot(page, "hedonic-figure", min_traces=10)
-    subtitle = page.locator(".chart-card:has(#trajectories-figure) .chart-subtitle")
-    coverage_text = re.compile(r"([\d.]+) bairros com ao menos")
-    expect(subtitle).to_contain_text(coverage_text)
-    coverage = coverage_text.search(subtitle.text_content() or "")
-    assert coverage is not None
-    count = int(coverage.group(1).replace(".", ""))
-    wait_for_plot(page, "trajectories-figure", min_traces=count + 1)
-    assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
-    legend = page.locator("#trajectories-figure .legend .traces")
-    expect(legend).to_have_count(2)
-    expect(
-        page.locator(".chart-card:has(#trajectories-figure)").get_by_role(
-            "link", name="Consultar a auditoria"
-        )
-    ).to_be_visible()
-
-    for label in ("Bairros", "Mediana entre os bairros"):
-        for hidden in (True, False):
-            click_legend_item(page, "trajectories-figure", label)
-            page.wait_for_function(
-                """([label, hidden, count]) => {
-                    const plot = document.querySelector('#trajectories-figure .js-plotly-plot');
-                    const selected = plot.data.filter(t => t.name === label);
-                    const others = plot.data.filter(t => t.name !== label);
-                    const isShown = t => t.visible !== 'legendonly' && t.visible !== false;
-                    return selected.length === (label === 'Bairros' ? count : 1) &&
-                        selected.every(t => hidden ? t.visible === 'legendonly' : isShown(t)) &&
-                        others.every(isShown);
-                }""",
-                arg=(label, hidden, count),
-            )
+    assert_no_plot_annotations(page, "hedonic-figure")
 
     click_legend_item(page, "hedonic-figure", "Índice hedônico · IC 95%")
     page.wait_for_function(
@@ -429,15 +401,74 @@ def check_selection(page: Page, url: str) -> None:
     assert page.evaluate("history.length") == history_size
 
 
+def check_pattern_panels(page: Page, width: int) -> None:
+    """Verify three comparable plots, their member lists and their hover copy."""
+    card = page.locator(".patterns-card")
+    expect(card.get_by_role("heading", level=3)).to_have_text(
+        ["Queda e estabilização", "Estáveis", "Alta recente"]
+    )
+    expect(card.locator(".pattern-counts")).to_have_text(
+        [
+            "35 bairros · 29 firmes · 6 de fronteira",
+            "51 bairros · 32 firmes · 19 de fronteira",
+            "17 bairros · 11 firmes · 6 de fronteira",
+        ]
+    )
+    expect(card.get_by_role("link", name="Consultar a auditoria")).to_be_visible()
+    for plot_id in PATTERN_PLOTS:
+        wait_for_plot(page, plot_id, min_traces=2)
+    plots = card.locator(".js-plotly-plot").evaluate_all("""plots => plots.map(plot => ({
+        range: plot._fullLayout.yaxis.range,
+        periods: plot._fullLayout.xaxis.tickvals.length,
+        legend: plot._fullLayout.showlegend,
+    }))""")
+    assert len({tuple(plot["range"]) for plot in plots}) == 1
+    assert all(plot["periods"] == 5 and not plot["legend"] for plot in plots)
+    columns = card.locator(".pattern-grid").evaluate(
+        "grid => getComputedStyle(grid).gridTemplateColumns.split(' ').length"
+    )
+    assert columns == (3 if width > 900 else 1)
+    for details in card.locator("details").all():
+        summary = details.locator("summary")
+        expect(summary).to_have_text("Bairros deste padrão")
+        summary.press("Enter")
+        expect(details).to_have_attribute("open", "")
+        expect(details.get_by_text("Firmes:", exact=False)).to_be_visible()
+        expect(details.get_by_text("De fronteira:", exact=False)).to_be_visible()
+        summary.press("Enter")
+        expect(details.locator("p").first).to_be_hidden()
+
+    stable = card.locator(".pattern-panel").nth(1)
+    stable.locator("summary").press("Enter")
+    borderline = stable.get_by_text("De fronteira:", exact=False)
+    for name in ("Copacabana", "Guarani", "Manacas", "Santa Amelia", "Santa Monica"):
+        expect(borderline).to_contain_text(name)
+    stable.locator("summary").press("Enter")
+    plot = stable.locator(".js-plotly-plot")
+    plot.evaluate("""plot => {
+        const index = plot.data.findIndex(trace => trace.name === 'Copacabana');
+        Plotly.Fx.hover(plot, [{curveNumber: index, pointNumber: 1}]);
+    }""")
+    hover = stable.locator(".hoverlayer .hovertext")
+    expect(hover).to_contain_text("Copacabana")
+    expect(hover).to_contain_text("das reamostragens")
+    plot.evaluate("""plot => {
+        Plotly.Fx.hover(plot, [{curveNumber: plot.data.length - 1, pointNumber: 1}]);
+    }""")
+    expect(hover).to_contain_text("Centro do padrão")
+    expect(hover).to_contain_text("(EP ")
+    plot.evaluate("plot => Plotly.Fx.unhover(plot)")
+
+
 def check_models_viewport(page: Page, width: int) -> None:
     """Activate the models tab and verify its first paint and resize."""
     overview = page.locator("#tab-overview")
     models = page.locator("#tab-models")
-    # Both models render while their tab is inactive. Wait for this so
+    # The four plots render while their tab is inactive. Wait for this so
     # the check includes the first paint of an already-initialised chart.
     page.wait_for_function(
         """() => [...document.querySelectorAll('#models-panel .js-plotly-plot')]
-            .filter(plot => plot._fullData?.length > 1).length === 2""",
+            .filter(plot => plot._fullData?.length > 1).length === 4""",
         timeout=45_000,
     )
     if width < 600:
@@ -449,11 +480,14 @@ def check_models_viewport(page: Page, width: int) -> None:
     expect(models).to_have_attribute("aria-selected", "true")
     check_sensitivity_note(page)
     wait_for_plot(page, "hedonic-figure", min_traces=2)
-    wait_for_plot(page, "trajectories-figure", min_traces=2)
+    for plot_id in PATTERN_PLOTS:
+        wait_for_plot(page, plot_id, min_traces=2)
+    check_pattern_panels(page, width)
     page.set_viewport_size({"width": 320 if width > 320 else 390, "height": 900})
     wait_for_plot(page, "hedonic-figure", min_traces=2)
-    wait_for_plot(page, "trajectories-figure", min_traces=2)
-    assert_no_plot_annotations(page, "hedonic-figure", "trajectories-figure")
+    for plot_id in PATTERN_PLOTS:
+        wait_for_plot(page, plot_id, min_traces=2)
+    assert_no_plot_annotations(page, "hedonic-figure")
     page.set_viewport_size({"width": width, "height": 900})
     wait_for_plot(page, "hedonic-figure", min_traces=2)
 

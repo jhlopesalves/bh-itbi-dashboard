@@ -4,7 +4,7 @@ from bh_itbi.views.diagnostics import (
     DiagnosticsView,
     build_diagnostics_view,
 )
-from bh_itbi.views.models import trajectory_median
+from bh_itbi.views.models import pattern_member_names
 from bh_itbi.views.navigation import TabView, build_tab_view
 from bh_itbi.views.overview import (
     OverviewView,
@@ -20,5 +20,5 @@ __all__ = [
     "build_overview_view",
     "build_tab_view",
     "clicked_neighbourhood",
-    "trajectory_median",
+    "pattern_member_names",
 ]

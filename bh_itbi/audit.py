@@ -34,6 +34,7 @@ from bh_itbi.audit_checks import (
     round_number_diagnostics,
     tax_base_diagnostics,
 )
+from bh_itbi.audit_patterns import AuditPatterns, audit_trajectory_patterns
 from bh_itbi.cluster import (
     ClusterMetadata,
     TrajectoryStability,
@@ -45,11 +46,14 @@ from bh_itbi.config import (
     END_YEAR,
     HEDONIC_CONFIDENCE_LEVEL,
     MODEL_VERSION,
+    PATTERN_ORDER,
+    PATTERNS_ID,
     REVISION,
     ROOT,
     SOURCE_SHA256,
     START_YEAR,
 )
+from bh_itbi.patterns import PatternSettings, pattern_settings
 from bh_itbi.sensitivity import (
     PROTOCOL,
     SensitivityError,
@@ -92,6 +96,17 @@ LIMITATIONS = """## Limitations and open source questions
 - Block faces approximate buildings. Records without a face match form singleton clusters.
 """
 
+TRAJECTORY_PATTERNS_CONTEXT = (
+    "The v1 annual typology (four groups on unadjusted medians indexed to 2016) was "
+    "withdrawn after bootstrap agreement with the published partition reached a median ARI "
+    "of 0.45. A rule proposed before any re-analysis (publish groups only if the bootstrap "
+    "median ARI reaches 0.75) was not met by any specification tested: the best reached about "
+    "0.61. After inspecting those results, the publication criterion was changed: patterns "
+    "are shown because their centres are stable under resampling, while membership is "
+    "reported per neighbourhood and borderline neighbourhoods are identified as such. "
+    "This change was made after seeing the data and is reported as such."
+)
+
 
 class AuditError(ValueError):
     """The fixed audit could not reproduce the published artefacts or fit its protocol."""
@@ -121,6 +136,8 @@ class AuditManifest(AuditProvenance):
     median_draws: int
     thread_limit: int
     protocol_settings: bool
+    patterns_id: str
+    pattern_settings: PatternSettings
 
 
 @dataclass(frozen=True)
@@ -165,6 +182,7 @@ class _AuditOutputs:
     sensitivity: SensitivityResults
     weights: pd.DataFrame
     diagnostics: _AuditDiagnostics
+    patterns: AuditPatterns
 
 
 def _verified_audit_inputs() -> AuditInputs:
@@ -192,7 +210,6 @@ def _verified_audit_inputs() -> AuditInputs:
         },
         hedonic=published.hedonic,
         hedonic_metadata=published.metadata["hedonic"],
-        trajectories=(published.members, published.metadata["clusters"]),
     )
 
 
@@ -228,6 +245,8 @@ def _make_audit_manifest(provenance: AuditProvenance, settings: AuditSettings) -
         "median_draws": settings.median_draws,
         "thread_limit": THREAD_LIMIT,
         "protocol_settings": settings == AuditSettings(),
+        "patterns_id": PATTERNS_ID,
+        "pattern_settings": pattern_settings(),
     }
 
 
@@ -568,6 +587,54 @@ def _audit_clustering_section(stability: TrajectoryStability) -> str:
     )
 
 
+def _audit_patterns_section(evidence: AuditPatterns) -> str:
+    metadata = evidence["metadata"]
+    alternative = evidence["alternative"]
+    alternative_sizes = " / ".join(str(alternative["sizes"][name]) for name in PATTERN_ORDER)
+    switches = ", ".join(name.title() for name in alternative["stable_rising_switches"])
+    other = ", ".join(name.title() for name in alternative["other_switches"])
+    near_tie = (
+        f"The chosen fit has inertia {metadata['inertia']:.10f} and the {alternative_sizes} "
+        f"alternative has inertia {alternative['inertia']:.10f}"
+    )
+    if switches:
+        near_tie += f", with {switches} switching between stable and rising"
+    if other:
+        near_tie += f" and {other} switching assignment elsewhere"
+    summaries = pd.DataFrame(
+        [{"pattern": name, **metadata["patterns"][name]} for name in PATTERN_ORDER]
+    )
+    records_firm = {name: metadata["patterns"][name]["firm"] for name in PATTERN_ORDER}
+    block = evidence["block_face"]
+    stability = pd.DataFrame(
+        [
+            {
+                "resampling": scheme,
+                "ARI P10": result["ari_p10"],
+                "ARI median": result["ari_median"],
+                "ARI P90": result["ari_p90"],
+                **{f"{name} firm": firm[name] for name in PATTERN_ORDER},
+            }
+            for scheme, result, firm in (
+                ("Independent records", metadata, records_firm),
+                ("Block faces", block, block["firm"]),
+            )
+        ]
+    )
+    return "\n\n".join(
+        (
+            "## Trajectory patterns",
+            f"> {TRAJECTORY_PATTERNS_CONTEXT}",
+            f"{near_tie}.",
+            _audit_report_table(summaries),
+            _audit_report_table(stability),
+            "Block faces are resampled within each neighbourhood and biennium, with unmatched "
+            "records treated as singleton faces. See [trajectory_patterns.json]"
+            "(trajectory_patterns.json) for the full estimates and membership shares.",
+        )
+    )
+
+
 def _render_audit_report(manifest: AuditManifest, outputs: _AuditOutputs) -> str:
     return (
         "\n\n".join(
@@ -581,6 +648,7 @@ def _render_audit_report(manifest: AuditManifest, outputs: _AuditOutputs) -> str
                 _audit_huber_section(outputs),
                 _audit_descriptive_section(outputs.diagnostics),
                 _audit_clustering_section(outputs.diagnostics["clustering"]),
+                _audit_patterns_section(outputs.patterns),
                 INTERPRETATION.strip(),
                 LIMITATIONS.strip(),
             )
@@ -609,6 +677,7 @@ def _publish_audit_outputs(
     ):
         _write_audit_csv(destination / filename, table)
     _write_audit_json(destination / "diagnostics.json", outputs.diagnostics)
+    _write_audit_json(destination / "trajectory_patterns.json", outputs.patterns)
     _write_audit_text(destination / "protocol.json", PROTOCOL.canonical_json())
     _write_audit_text(destination / "report.md", report)
     _write_audit_json(destination / "manifest.json", manifest)
@@ -638,8 +707,10 @@ def run_audit(
         )
         diagnostics = _collect_audit_diagnostics(inputs, settings, sensitivity)
         weights = huber_weight_profiles(sensitivity.population, sensitivity.huber_fits)
+        print("Resampling trajectory patterns by record and block face…", flush=True)
+        patterns = audit_trajectory_patterns(inputs.frame)
     print("Writing audit evidence…", flush=True)
     _publish_audit_outputs(
-        output_dir, manifest, _AuditOutputs(sensitivity, weights, diagnostics)
+        output_dir, manifest, _AuditOutputs(sensitivity, weights, diagnostics, patterns)
     )
     return manifest

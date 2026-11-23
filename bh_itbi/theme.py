@@ -81,6 +81,8 @@ EXTRA_NEIGHBOURHOOD_DASHES = ("solid", "dash", "dot")
 
 # Deliberately reuse Panorama neighbourhood hues on the separate models tab.
 PATTERN_COLOURS = {"falling": "#3d3a8c", "stable": "#5f7f3f", "rising": "#b23a6e"}
+PATTERN_BORDERLINE = "#b9bec4"
+PATTERN_FIGURE_HEIGHT = 325
 
 
 class NeighbourhoodStyle(NamedTuple):
@@ -166,10 +168,11 @@ AGE_FILLS: dict[str, str] = {
 }
 
 
-def padded_price_range(low: float, high: float) -> tuple[float, float]:
+def padded_price_range(
+    low: float, high: float, *, step: float = DISTANCE_PRICE_STEP
+) -> tuple[float, float]:
     """Pad a price axis and round its bounds outwards to the reference step."""
     pad = DISTANCE_PAD_FRACTION * (high - low)
-    step = DISTANCE_PRICE_STEP
     lower = float(step * floor((low - pad) / step))
     upper = float(step * ceil((high + pad) / step))
     if lower == upper:

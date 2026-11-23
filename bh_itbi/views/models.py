@@ -1,8 +1,11 @@
-"""Aggregate observed neighbourhood trajectories for the models tab."""
+"""Assemble the firm and borderline member lists shown under the pattern plots."""
 
 import pandas as pd
 
 
-def trajectory_median(members: pd.DataFrame) -> pd.DataFrame:
-    """Compute the pointwise median index across the neighbourhoods present."""
-    return members.groupby("year", as_index=False, sort=True)[["index"]].median()
+def pattern_member_names(members: pd.DataFrame, pattern: str) -> tuple[list[str], list[str]]:
+    """Return alphabetical display names for both membership groups in one pattern."""
+    selected = members.loc[members["pattern"].eq(pattern)].drop_duplicates("neighbourhood")
+    firm = selected.loc[selected["firm"], "neighbourhood"].str.title().sort_values()
+    borderline = selected.loc[~selected["firm"], "neighbourhood"].str.title().sort_values()
+    return firm.tolist(), borderline.tolist()

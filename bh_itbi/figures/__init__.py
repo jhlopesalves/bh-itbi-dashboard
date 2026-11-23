@@ -14,8 +14,8 @@ from bh_itbi.figures.distribution import distribution_figure
 from bh_itbi.figures.models import (
     band_traces,
     hedonic_figure,
+    pattern_figures,
     ribbon_grid,
-    trajectories_figure,
 )
 from bh_itbi.figures.overview import (
     ComparisonPlot,
@@ -46,8 +46,8 @@ __all__ = [
     "map_figure",
     "neighbourhood_comparison_data",
     "neighbourhood_trajectories_figure",
+    "pattern_figures",
     "ribbon_grid",
     "tax_base_figure",
     "temporal_figure",
-    "trajectories_figure",
 ]
