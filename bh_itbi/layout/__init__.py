@@ -51,7 +51,8 @@ __all__ = [
 def build_layout(
     neighbourhoods: Sequence[str],
     models: PreparedModels | None,
-    raw_rows: int,
+    source_rows: int,
+    eligible_rows: int,
     endpoint: AuditEndpoint | None,
 ) -> html.Div:
     """Construct the root Dash component tree for the application shell."""
@@ -64,7 +65,7 @@ def build_layout(
                 data={"options": QUERY_OPTIONS, "defaults": default_controls()},
             ),
             html.A(text.SKIP_LINK_TEXT, href="#conteudo", className="skip-link"),
-            masthead(raw_rows),
+            masthead(source_rows, eligible_rows),
             filter_area(neighbourhoods),
             view_tablist(),
             dcc.Store(id="view-tabs", data="overview"),

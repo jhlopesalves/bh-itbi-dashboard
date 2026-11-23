@@ -49,6 +49,27 @@ def test_application_routes_and_portuguese_document(app):
     assert client.get("/_dash-dependencies").status_code == 200
 
 
+def test_masthead_distinguishes_source_and_period_counts(source_factory):
+    source = source_factory(3)
+    source.loc[0, ["year", "transaction_date"]] = [2015, "2015-01-01"]
+    app = create_app(frame=prepare_transactions(source))
+    layout = app.server.test_client().get("/_dash-layout").get_json()
+    masthead = next(node for node in layout["props"]["children"] if node["type"] == "Header")
+    _, main = masthead["props"]["children"]
+    _, metadata = main["props"]["children"]
+    _, facts = metadata["props"]["children"]
+    assert [node["props"]["children"] for node in facts["props"]["children"]] == [
+        "Período",
+        "2016–2025",
+        "Registros na fonte (todos os anos)",
+        "3",
+        "Elegíveis no período",
+        "2",
+        "Valores reais",
+        "IPCA, setembro de 2026",
+    ]
+
+
 def test_shared_chart_asset_loads_before_the_renderers(app) -> None:
     page = app.server.test_client().get("/").get_data(as_text=True)
     locale = page.index("/assets/00-plotly-locale-pt-br.js")

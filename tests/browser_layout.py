@@ -412,6 +412,24 @@ def check_models_viewport(page: Page, width: int) -> None:
     wait_for_plot(page, "hedonic-figure", min_traces=2)
 
 
+def check_masthead_facts(page: Page) -> None:
+    """Verify that each source fact and count is visible at the active width."""
+    facts = page.locator(".masthead-facts")
+    expect(facts.locator("dt")).to_have_text(
+        [
+            "Período",
+            "Registros na fonte (todos os anos)",
+            "Elegíveis no período",
+            "Valores reais",
+        ]
+    )
+    expect(facts.locator("dd")).to_have_text(
+        ["2016–2025", "516.725", "205.436", "IPCA, setembro de 2026"]
+    )
+    for fact in facts.locator("dt, dd").all():
+        expect(fact).to_be_visible()
+
+
 def check_viewport(browser: Browser, url: str, width: int) -> None:
     """Exercise first activation, every tab and a viewport change."""
     mobile = width < 600
@@ -427,6 +445,7 @@ def check_viewport(browser: Browser, url: str, width: int) -> None:
         models = page.locator("#tab-models")
         expect(overview).to_have_attribute("aria-selected", "true")
         expect(page.get_by_role("tab")).to_have_count(3)
+        check_masthead_facts(page)
         wait_for_plot(page, "distribution-figure", min_traces=2)
         check_models_viewport(page, width)
 

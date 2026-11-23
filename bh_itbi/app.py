@@ -8,7 +8,7 @@ import pandas as pd
 from dash import Dash
 
 from bh_itbi.callbacks import register_callbacks
-from bh_itbi.config import ROOT, SITE_URL
+from bh_itbi.config import END_YEAR, ROOT, SITE_URL, START_YEAR
 from bh_itbi.data import DataError, load_source_metadata, load_transactions
 from bh_itbi.layout import build_layout
 from bh_itbi.models import AuditEndpoint, PreparedModels, load_audit_endpoint, load_models
@@ -49,6 +49,7 @@ def create_app(
         raise DataError(
             "Prepared models are missing or incompatible. Run python main.py prepare."
         )
+    eligible_rows = int(frame["year"].between(START_YEAR, END_YEAR).sum())
     neighbourhoods = sorted(frame["neighbourhood"].dropna().unique().tolist())
     app = Dash(
         __name__,
@@ -58,7 +59,9 @@ def create_app(
         serve_locally=True,
     )
     app.index_string = INDEX_TEMPLATE
-    app.layout = build_layout(neighbourhoods, models, source_rows, audit_endpoint)
+    app.layout = build_layout(
+        neighbourhoods, models, source_rows, eligible_rows, audit_endpoint
+    )
     register_callbacks(app, frame, models, map_reference_scales(frame))
 
     @app.server.get("/healthz")
