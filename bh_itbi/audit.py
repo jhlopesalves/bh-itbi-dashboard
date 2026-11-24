@@ -34,6 +34,7 @@ from bh_itbi.audit_checks import (
     round_number_diagnostics,
     tax_base_diagnostics,
 )
+from bh_itbi.audit_figure import IndexSeries, index_comparison_svg
 from bh_itbi.audit_patterns import AuditPatterns, audit_trajectory_patterns
 from bh_itbi.cluster import (
     ClusterMetadata,
@@ -42,9 +43,10 @@ from bh_itbi.cluster import (
     trajectory_stability,
 )
 from bh_itbi.config import (
+    AUDIT_LOW_PRICE,
     AUDIT_VERSION,
     END_YEAR,
-    HEDONIC_CONFIDENCE_LEVEL,
+    INDEX_BASE,
     MODEL_VERSION,
     PATTERN_ORDER,
     PATTERNS_ID,
@@ -63,49 +65,6 @@ from bh_itbi.sensitivity import (
 
 THREAD_LIMIT = 2
 BASELINE_RTOL = 1e-9
-SELECTED_QUARTERS = ("2016Q3", "2019Q4", "2021Q4", "2023Q4", "2025Q4")
-
-TARGET_AND_POPULATION = """## Target and observable population
-
-**Scientific target.** The evolution of inflation-adjusted declared values of residential properties transferred in arm's-length market sales in Belo Horizonte, adjusted for the characteristics observed in the hedonic specification.
-
-**Observable population.** Eligible residential ITBI records (apartments and houses) with a declared value, a positive built area and complete model characteristics. ITBI covers onerous transfers of any nature. The municipal source has no field for the nature of the transfer or the date of the underlying contract, so membership in the target population is unobserved. No rule in this audit identifies arm's-length market sales. Every screen defines an operational proxy population and is reported as such.
-
-**Source definitions recorded, not verified here.** According to the municipal data dictionary, the published built area is the unit's built area multiplied by the acquired percentage ("Área Construída Adquirida"), and the tax base is the market value of the rights transferred ("Valor Base Cálculo"). Whether the harmonised `built_area_m2` maps to "Área Construída Adquirida" remains to be confirmed against the raw files.
-"""  # noqa: E501 - Fixed wording from the audit protocol.
-
-INTERPRETATION = """## Interpretation rules
-
-- Each screen defines an operational proxy population. Membership in the target is unobserved.
-- Differences between specifications are descriptive. The estimates share records, and no
-  joint covariance is estimated.
-- Huber-weighted means depend on the fitted model.
-- The adjacent-quarter variance ratio is descriptive.
-- The tax-base series and contrasts establish no causal effects of legislation, tax
-  administration or market behaviour.
-"""
-
-LIMITATIONS = """## Limitations and open source questions
-
-- The mapping of `built_area_m2` to the municipal acquired-area definition requires
-  verification against the raw records.
-- The municipal source contains neither transaction nature nor the underlying contract date.
-- The Huber sandwich holds the estimated scales fixed. Its intervals are pointwise and
-  model-dependent. A neighbourhood bootstrap of the Huber fits is deferred on
-  computational grounds.
-- Block faces approximate buildings. Records without a face match form singleton clusters.
-"""
-
-TRAJECTORY_PATTERNS_CONTEXT = (
-    "The v1 annual typology (four groups on unadjusted medians indexed to 2016) was "
-    "withdrawn after bootstrap agreement with the published partition reached a median ARI "
-    "of 0.45. A rule proposed before any re-analysis (publish groups only if the bootstrap "
-    "median ARI reaches 0.75) was not met by any specification tested: the best reached about "
-    "0.61. After inspecting those results, the publication criterion was changed: patterns "
-    "are shown because their centres are stable under resampling, while membership is "
-    "reported per neighbourhood and borderline neighbourhoods are identified as such. "
-    "This change was made after seeing the data and is reported as such."
-)
 
 
 class AuditError(ValueError):
@@ -351,330 +310,250 @@ def _markdown_rows(headers: Sequence[str], rows: Sequence[Sequence[object]]) -> 
     )
 
 
-def _audit_display(value: object, precision: str = ".3f") -> str:
-    if value is None or value is pd.NA:
-        return "—"
-    if isinstance(value, float):
-        return format(value, precision) if math.isfinite(value) else "—"
-    return str(value)
+def _join_words(items: Sequence[str]) -> str:
+    return items[0] if len(items) == 1 else f"{', '.join(items[:-1])} and {items[-1]}"
 
 
-def _audit_report_table(
-    frame: pd.DataFrame,
-    columns: Mapping[str, str] | None = None,
-    *,
-    precision: str = ".3f",
+def _rows(frame: pd.DataFrame, key: str) -> dict[str, pd.Series]:
+    """Index a small table's rows by one column, keeping each row a typed Series."""
+    return {str(row[key]): row for _, row in frame.iterrows()}
+
+
+def _interval(row: pd.Series) -> str:
+    return f"{row['lower_2025Q4']:.1f}–{row['upper_2025Q4']:.1f}"
+
+
+def _threshold(rule: object) -> str:
+    return str(rule).split("≥ ")[-1]
+
+
+def _exception_text(exceptions: pd.DataFrame) -> str:
+    if exceptions.empty:
+        return "there are no exceptions"
+    families = exceptions["family"].unique()
+    if len(families) == 1 and len(exceptions) > 1:
+        lowest = _threshold(exceptions["rule"].iloc[0])
+        return f"the exceptions are the {families[0]}s from {lowest} up"
+    return "the exceptions are " + _join_words(
+        [str(rule).lower() for rule in exceptions["rule"]]
+    )
+
+
+def _audit_summary(table: pd.DataFrame) -> str:
+    specs = _rows(table, "spec_id")
+    base, huber = specs["baseline"], specs["huber_year"]
+    low = table.iloc[int(table["index_2025Q4"].to_numpy().argmin())]
+    high = table.iloc[int(table["index_2025Q4"].to_numpy().argmax())]
+    above = table["lower_2025Q4"].gt(INDEX_BASE)
+    return (
+        "# How robust is the price index?\n\n"
+        f"The published hedonic index puts the fourth quarter of {END_YEAR} at "
+        f"{base['index_2025Q4']:.1f} (95% interval {_interval(base)}), with the first quarter "
+        f"of {START_YEAR} at {INDEX_BASE}. Re-estimated under {len(specs)} specifications, "
+        f"that figure ranges from {low['index_2025Q4']:.1f} ({str(low['rule']).lower()}) to "
+        f"{high['index_2025Q4']:.1f} ({str(high['rule']).lower()}). Most of the spread comes "
+        "from one group of records: those declared far below the municipal tax base, "
+        "concentrated in 2016–2019. Down-weighting outlying records with a Huber regression "
+        f"lowers the end of the series to {huber['index_2025Q4']:.1f}, but does not remove the "
+        f"rise. The {END_YEAR} interval lies above {INDEX_BASE} in {int(above.sum())} of the "
+        f"{len(specs)} specifications; {_exception_text(table.loc[~above])}.\n\n"
+        "![Quarterly index under four specifications.](index_comparison.svg)\n\n"
+        f"*Quarterly index under four specifications ({START_YEAR}Q1 = {INDEX_BASE}). The "
+        "shaded band is the 95% interval of the published index. The other specifications are "
+        "in [index_trajectories.csv](index_trajectories.csv).*"
+    )
+
+
+def _low_tail_paragraph(checks: _AuditDiagnostics, deficit: float) -> str:
+    profile = _rows(checks["low_tail_profile"], "price_group")
+    if "below_1000" not in profile:
+        return f"**Very low declared values.** No records fall below R${AUDIT_LOW_PRICE:,}/m²."
+    tail, rest = profile["below_1000"], profile["at_or_above_1000"]
+    by_year = checks["tails"]["by_year"].set_index("year")["share_below_1000"]
+    share = tail["n"] / (tail["n"] + rest["n"])
+    return (
+        f"**Very low declared values.** {tail['n']:,.0f} records ({share:.1%}) have a real "
+        f"declared value below R${AUDIT_LOW_PRICE:,}/m². Their median declared value is "
+        f"R${tail['median_declared']:,.0f}, against R${rest['median_declared']:,.0f} for the "
+        f"rest, and {tail['median_declared_base']:.0%} of the tax base; "
+        f"{tail['share_houses']:.0%} are houses, against {rest['share_houses']:.0%} of the "
+        f"other records. They are {by_year.iloc[0]:.1%} of records in {by_year.index[0]} and "
+        f"{by_year.iloc[-1]:.1%} in {by_year.index[-1]}, so they pull the early quarters down "
+        "and steepen the rise. The source cannot say what they are: it has no field for the "
+        "nature of the transfer or the date of the contract. According to the municipal data "
+        "dictionary, the published area already reflects the share acquired, so partial "
+        "transfers would not explain them, provided the harmonised area column is the one the "
+        "dictionary describes (still to be checked against the raw files). The Huber "
+        "regression, which down-weights large residuals instead of dropping records, places "
+        f"{deficit:.0%} of the weight it removes on these records."
+    )
+
+
+def _cut_off_paragraph(table: pd.DataFrame) -> str:
+    floors = table.loc[table["family"].eq("real price floor")]
+    huber = _rows(table, "spec_id")["huber_year"]
+    values = ", ".join(f"{value:.1f}" for value in floors["index_2025Q4"])
+    first, last = _threshold(floors["rule"].iloc[0]), _threshold(floors["rule"].iloc[-1])
+    return (
+        f"**No natural cut-off.** Raising a price floor from {first}/m² to {last}/m² lowers "
+        f"the {END_YEAR}Q4 value step by step ({values}), with no level at which it "
+        f"settles. The Huber fit gives {huber['index_2025Q4']:.1f} ({_interval(huber)}); that "
+        "is the figure the dashboard's sensitivity note reports."
+    )
+
+
+def _tax_base_paragraphs(
+    table: pd.DataFrame, checks: _AuditDiagnostics, exclusions: pd.DataFrame
 ) -> str:
-    if frame.empty:
-        return "No eligible cells."
-    labels = {str(name): str(name).replace("_", " ") for name in frame.columns}
-    if columns is not None:
-        labels = dict(columns)
-    rows = [
-        [_audit_display(value, precision) for value in row]
-        for row in frame[list(labels)].itertuples(index=False, name=None)
+    annual = checks["tax_base"]["annual"].set_index("year")
+    below = annual["share_below"]
+    parity = annual.index[annual["median_declared_base"].ge(0.995)]
+    parity_text = (
+        f"to 1.00 from {int(parity.min())}" if len(parity) else "without reaching 1.00"
+    )
+    rebound = (
+        f", before rising again to {below.iloc[-1]:.0%} in {below.index[-1]}"
+        if below.iloc[-1] > below.min() + 0.05
+        else ""
+    )
+    ratios = table.loc[table["family"].eq("declared/base floor")]
+    removed = exclusions.loc[exclusions["spec_id"].eq("ratio_floor_050")]
+    counts = removed.groupby("year")[["n_removed", "n_population"]].sum()
+    shares = counts["n_removed"] / counts["n_population"]
+    return (
+        "**The tax base moved.** The median ratio of declared value to tax base rises from "
+        f"{annual['median_declared_base'].iloc[0]:.2f} in {annual.index[0]} {parity_text}, "
+        f"and the share of records declared below the base falls from {below.iloc[0]:.0%} to "
+        f"{below.min():.0%} in {below.idxmin()}{rebound}. Whatever the cause, the base is not "
+        "a fixed yardstick across the period.\n\n"
+        "**Declared/base floors are therefore hard to read.** A floor of 0.50 removes "
+        f"{shares.iloc[0]:.1%} of {shares.index[0]} records but {shares.iloc[-1]:.1%} of "
+        f"{shares.index[-1]} records, mixing data quality with changes in how the base was "
+        "set. These specifications give the lowest values "
+        f"({ratios['index_2025Q4'].min():.1f}–{ratios['index_2025Q4'].max():.1f}) and are not "
+        "a cleaner version of the index."
+    )
+
+
+def _property_type_paragraph(table: pd.DataFrame) -> str:
+    specs = _rows(table, "spec_id")
+    apartments, houses = specs["apartments_only"], specs["houses_only"]
+    return (
+        f"**Property type.** Apartments alone give {apartments['index_2025Q4']:.1f}; houses "
+        f"alone give {houses['index_2025Q4']:.1f} with a much wider interval "
+        f"({_interval(houses)}), from {houses['n']:,.0f} records. The common trend the "
+        "pooled model imposes on both types is not what drives the result."
+    )
+
+
+def _patterns_paragraphs(evidence: AuditPatterns, old_ari: float) -> str:
+    metadata, independent = evidence["metadata"], evidence["independent_records"]
+    sizes = [metadata["patterns"][name]["size"] for name in PATTERN_ORDER]
+    firm = [metadata["patterns"][name]["firm"] for name in PATTERN_ORDER]
+    return (
+        "## Neighbourhood trajectory patterns\n\n"
+        f"The dashboard groups {metadata['n_neighbourhoods']} neighbourhoods into three "
+        "patterns of quality-adjusted apartment prices by biennium: falling then stabilising "
+        f"({sizes[0]}), stable ({sizes[1]}) and a late rise ({sizes[2]}). Firmness comes from "
+        "resampling whole block faces within each neighbourhood and biennium, because sales in "
+        "the same building are not independent. The three patterns reappear in "
+        f"{metadata['separation_share']:.0%} of {metadata['draws']} draws, but membership is "
+        f"loose: {firm[0]}, {firm[1]} and {firm[2]} neighbourhoods stay in their pattern in at "
+        f"least {metadata['firm_share']:.0%} of draws, and the median adjusted Rand index "
+        f"against the published partition is {metadata['ari_median']:.2f}. Resampling "
+        f"individual records would give {independent['ari_median']:.2f} and "
+        f"{sum(independent['firm'].values())} firm members instead of {sum(firm)}, which "
+        "overstates stability. Draws that miss the three patterns usually spend one centre on "
+        "a single neighbourhood with an unusually wide spread of prices.\n\n"
+        "These patterns replace a four-group typology built on unadjusted annual medians, "
+        f"withdrawn when its bootstrap agreement came out at {old_ari:.2f}. The criterion for "
+        "showing them (stable pattern shapes with membership reported per neighbourhood, "
+        "rather than a stable partition) was settled after seeing these results."
+    )
+
+
+def _other_checks(checks: _AuditDiagnostics) -> str:
+    noise, heaping = checks["adjacent_quarter_noise"], checks["round_numbers"]
+    widths = checks["neighbourhood_quarterly_uncertainty"]["neighbourhoods"][
+        "median_block_relative_width"
     ]
-    return _markdown_rows(list(labels.values()), rows)
-
-
-def _audit_provenance_section(manifest: AuditManifest) -> str:
+    autocorrelation = f"{noise['lag1_autocorrelation']:.2f}".replace("-", "−")
     return (
-        "## Provenance\n\n"
-        f"- Source revision `{manifest['revision']}`\n"
-        f"- Source SHA-256 `{manifest['source_sha256']}`\n"
-        f"- Cached transaction table verified: **{manifest['cached_table_verified']}**\n"
-        f"- Model version `{manifest['model_version']}` and audit version "
-        f"`{manifest['audit_version']}`\n"
-        f"- Protocol `{manifest['protocol_id']}` with SHA-256 `{manifest['protocol_sha256']}`\n"
-        f"- Seed {manifest['seed']}, {manifest['cluster_draws']} trajectory bootstrap draws, "
-        f"{manifest['median_draws']} draws per quarterly median bootstrap and "
-        f"{manifest['thread_limit']} numerical threads\n\n"
-        "The cached-table hash, Git state and software versions are in "
-        "[manifest.json](manifest.json)."
+        "## Other checks\n\n"
+        "- **Quarter-to-quarter noise.** Sampling error accounts for about "
+        f"{noise['descriptive_ratio']:.0%} of the variance of quarterly changes in the "
+        "published index, and consecutive changes are negatively correlated "
+        f"({autocorrelation}), so single-quarter moves should not be over-read.\n"
+        f"- **Round numbers.** {heaping['exact_10000_share']:.0%} of declared values in the "
+        "dashboard's range are exact multiples of R$10,000, which produces spikes in "
+        "fine-grained histograms.\n"
+        "- **Neighbourhood quarterly medians.** Resampling by block face, the interval around "
+        f"a reference neighbourhood's quarterly median is typically {widths.min():.0%} to "
+        f"{widths.max():.0%} of the median itself."
     )
 
 
-def _audit_protocol_section(specifications: pd.DataFrame) -> str:
-    columns = {
-        "spec_id": "Specification",
-        "family": "Family",
-        "rule": "Retained rows",
-        "estimator": "Estimator",
-    }
+LIMITS = """## Limits
+
+- The source does not identify market sales, so every specification is a proxy for the population of interest.
+- The specifications share most of their records and their intervals are pointwise, so differences between them are descriptive rather than tests.
+- The Huber intervals treat the estimated scales as fixed.
+- Block faces approximate buildings; records without a matched face are resampled on their own."""  # noqa: E501
+
+AUDIT_FILES = (
+    ("protocol.json", "the specifications and estimator settings"),
+    ("specifications.csv", "one row per specification: sample, fit and headline values"),
+    ("index_trajectories.csv", "quarterly index and intervals for every specification"),
+    ("decomposition.csv", "composition terms per specification and quarter"),
+    ("exclusions.csv", "records removed by each screen, by year and property type"),
+    ("huber_weights.csv", "Huber scales and down-weighting by year and property type"),
+    (
+        "diagnostics.json",
+        "price tails, low-tail profile, tax-base series, round numbers, quarterly noise, "
+        "neighbourhood medians and the withdrawn typology",
+    ),
+    ("trajectory_patterns.json", "pattern centres, ranges and membership per neighbourhood"),
+    ("manifest.json", "hashes, Git commit and software versions"),
+    ("index_comparison.svg", "the figure above"),
+)
+
+
+def _files_section(manifest: AuditManifest) -> str:
+    rows = [(f"[{name}]({name})", contents) for name, contents in AUDIT_FILES]
     return (
-        "## Protocol\n\n"
-        "All screens remove records from the published model population. Neighbourhood "
-        "eligibility is applied once to that population. The fixed comparisons of separately "
-        "estimated property types address the common trend imposed by the pooled model.\n\n"
-        f"{_audit_report_table(specifications, columns)}\n\n"
-        "Huber clips the residual score at ±k and minimises quadratic loss inside those "
-        "bounds and linear loss outside, conditional on the final thresholds. The thresholds "
-        f"are {PROTOCOL.tuning} times the residual MAD divided by {PROTOCOL.mad_consistency}, "
-        "using a global scale or a scale for each calendar year. The year-specific fit changes "
-        "only the threshold. Standardised Huber loss would weight years by inverse scale "
-        "squared even in the absence of clipping, changing the estimand. Both fits recover "
-        "OLS in the absence of clipping.\n\n"
-        "Huber estimates start at OLS and use iteratively reweighted least squares. "
-        f"The maximum coefficient change and maximum relative scale change must both be below "
-        f"{PROTOCOL.tolerance:g} within {PROTOCOL.max_iterations} iterations. The audit also "
-        "checks the score, the fixed point and the weighted quarterly residual means. "
-        f"All specifications have pointwise {HEDONIC_CONFIDENCE_LEVEL:.0%} intervals based "
-        "on their own neighbourhood-clustered covariance."
+        "## Files and reproduction\n\n"
+        "Running `python main.py audit` on the prepared cache regenerates every file here. "
+        f"This version comes from source revision `{manifest['revision'][:7]}`, model "
+        f"`{manifest['model_version']}` and protocol `{manifest['protocol_id']}`.\n\n"
+        + _markdown_rows(("File", "Contents"), rows)
     )
 
 
-def _audit_specification_sections(sensitivity: SensitivityResults) -> str:
-    table = sensitivity.specifications
-    base = table.iloc[0]
-    rows = [
-        (
-            row.spec_id,
-            f"{row.n:,}",
-            f"{row.index_2016Q3:.2f}",
-            f"{row.index_2025Q4:.2f} [{row.lower_2025Q4:.2f}, {row.upper_2025Q4:.2f}]",
-            f"{row.max_abs_log_dev:.5f}",
-            row.quarter_of_max_dev,
-        )
-        for row in table.itertuples(index=False)
-    ]
-    summary = _markdown_rows(
-        (
-            "Specification",
-            "n",
-            "2016Q3",
-            "2025Q4 [95% interval]",
-            "Max absolute log deviation",
-            "Quarter",
-        ),
-        rows,
-    )
-    selected = sensitivity.index.pivot(index="spec_id", columns="quarter", values="index")
-    selected = selected.loc[table["spec_id"], list(SELECTED_QUARTERS)].reset_index()
-    return (
-        "## Baseline reproduction\n\n"
-        f"The baseline reproduced the published quarterly index, intervals and fit metadata "
-        f"within relative tolerance {BASELINE_RTOL:g}. The OLS fit has {base['n']:,} records, "
-        f"R² {base['r_squared']:.3f} and residual SD {base['residual_sd']:.3f} log points.\n\n"
-        "## Specification summary\n\n"
-        f"{summary}\n\n"
-        "## Selected quarters\n\n"
-        "The full trajectories and log deviations are in "
-        "[index_trajectories.csv](index_trajectories.csv).\n\n"
-        f"{_audit_report_table(selected, precision='.2f')}"
-    )
-
-
-def _audit_exclusion_section(sensitivity: SensitivityResults) -> str:
-    grouped = sensitivity.exclusions.groupby(["spec_id", "year"])[
-        ["n_population", "n_removed"]
-    ].sum()
-    shares = (grouped["n_removed"] / grouped["n_population"]).unstack("year")
-    screens = sensitivity.specifications.loc[
-        ~sensitivity.specifications["family"].isin(["reference", "estimator"])
-    ]
-    table = shares.reindex(screens["spec_id"]).reset_index()
-    table.insert(1, "family", screens["family"].to_list())
-    table.columns = table.columns.astype(str)
-    return (
-        "## Exclusion composition\n\n"
-        "Annual shares use each year's published-model records as the denominator. "
-        "[exclusions.csv](exclusions.csv) also gives counts and shares by property type.\n\n"
-        + _audit_report_table(table, precision=".1%")
-    )
-
-
-def _audit_huber_section(outputs: _AuditOutputs) -> str:
-    weights = outputs.weights
-    grouped = (
-        weights.assign(downweighted=weights["n"] * weights["share_downweighted"])
-        .groupby(["spec_id", "year"], as_index=False)
-        .agg(n=("n", "sum"), downweighted=("downweighted", "sum"), scale=("scale", "first"))
-    )
-    grouped["share_downweighted"] = grouped["downweighted"] / grouped["n"]
-    deficit = weights.groupby("spec_id")["low_tail_share_of_total_deficit"].sum()
-    text = (
-        "## Huber weights and residual dispersion\n\n"
-        "Shares use the weights from the final solve. Annual scales are in log points. "
-        "The year-by-type detail is in [huber_weights.csv](huber_weights.csv).\n\n"
-        + _audit_report_table(grouped[["spec_id", "year", "scale", "share_downweighted"]])
-    )
-    for spec_id, share in deficit.items():
-        text += (
-            f"\n\nRecords below R$1,000/m² carry {share:.1%} of the `{spec_id}` weight deficit."
-        )
-    return (
-        text
-        + "\n\n**Baseline OLS residual MAD scale, in log points**\n\n"
-        + _audit_report_table(outputs.diagnostics["residual_dispersion"])
-    )
-
-
-def _audit_descriptive_section(checks: _AuditDiagnostics) -> str:
-    tails = checks["tails"]
-    noise = checks["adjacent_quarter_noise"]
-    tax = checks["tax_base"]
-    heaping = checks["round_numbers"]
-    heaping_ratio = _audit_display(heaping["ratio_to_one_fifth_share"], ".2f")
-    uncertainty = checks["neighbourhood_quarterly_uncertainty"]
-    return "\n\n".join(
-        (
-            "## Descriptive diagnostics",
-            f"**Price tails.** {tails['eligible_n']:,} eligible records have positive area.",
-            _audit_report_table(tails["quantiles"], precision=",.3f"),
-            _audit_report_table(tails["by_year"], precision=".3%"),
-            "**Low-tail profile and fraction windows.** Counts at each fraction use ±0.003. "
-            "The side counts are averaged over windows centred 0.012 to either side.",
-            _audit_report_table(checks["low_tail_profile"]),
-            _audit_report_table(checks["fraction_test"]),
-            "**Reach of a declared/base floor of 0.50.**",
-            _audit_report_table(checks["ratio_screen_reach"]),
-            "**Adjacent-quarter changes.** "
-            f"Across {noise['n_changes']} changes, observed variance is "
-            f"{noise['observed_variance']:.6f} and mean estimated sampling variance is "
-            f"{noise['mean_sampling_variance']:.6f} log points squared. "
-            f"The descriptive ratio is {_audit_display(noise['descriptive_ratio'])}. "
-            f"Lag-1 autocorrelation is {noise['lag1_autocorrelation']:.3f}, with "
-            f"1/√n = {noise['white_noise_reference']:.3f} as a white-noise reference.",
-            f"**Tax-base comparisons.** {tax['declared_above_base']:,} of {tax['n']:,} "
-            "records with a positive tax base have declared values above it. Quarterly shares "
-            "are in [diagnostics.json](diagnostics.json).",
-            _audit_report_table(tax["annual"]),
-            f"**Round numbers.** Among {heaping['n']:,} records in the dashboard's range, "
-            f"{heaping['exact_10000_share']:.1%} are exact R$10,000 multiples and "
-            f"{heaping['exact_50000_share']:.1%} are exact R$50,000 multiples. "
-            f"The second share divided by one fifth of the first is {heaping_ratio}.",
-            _audit_report_table(heaping["bin_widths"]),
-            "**Quarterly neighbourhood medians.** Relative widths divide interval width by "
-            "the sample median. Block-face draws take all records from each selected face. "
-            "Quarterly intervals and counts are in [diagnostics.json](diagnostics.json).",
-            _audit_report_table(uncertainty["neighbourhoods"], precision=".1%"),
-        )
-    )
-
-
-def _audit_clustering_section(stability: TrajectoryStability) -> str:
-    boot = stability["bootstrap"]
-    rows = [
-        (k, _audit_display(silhouette))
-        for k, silhouette in stability["published_silhouettes"].items()
-    ]
-    silhouettes = _markdown_rows(("k", "Silhouette"), rows)
-    sizes = _markdown_rows(
-        ("Published group", "Neighbourhoods"), sorted(stability["published_sizes"].items())
-    )
-    return "\n\n".join(
-        (
-            "## Clustering stability and composition check",
-            "The published trajectories index annual apartment medians to the first year.",
-            sizes,
-            silhouettes,
-            f"**Sampling instability.** Across {boot['draws']} draws, the adjusted Rand index "
-            f"against the published partition has median {boot['ari_median']:.3f}, "
-            f"P10 {boot['ari_p10']:.3f} and P90 {boot['ari_p90']:.3f}. The endpoint "
-            f"bootstrap SE has median {boot['endpoint_se_median']:.2f} and "
-            f"P90 {boot['endpoint_se_p90']:.2f} index points. Resampling records independently "
-            "omits within-cell dependence and is likely to overstate stability.",
-            "**Representation dependence.** All representations use the same K-means settings.",
-            _audit_report_table(pd.DataFrame(stability["representations"])),
-            f"**Composition check.** The ratio of {END_YEAR} to {START_YEAR} apartment medians "
-            "is indexed to 100 for all apartments and for the subset excluding the new "
-            "age band. "
-            "The table gives the median ratio in each published group. Neighbourhood ratios, "
-            "endpoint counts, small-cell flags and membership are in "
-            "[diagnostics.json](diagnostics.json).",
-            _audit_report_table(pd.DataFrame(stability["group_composition"]), precision=".2f"),
-        )
-    )
-
-
-def _audit_pattern_near_tie(evidence: AuditPatterns) -> str:
-    metadata = evidence["metadata"]
-    alternative = evidence["alternative"]
-    alternative_sizes = " / ".join(str(alternative["sizes"][name]) for name in PATTERN_ORDER)
-    switches = ", ".join(name.title() for name in alternative["stable_rising_switches"])
-    other = ", ".join(name.title() for name in alternative["other_switches"])
-    near_tie = (
-        f"The chosen fit has inertia {metadata['inertia']:.10f} and the {alternative_sizes} "
-        f"alternative has inertia {alternative['inertia']:.10f}"
-    )
-    if switches:
-        near_tie += f", with {switches} switching between stable and rising"
-    if other:
-        near_tie += f" and {other} switching assignment elsewhere"
-    return f"{near_tie}."
-
-
-def _audit_patterns_section(evidence: AuditPatterns) -> str:
-    metadata = evidence["metadata"]
-    patterns = metadata["patterns"]
-    summaries = pd.DataFrame(
-        [
-            {"pattern": name, "size": patterns[name]["size"], "firm": patterns[name]["firm"]}
-            for name in PATTERN_ORDER
-        ]
-    )
-    block_firm = {name: patterns[name]["firm"] for name in PATTERN_ORDER}
-    independent = evidence["independent_records"]
-    stability = pd.DataFrame(
-        [
-            {
-                "resampling": scheme,
-                "ARI P10": result["ari_p10"],
-                "ARI median": result["ari_median"],
-                "ARI P90": result["ari_p90"],
-                **{f"{name} firm": firm[name] for name in PATTERN_ORDER},
-            }
-            for scheme, result, firm in (
-                ("Block faces (published)", metadata, block_firm),
-                ("Independent records", independent, independent["firm"]),
-            )
-        ]
-    )
-    return "\n\n".join(
-        (
-            "## Trajectory patterns",
-            f"> {TRAJECTORY_PATTERNS_CONTEXT}",
-            _audit_pattern_near_tie(evidence),
-            _audit_report_table(summaries),
-            _audit_report_table(stability),
-            "Block faces are resampled within each neighbourhood and biennium, with unmatched "
-            "records treated as singleton faces. The five cells with the fewest block faces "
-            "are listed below.",
-            _audit_report_table(
-                evidence["fewest_block_faces"].rename(
-                    columns={"largest_face_share": "largest-face share"}
-                ),
-                precision=".1%",
-            ),
-            "Draws in which the three patterns are not identified mostly assign one centre to "
-            "a single neighbourhood whose cell is dominated by one block face; "
-            "a minimum block-face count per cell is deferred.",
-            "See [trajectory_patterns.json](trajectory_patterns.json) for the full "
-            "estimates and membership shares.",
-        )
-    )
+COMPARISON_SERIES = (
+    IndexSeries("baseline", "Published", "#1d6f73"),
+    IndexSeries("price_floor_1000", "Floor R$1,000/m²", "#b0612c"),
+    IndexSeries("huber_year", "Huber", "#5b4b8a"),
+    IndexSeries("ratio_floor_050", "Declared/base ≥ 0.50", "#7a7a7a", "5 4"),
+)
 
 
 def _render_audit_report(manifest: AuditManifest, outputs: _AuditOutputs) -> str:
-    return (
-        "\n\n".join(
-            (
-                "# Robustness audit of the Belo Horizonte ITBI dashboard",
-                _audit_provenance_section(manifest),
-                TARGET_AND_POPULATION.strip(),
-                _audit_protocol_section(outputs.sensitivity.specifications),
-                _audit_specification_sections(outputs.sensitivity),
-                _audit_exclusion_section(outputs.sensitivity),
-                _audit_huber_section(outputs),
-                _audit_descriptive_section(outputs.diagnostics),
-                _audit_clustering_section(outputs.diagnostics["clustering"]),
-                _audit_patterns_section(outputs.patterns),
-                INTERPRETATION.strip(),
-                LIMITATIONS.strip(),
-            )
-        )
-        + "\n"
+    table = outputs.sensitivity.specifications
+    checks = outputs.diagnostics
+    deficit = outputs.weights.groupby("spec_id")["low_tail_share_of_total_deficit"].sum()
+    sections = (
+        _audit_summary(table),
+        "## Where the spread comes from",
+        _low_tail_paragraph(checks, float(deficit["huber_year"])),
+        _cut_off_paragraph(table),
+        _tax_base_paragraphs(table, checks, outputs.sensitivity.exclusions),
+        _property_type_paragraph(table),
+        _patterns_paragraphs(outputs.patterns, checks["clustering"]["bootstrap"]["ari_median"]),
+        _other_checks(checks),
+        LIMITS,
+        _files_section(manifest),
     )
+    return "\n\n".join(sections) + "\n"
 
 
 def _write_audit_text(destination: Path, text: str) -> None:
@@ -700,6 +579,10 @@ def _publish_audit_outputs(
     _write_audit_json(destination / "trajectory_patterns.json", outputs.patterns)
     _write_audit_text(destination / "protocol.json", PROTOCOL.canonical_json())
     _write_audit_text(destination / "report.md", report)
+    _write_audit_text(
+        destination / "index_comparison.svg",
+        index_comparison_svg(outputs.sensitivity.index, COMPARISON_SERIES),
+    )
     _write_audit_json(destination / "manifest.json", manifest)
 
 

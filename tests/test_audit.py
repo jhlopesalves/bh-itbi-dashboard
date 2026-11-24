@@ -13,8 +13,6 @@ import pytest
 
 from bh_itbi import data, models, patterns
 from bh_itbi.audit import (
-    TARGET_AND_POPULATION,
-    TRAJECTORY_PATTERNS_CONTEXT,
     AuditError,
     AuditInputs,
     AuditSettings,
@@ -34,6 +32,7 @@ FILES = {
     "huber_weights.csv",
     "diagnostics.json",
     "report.md",
+    "index_comparison.svg",
     "trajectory_patterns.json",
 }
 
@@ -85,12 +84,14 @@ def test_audit_writes_exactly_the_required_outputs_deterministically(
     assert len(summary) == 18
     assert all("rank" not in column and "prefer" not in column for column in summary.columns)
     report = (a / "report.md").read_text(encoding="utf-8")
-    fixed = TARGET_AND_POPULATION.strip()
-    assert fixed in report
-    assert f"> {TRAJECTORY_PATTERNS_CONTEXT}" in report
-    other = report.replace(fixed, "").replace(TRAJECTORY_PATTERNS_CONTEXT, "").lower()
-    for prohibited in ("preferred", "best", "corrected", "true index", "arm's-length sales"):
-        assert prohibited not in other
+    assert report.startswith("# How robust is the price index?\n")
+    assert "](index_comparison.svg)" in report
+    for name in FILES - {"report.md"}:
+        assert f"[{name}]({name})" in report, name
+    for prohibited in ("preferred", "best", "corrected", "true index", "reported as such"):
+        assert prohibited not in report.lower()
+    figure = (a / "index_comparison.svg").read_text(encoding="utf-8")
+    assert figure.startswith("<svg ") and figure.count("<polyline") == 4
 
 
 def test_losing_a_quarter_raises_audit_error(tmp_path: Path, audit_inputs: AuditInputs) -> None:
