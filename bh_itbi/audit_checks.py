@@ -22,6 +22,7 @@ from bh_itbi.config import (
 )
 from bh_itbi.diagnostics import heaping_summary, heaping_table
 from bh_itbi.filters import positive_area_rows
+from bh_itbi.resampling import _block_face_codes, _block_face_medians
 from bh_itbi.robust import RobustFit, mad_scale
 
 PRICE_QUANTILES = (0.001, 0.01, 0.02, 0.5, 0.98, 0.99, 0.999)
@@ -320,33 +321,6 @@ def round_number_diagnostics(window: pd.DataFrame) -> RoundNumbers:
         else None,
         "bin_widths": pd.DataFrame(bin_rows),
     }
-
-
-def _block_face_codes(rows: pd.DataFrame) -> NDArray[np.intp]:
-    geocoded = rows["face_geocoded"].to_numpy(dtype=bool)
-    coordinates = rows[["lat", "lon"]].to_numpy(dtype=float)[geocoded].round(7)
-    _, faces = np.unique(coordinates, axis=0, return_inverse=True)
-    # Negative labels keep records without a matched face in distinct clusters.
-    codes = -1 - np.arange(len(rows), dtype=np.intp)
-    codes[geocoded] = faces
-    return np.unique(codes, return_inverse=True)[1]
-
-
-def _block_face_medians(
-    values: NDArray[np.float64],
-    codes: NDArray[np.intp],
-    rng: np.random.Generator,
-    draws: int,
-) -> NDArray[np.float64]:
-    n_clusters = int(codes.max()) + 1
-    # Multinomial counts encode the multiplicities of the sampled block faces.
-    frequencies = rng.multinomial(n_clusters, np.full(n_clusters, 1 / n_clusters), size=draws)
-    order = np.argsort(values)
-    cumulative = np.cumsum(frequencies[:, codes[order]], axis=1)
-    total = cumulative[:, -1:]
-    left = (cumulative <= (total - 1) // 2).sum(axis=1)
-    right = (cumulative <= total // 2).sum(axis=1)
-    return (values[order[left]] + values[order[right]]) / 2
 
 
 def _median_intervals(

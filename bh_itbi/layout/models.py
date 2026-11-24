@@ -1,4 +1,4 @@
-"""Lay out the hedonic index decomposition and neighbourhood trajectories."""
+"""Lay out the hedonic index decomposition and neighbourhood trajectory patterns."""
 
 from __future__ import annotations
 
@@ -6,11 +6,13 @@ import pandas as pd
 from dash import html
 from dash.development.base_component import Component
 
-from bh_itbi.cluster import ClusterMetadata
+from bh_itbi.config import PATTERN_ORDER
 from bh_itbi.formatting import number
 from bh_itbi.layout.components import boxed_note, card, graph
 from bh_itbi.models import COMPOSITION_TERMS, AuditEndpoint, HedonicMetadata, PreparedModels
 from bh_itbi.text import models as text
+from bh_itbi.theme import PATTERN_FIGURE_HEIGHT
+from bh_itbi.views.models import pattern_member_names
 
 
 def _models_intro() -> html.Div:
@@ -75,22 +77,61 @@ def _hedonic_card(final: pd.Series, endpoint: AuditEndpoint | None) -> html.Sect
     return card(text.HEDONIC_TITLE, text.HEDONIC_SUBTITLE, body)
 
 
-def _annual_trajectories_card(clusters: ClusterMetadata) -> html.Section:
-    """Render the figure for the fixed neighbourhood coverage."""
-    return card(
-        text.TRAJECTORIES_MODEL_TITLE,
-        text.trajectories_subtitle(clusters["n_neighbourhoods"]),
+def _pattern_panel(models: PreparedModels, name: str) -> html.Div:
+    """Place the pattern's counts and member lists around its plot."""
+    summary = models.metadata["patterns"]["patterns"][name]
+    firm, borderline = pattern_member_names(models.pattern_members, name)
+    return html.Div(
         [
-            graph("trajectories-figure", height=410),
+            html.H3(text.PATTERN_LABELS[name]),
+            html.P(
+                text.pattern_counts(summary["size"], summary["firm"]),
+                className="pattern-counts",
+            ),
+            graph(f"pattern-figure-{name}", height=PATTERN_FIGURE_HEIGHT),
+            html.Details(
+                [
+                    html.Summary(text.PATTERN_MEMBERS_SUMMARY),
+                    html.P(f"{text.PATTERN_FIRM_LABEL}: {', '.join(firm) or '—'}"),
+                    html.P(f"{text.PATTERN_BORDERLINE_LABEL}: {', '.join(borderline) or '—'}"),
+                ]
+            ),
+        ],
+        className="pattern-panel",
+    )
+
+
+def _patterns_card(models: PreparedModels) -> html.Section:
+    """Describe the fixed population and show comparable pattern panels."""
+    metadata = models.metadata["patterns"]
+    sizes = metadata["patterns"]
+    total = metadata["n_neighbourhoods"]
+    borderline = (total - sum(summary["firm"] for summary in sizes.values())) / total
+    note = text.patterns_footnote(
+        (metadata["draws"], metadata["firm_share"]),
+        metadata["separation_share"],
+        (metadata["falling_first"], metadata["rising_last"]),
+        metadata["ari_median"],
+        borderline,
+    )
+    return card(
+        text.PATTERNS_TITLE,
+        text.patterns_subtitle(total, metadata["period_minimum"]),
+        [
+            html.Div(
+                [_pattern_panel(models, name) for name in PATTERN_ORDER],
+                className="pattern-grid",
+            ),
             html.P(
                 [
-                    text.TRAJECTORIES_FOOTNOTE,
+                    note,
                     " ",
                     html.A(text.AUDIT_LINK_TEXT, href=text.AUDIT_REPORT_URL),
                 ],
                 className="card-footnote",
             ),
         ],
+        class_name="patterns-card",
     )
 
 
@@ -107,6 +148,6 @@ def models_panel(models: PreparedModels | None, endpoint: AuditEndpoint | None) 
             _models_intro(),
             _model_metrics(metadata["hedonic"]),
             _hedonic_card(final, endpoint),
-            _annual_trajectories_card(metadata["clusters"]),
+            _patterns_card(models),
         ]
     return html.Div(content, id="models-panel", className="view-panel is-hidden")

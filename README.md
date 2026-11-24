@@ -8,13 +8,19 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 **[Acessar o painel interativo](https://bh-itbi-dashboard.onrender.com/)**
 
-![Panorama com filtros, indicadores, mapa do valor real por m², histograma do valor real por m², séries mensais, distribuições por bairro e trajetórias trimestrais.](docs/images/panorama.png)
+![Panorama com filtros, indicadores, mapa do valor real por m², histograma, séries mensais, distribuições por bairro e séries trimestrais por bairro.](docs/images/panorama.png)
 
-*Panorama dos valores declarados de apartamentos e casas no recorte padrão, com mapa, distribuições, séries mensais e trajetórias por bairro.*
+*Panorama dos valores declarados de apartamentos e casas no recorte padrão, com mapa, distribuições, séries mensais e séries trimestrais por bairro.*
 
 ![Índice hedônico em verde-petróleo com intervalo de confiança de 95%, média geométrica bruta pontilhada e faixas de composição por bairro, área, idade e tipo.](docs/images/indice-hedonico.png)
 
 *Índice hedônico, média geométrica bruta e decomposição da diferença por característica observada na amostra de apartamentos e casas (1º tri. 2016 = 100).*
+
+A aba de índices também apresenta três padrões de trajetória para apartamentos. As medianas por biênio usam valores reais por m² ajustados por área e faixa de idade, centrados na média de cada bairro. A frequência de permanência no mesmo padrão nas reamostragens distingue bairros firmes e de fronteira.
+
+![Três painéis de padrões de trajetória por bairro: queda e estabilização, estáveis e alta recente, com o centro de cada padrão em linha forte, bairros firmes em linhas finas e bairros de fronteira em tracejado cinza.](docs/images/padroes-trajetoria.png)
+
+*Padrões de trajetória de apartamentos por biênio (100 = média do próprio bairro em 2016–2025), com firmeza avaliada por reamostragem de faces de quadra.*
 
 ## Executar localmente
 
@@ -30,7 +36,7 @@ Acesse [http://127.0.0.1:8050/](http://127.0.0.1:8050/) no navegador.
 
 ## Auditoria de robustez
 
-A pasta [`docs/robustness`](docs/robustness/report.md) reúne uma auditoria reprodutível dos resultados analíticos (relatório em inglês): a reprodução do índice hedônico publicado, um protocolo de sensibilidade fixado antes da execução, estimadores robustos com inferência agrupada por bairro, a estabilidade do agrupamento de trajetórias e diagnósticos descritivos. A auditoria não substitui o índice publicado; ela mostra quanto as estimativas dependem das escolhas de população e de estimador.
+A pasta [`docs/robustness`](docs/robustness/report.md) reúne uma auditoria reprodutível dos resultados analíticos (relatório em inglês): a reprodução do índice hedônico publicado, um protocolo de sensibilidade fixado antes da execução, estimadores robustos com inferência agrupada por bairro, a estabilidade dos padrões de trajetória e diagnósticos descritivos. A auditoria mostra quanto as estimativas dependem das escolhas de população e de estimador.
 
 ```bash
 uv run python main.py prepare

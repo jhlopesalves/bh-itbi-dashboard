@@ -50,7 +50,7 @@ from bh_itbi.theme import (
     TYPE_STYLES,
     composition_tint,
     empty_figure,
-    neighbourhood_colours,
+    neighbourhood_styles,
     padded_price_range,
     rgba,
     themed,
@@ -237,6 +237,7 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
     """Draw area-scaled circles coloured by real price per m² on fixed scales."""
     if points.empty:
         return empty_figure(MAP_EMPTY_MESSAGE, 540)
+    points = points.sort_values("built_area_m2", ascending=False, kind="stable")
     tickvals, ticktext = _map_colourbar_ticks(scales["price_lower"], scales["price_upper"])
     fig = go.Figure(
         go.Scattermap(
@@ -246,11 +247,11 @@ def map_figure(points: pd.DataFrame, style: str, scales: MapScales) -> go.Figure
             marker={
                 "size": points["built_area_m2"].clip(upper=scales["area_reference"]),
                 "sizemode": "area",
-                "sizeref": scales["area_reference"] / 16**2,
-                "sizemin": 2.5,
-                "opacity": 0.70,
+                "sizeref": scales["area_reference"] / 8**2,
+                "sizemin": 1.85,  # Plotly applies the minimum to the circle radius.
+                "opacity": 0.60,
                 "color": points["price_per_m2_brl_real"],
-                "colorscale": "Cividis",
+                "colorscale": "Viridis",
                 "cmin": scales["price_lower"],
                 "cmax": scales["price_upper"],
                 "showscale": True,
@@ -294,7 +295,7 @@ def neighbourhood_comparison_data(
     names: Sequence[str],
 ) -> ComparisonPlot:
     """Send only the visible curves and summaries to the browser."""
-    colours = neighbourhood_colours(names)
+    styles = neighbourhood_styles(names)
     visible: list[ComparisonRow] = []
     for row in rows:
         if row.density is None:
@@ -304,7 +305,7 @@ def neighbourhood_comparison_data(
             visible_prices, visible_density = trim_log_density(grid, row.density)
             prices = visible_prices.tolist()
             density = visible_density.tolist()
-        colour = colours[row.neighbourhood]
+        colour = styles[row.neighbourhood].colour
         visible.append(
             {
                 "name": row.neighbourhood.title(),
@@ -333,7 +334,7 @@ def neighbourhood_trajectories_figure(
     quarterly = temporal_table(rows, filters, neighbourhood=True)
     fig = go.Figure()
     plotted: list[pd.Series] = []
-    for name, colour in neighbourhood_colours(filters.neighbourhoods).items():
+    for name, style in neighbourhood_styles(filters.neighbourhoods).items():
         subset = quarterly.loc[quarterly["neighbourhood"].eq(name)]
         plotted.append(subset["median"])
         label = name.title()
@@ -343,7 +344,7 @@ def neighbourhood_trajectories_figure(
                 y=subset["median"],
                 mode="lines+markers",
                 name=label,
-                line={"color": colour, "width": 2},
+                line={"color": style.colour, "dash": style.dash, "width": 2},
                 marker={"size": 4},
                 connectgaps=False,
                 customdata=[

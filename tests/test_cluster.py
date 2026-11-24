@@ -2,7 +2,6 @@
 
 import json
 from collections.abc import Sequence
-from pathlib import Path
 from unittest.mock import Mock
 
 import numpy as np
@@ -13,11 +12,10 @@ from sklearn import metrics
 from sklearn.cluster import KMeans
 from threadpoolctl import threadpool_limits
 
-from bh_itbi import models
 from bh_itbi.app import create_app
 from bh_itbi.cluster import ClusteringError, cluster_trajectories, trajectory_stability
-from bh_itbi.config import CLUSTER_K, CLUSTER_YEAR_MINIMUM, START_YEAR, YEARS
-from bh_itbi.text.models import trajectories_subtitle
+from bh_itbi.config import CLUSTER_K, CLUSTER_YEAR_MINIMUM, PATTERN_ORDER, START_YEAR, YEARS
+from bh_itbi.text.models import patterns_subtitle
 
 
 def _transactions(growth_rates: Sequence[int]) -> pd.DataFrame:
@@ -190,43 +188,29 @@ def test_scores_only_requested_label_counts_and_keeps_the_selected_fit(
     np.testing.assert_allclose(terminal, [127.45, 118.45, 109.45, 100.45])
 
 
-def test_prepares_four_groups_but_displays_neighbourhood_trajectories(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, snapshot_frame: pd.DataFrame
-) -> None:
-    neighbourhoods = ["SAVASSI", "LOURDES", "BURITIS", "CASTELO"]
-    frame = snapshot_frame.loc[snapshot_frame["neighbourhood"].isin(neighbourhoods)]
-    monkeypatch.setattr(models, "MODEL_DIR", tmp_path)
-
-    with threadpool_limits(limits=1):
-        metadata = models.prepare_models(frame, force=True)
-
-    clusters = metadata["clusters"]
-    assert clusters["n_neighbourhoods"] == clusters["k"] == CLUSTER_K
-    assert clusters["members_per_group"] == {"1": 1, "2": 1, "3": 1, "4": 1}
-    assert clusters["silhouettes"]["2"] is not None
-    assert clusters["silhouettes"]["3"] is not None
-    assert all(clusters["silhouettes"][key] is None for key in ("4", "5", "6"))
-    prepared = models.load_models()
+def test_prepares_and_displays_pattern_panels(snapshot_frame, snapshot_models) -> None:
+    prepared = snapshot_models
     assert prepared is not None
-    assert prepared.metadata == metadata
+    metadata = prepared.metadata["patterns"]
+    assert metadata["k"] == len(PATTERN_ORDER)
+    assert metadata["n_neighbourhoods"] == 7
+    assert prepared.pattern_members["pattern"].nunique() == len(PATTERN_ORDER)
 
-    app = create_app(frame=frame, models=prepared)
+    app = create_app(frame=snapshot_frame, models=prepared)
     client = app.server.test_client()
     response = client.get("/_dash-layout")
     assert response.status_code == 200
     layout = json.dumps(response.get_json(), ensure_ascii=False)
-    assert trajectories_subtitle(len(neighbourhoods)) in layout
-    assert all(term not in layout for term in ("Grupo 1", "cluster-group", "A silhueta"))
+    assert patterns_subtitle(metadata["n_neighbourhoods"], metadata["period_minimum"]) in layout
+    assert all(f"pattern-figure-{name}" in layout for name in PATTERN_ORDER)
     dependencies = client.get("/_dash-dependencies")
-    assert dependencies.status_code == 200
-    assert b"cluster-group" not in dependencies.data
+    assert b"trajectories-figure" not in dependencies.data
 
 
-def test_stability_uses_published_labels_and_fixed_resampling(snapshot_frame, snapshot_models):
-    members = snapshot_models.members
-    original = members.copy(deep=True)
-    metadata = snapshot_models.metadata["clusters"]
+def test_stability_uses_published_labels_and_fixed_resampling(snapshot_frame):
     with threadpool_limits(limits=1):
+        members, _, metadata = cluster_trajectories(snapshot_frame)
+        original = members.copy(deep=True)
         first, second = (
             trajectory_stability(
                 snapshot_frame, members, metadata, rng=np.random.default_rng(713), draws=4

@@ -5,7 +5,7 @@
 - Source revision `5908d77ed56fc9adb6dbafaf2cb38f34245bcd76`
 - Source SHA-256 `386a922d539e78538cd31dd21f7f3ed32db7505ecc70d16a683f69aadf7dbe86`
 - Cached transaction table verified: **True**
-- Model version `v3` and audit version `v1`
+- Model version `v5` and audit version `v1`
 - Protocol `hedonic-sensitivity-v1` with SHA-256 `f053d9ea55d47b3e16b95734ab8114c1fece0c706865f7d1460f352aaf1a9724`
 - Seed 20261122, 200 trajectory bootstrap draws, 1000 draws per quarterly median bootstrap and 2 numerical threads
 
@@ -299,6 +299,37 @@ The published trajectories index annual apartment medians to the first year.
 | 2 | 106.08 | 101.63 |
 | 3 | 97.08 | 94.30 |
 | 4 | 84.20 | 88.38 |
+
+## Trajectory patterns
+
+> The v1 annual typology (four groups on unadjusted medians indexed to 2016) was withdrawn after bootstrap agreement with the published partition reached a median ARI of 0.45. A rule proposed before any re-analysis (publish groups only if the bootstrap median ARI reaches 0.75) was not met by any specification tested: the best reached about 0.61. After inspecting those results, the publication criterion was changed: patterns are shown because their centres are stable under resampling, while membership is reported per neighbourhood and borderline neighbourhoods are identified as such. This change was made after seeing the data and is reported as such.
+
+The chosen fit has inertia 0.6476067335 and the 34 / 47 / 22 alternative has inertia 0.6478202965, with Copacabana, Guarani, Manacas, Santa Amelia, Santa Monica switching between stable and rising and Luxemburgo switching assignment elsewhere.
+
+| pattern | size | firm |
+| --- | --- | --- |
+| falling | 35 | 19 |
+| stable | 51 | 10 |
+| rising | 17 | 5 |
+
+| resampling | ARI P10 | ARI median | ARI P90 | falling firm | stable firm | rising firm |
+| --- | --- | --- | --- | --- | --- | --- |
+| Block faces (published) | 0.174 | 0.321 | 0.454 | 19 | 10 | 5 |
+| Independent records | 0.459 | 0.601 | 0.722 | 29 | 32 | 11 |
+
+Block faces are resampled within each neighbourhood and biennium, with unmatched records treated as singleton faces. The five cells with the fewest block faces are listed below.
+
+| neighbourhood | period | records | block faces | largest-face share |
+| --- | --- | --- | --- | --- |
+| MANTIQUEIRA | 2016–2017 | 128 | 8 | 68.8% |
+| SANTA HELENA | 2018–2019 | 160 | 9 | 51.9% |
+| SANTA HELENA | 2016–2017 | 103 | 9 | 72.8% |
+| CALIFORNIA | 2022–2023 | 78 | 10 | 52.6% |
+| CALIFORNIA | 2018–2019 | 62 | 13 | 29.0% |
+
+Draws in which the three patterns are not identified mostly assign one centre to a single neighbourhood whose cell is dominated by one block face; a minimum block-face count per cell is deferred.
+
+See [trajectory_patterns.json](trajectory_patterns.json) for the full estimates and membership shares.
 
 ## Interpretation rules
 

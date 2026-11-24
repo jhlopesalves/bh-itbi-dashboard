@@ -17,7 +17,7 @@ IPCA_BASE = "setembro de 2026"  # DATA_DICTIONARY.md at the pinned revision.
 
 CACHE_VERSION = "v3"
 CACHE_DIR = ROOT / "data" / "cache" / f"{CACHE_VERSION}-{REVISION[:12]}"
-MODEL_VERSION = "v3"
+MODEL_VERSION = "v5"
 MODEL_DIR = CACHE_DIR / f"models-{MODEL_VERSION}"
 
 AUDIT_VERSION = "v1"
@@ -129,6 +129,16 @@ CLUSTER_K = 4
 CLUSTER_K_RANGE = tuple(range(2, 7))
 CLUSTER_N_INIT = 20
 CLUSTER_RANDOM_STATE = 42
+PATTERN_K = 3
+PATTERNS_ID = "trajectory-patterns-v1"
+PATTERN_N_INIT = 200
+PATTERN_PERIOD_MINIMUM = 60
+PATTERN_DRAWS = 200
+PATTERN_SEED = 20261123
+PATTERN_FIRM_SHARE = 0.80
+PATTERN_RESAMPLING = "block_face"
+PATTERN_ORDER = ("falling", "stable", "rising")
+PATTERN_PERIODS = tuple(f"{year}–{year + 1}" for year in range(START_YEAR, END_YEAR, 2))
 INDEX_BASE = 100
 
 

@@ -9,11 +9,14 @@ import numpy as np
 import pandas as pd
 import pytest
 from test_app import post_callback
+from test_patterns import assert_pinned_patterns
 
 from bh_itbi import data, models
 from bh_itbi.app import create_app
-from bh_itbi.config import MODEL_VERSION
+from bh_itbi.config import MODEL_VERSION, PATTERN_ORDER
+from bh_itbi.figures import map_figure
 from bh_itbi.filters import Filters, filter_transactions, positive_area
+from bh_itbi.overview import map_points, map_reference_scales
 
 
 @pytest.fixture
@@ -100,14 +103,14 @@ def test_model_manifest_checks_every_required_table(tmp_path, failure):
         "model_version": MODEL_VERSION,
         "tables_sha256": {},
     }
-    for name in ("hedonic", "members", "centres"):
+    for name in ("hedonic", "pattern_members", "pattern_centres"):
         path = tmp_path / f"{name}.parquet"
         data.atomic_parquet(pd.DataFrame({"index": [100.0]}), path)
         metadata["tables_sha256"][name] = data.file_sha256(path)
     if failure == "missing":
-        (tmp_path / "members.parquet").unlink()
+        (tmp_path / "pattern_members.parquet").unlink()
     elif failure == "corrupt":
-        (tmp_path / "centres.parquet").write_bytes(b"partial parquet")
+        (tmp_path / "pattern_centres.parquet").write_bytes(b"partial parquet")
     elif failure:
         metadata[failure] = "obsolete"
     data.atomic_json(metadata, tmp_path / "metadata.json")
@@ -145,7 +148,7 @@ def test_all_production_sections_with_real_prepared_data(monkeypatch):
 
     monkeypatch.setattr(data, "prepare_cache", unexpected_prepare)
     monkeypatch.setattr(models, "fit_hedonic", unexpected_prepare)
-    monkeypatch.setattr(models, "cluster_trajectories", unexpected_prepare)
+    monkeypatch.setattr(models, "trajectory_patterns", unexpected_prepare)
     app = create_app(require_prepared=True)
     client = app.server.test_client()
     for path in ("/", "/healthz", "/_dash-layout", "/_dash-dependencies"):
@@ -220,22 +223,44 @@ def test_savassi_map_retains_at_least_95_percent_of_candidates() -> None:
     assert drawn / candidates >= 0.95
 
 
+@pytest.mark.skipif(
+    os.environ.get("BH_ITBI_REAL_DATA") != "1",
+    reason="Run after main.py prepare with BH_ITBI_REAL_DATA=1",
+)
+def test_default_map_marker_diameters() -> None:
+    frame = data.load_transactions(allow_prepare=False)
+    points, _ = map_points(filter_transactions(frame, Filters()))
+    scales = map_reference_scales(frame)
+    figure = map_figure(points, "open-street-map", scales)
+    marker = figure.data[0].marker
+    sizes = np.asarray(marker.size)
+    # P98 refers to the full-period area reference, which caps the sampled sizes.
+    assert sizes.max() == scales["area_reference"]
+    radii = np.maximum(np.sqrt(sizes / (2 * marker.sizeref)), marker.sizemin)
+    diameters = 2 * radii
+    np.testing.assert_allclose(
+        [diameters.min(), np.median(diameters), diameters.max()],
+        [3.7, 6.1, 11.3],
+        atol=0.15,
+        rtol=0,
+    )
+
+
 def assert_real_models(app):
     result = post_callback(app, "hedonic-figure.figure", ["models"])
     hedonic_figure = result["hedonic-figure"]["figure"]
     assert hedonic_figure["layout"]["yaxis"]["type"] == "log"
     assert hedonic_figure["data"][-1]["name"] == "Índice hedônico · IC 95%"
-    traces = result["trajectories-figure"]["figure"]["data"]
-    assert len(traces) == 95
-    assert [trace["name"] for trace in traces if trace.get("showlegend", True)] == [
-        "Bairros",
-        "Mediana entre os bairros",
-    ]
-    assert all(trace["legendgroup"] == "neighbourhoods" for trace in traces[:-1])
+    figures = [result[f"pattern-figure-{name}"]["figure"] for name in PATTERN_ORDER]
+    assert [len(figure["data"]) for figure in figures] == [36, 52, 18]
+    assert all(not figure["layout"]["showlegend"] for figure in figures)
+    assert len({tuple(figure["layout"]["yaxis"]["range"]) for figure in figures}) == 1
     fitted = models.load_models()
     assert fitted is not None
     assert fitted.metadata["hedonic"]["n"] == 202204
-    assert fitted.metadata["clusters"]["n_neighbourhoods"] == 94
+    assert_pinned_patterns(
+        fitted.metadata["patterns"], fitted.pattern_members, fitted.pattern_centres
+    )
     assert fitted.hedonic["n"].sum() == 202204
     hedonic = fitted.hedonic
     indices = ["hedonic_index", "lower", "upper", "raw_geometric_mean"]

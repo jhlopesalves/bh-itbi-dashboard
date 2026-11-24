@@ -1,4 +1,4 @@
-"""Draw the hedonic composition ribbon and observed neighbourhood trajectories."""
+"""Draw the hedonic composition ribbon and adjusted neighbourhood patterns."""
 
 from __future__ import annotations
 
@@ -8,34 +8,35 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-from bh_itbi.config import INDEX_BASE, YEAR_TICKS
+from bh_itbi.config import INDEX_BASE, PATTERN_ORDER, PATTERN_PERIODS
 from bh_itbi.formatting import composition_number, number, quarter_label
 from bh_itbi.models import COMPOSITION_TERMS, PreparedModels
 from bh_itbi.text.models import (
     HEDONIC_INDEX_TRACE_NAME,
     HEDONIC_RAW_TRACE_NAME,
-    TRAJECTORIES_MEDIAN_LABEL,
-    TRAJECTORIES_NEIGHBOURHOODS_LABEL,
-    TRAJECTORY_HOVER,
-    TRAJECTORY_INDEX_AXIS_TITLE,
-    TRAJECTORY_MEDIAN_HOVER,
+    PATTERN_CENTRE_HOVER,
+    PATTERN_MEMBER_HOVER,
     hedonic_hover,
 )
 from bh_itbi.text.shared import (
     COMPOSITION_LABELS,
 )
 from bh_itbi.theme import (
+    AXIS,
     COMPOSITION_HUES,
+    GRID,
     INK,
     MUTED,
+    PATTERN_BORDERLINE,
+    PATTERN_COLOURS,
+    PATTERN_FIGURE_HEIGHT,
     REFERENCE,
-    SLATE,
     SURFACE,
     TEAL,
     composition_tint,
+    padded_price_range,
     themed,
 )
-from bh_itbi.views.models import trajectory_median
 
 
 def ribbon_grid(
@@ -257,40 +258,76 @@ def hedonic_figure(table: pd.DataFrame) -> go.Figure:
     return fig
 
 
-def trajectories_figure(models: PreparedModels) -> go.Figure:
-    """Display all neighbourhood indices and their pointwise median."""
+def _pattern_member_trace(name: str, rows: pd.DataFrame, colour: str) -> go.Scatter:
+    """Encode a firm's membership in colour and a borderline member in grey dashes."""
+    ordered = rows.sort_values("period")
+    firm = bool(ordered["firm"].iat[0])
+    return go.Scatter(
+        x=ordered["period"],
+        y=ordered["index"],
+        mode="lines",
+        name=name.title(),
+        opacity=0.35 if firm else 1,
+        line={
+            "color": colour if firm else PATTERN_BORDERLINE,
+            "dash": "solid" if firm else "dash",
+            "width": 0.9,
+        },
+        customdata=ordered["membership_share"],
+        hovertemplate=PATTERN_MEMBER_HOVER,
+    )
+
+
+def _pattern_panel_figure(
+    models: PreparedModels, pattern: str, bounds: tuple[float, float]
+) -> go.Figure:
+    """Draw one pattern on the common index scale with its centre in the foreground."""
+    colour = PATTERN_COLOURS[pattern]
+    rows = models.pattern_members
+    members = rows.loc[rows["pattern"].eq(pattern)].sort_values(["firm", "neighbourhood"])
+    centre = models.pattern_centres
+    centre = centre.loc[centre["pattern"].eq(pattern)].sort_values("period")
     fig = go.Figure()
-    grouped = models.members.groupby("neighbourhood", observed=True, sort=True)
-    for i, (name, trajectory) in enumerate(grouped):
-        ordered = trajectory.sort_values("year")
-        fig.add_trace(
-            go.Scatter(
-                x=ordered["year"],
-                y=ordered["index"],
-                name=TRAJECTORIES_NEIGHBOURHOODS_LABEL,
-                mode="lines",
-                line={"color": SLATE, "width": 1},
-                opacity=0.35,
-                showlegend=i == 0,
-                legendgroup="neighbourhoods",
-                customdata=[[str(name).title(), count] for count in ordered["n"]],
-                hovertemplate=TRAJECTORY_HOVER,
-            )
-        )
-    median = trajectory_median(models.members)
+    for name, group in members.groupby("neighbourhood", observed=True, sort=False):
+        fig.add_trace(_pattern_member_trace(str(name), group, colour))
     fig.add_trace(
         go.Scatter(
-            x=median["year"],
-            y=median["index"],
+            x=centre["period"],
+            y=centre["index"],
             mode="lines+markers",
-            name=TRAJECTORIES_MEDIAN_LABEL,
-            line={"color": INK, "width": 3},
-            marker={"size": 5},
-            hovertemplate=TRAJECTORY_MEDIAN_HOVER,
+            line={"color": colour, "width": 3},
+            marker={"color": colour, "size": 6},
+            customdata=centre[["p10", "p90"]].to_numpy(),
+            hovertemplate=PATTERN_CENTRE_HOVER,
         )
     )
-    themed(fig, height=410)
-    fig.add_hline(y=INDEX_BASE, line=dict(REFERENCE))
-    fig.update_xaxes(tickvals=list(YEAR_TICKS))
-    fig.update_yaxes(title_text=TRAJECTORY_INDEX_AXIS_TITLE)
+    themed(fig, height=PATTERN_FIGURE_HEIGHT)
+    fig.update_layout(showlegend=False, margin={"l": 40, "r": 16, "t": 8, "b": 37})
+    fig.update_xaxes(
+        categoryorder="array",
+        categoryarray=PATTERN_PERIODS,
+        tickvals=PATTERN_PERIODS,
+        tickfont={"size": 10},
+        showgrid=False,
+        showline=True,
+        linecolor=AXIS,
+        automargin=True,
+    )
+    fig.update_yaxes(
+        range=bounds,
+        dtick=10,
+        gridcolor=GRID,
+        showline=True,
+        linecolor=AXIS,
+        zeroline=False,
+        tickfont={"size": 11},
+    )
+    fig.add_hline(y=INDEX_BASE, line=dict(REFERENCE), layer="below")
     return fig
+
+
+def pattern_figures(models: PreparedModels) -> dict[str, go.Figure]:
+    """Build the three figures using one range across all members and centres."""
+    values = pd.concat([models.pattern_members["index"], models.pattern_centres["index"]])
+    bounds = padded_price_range(float(values.min()), float(values.max()), step=5)
+    return {name: _pattern_panel_figure(models, name, bounds) for name in PATTERN_ORDER}

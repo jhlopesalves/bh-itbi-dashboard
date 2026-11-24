@@ -23,14 +23,17 @@ LAYER_RANK: dict[str, int] = {
     "bh_itbi.data": 3,
     "bh_itbi.filters": 4,
     "bh_itbi.stats": 4,
+    "bh_itbi.resampling": 4,
     "bh_itbi.robust": 4,
     "bh_itbi.urls": 4,
     "bh_itbi.overview": 5,
     "bh_itbi.diagnostics": 5,
     "bh_itbi.cluster": 5,
+    "bh_itbi.patterns": 5,
     "bh_itbi.models": 5,
     "bh_itbi.sensitivity": 5,
     "bh_itbi.audit_checks": 5,
+    "bh_itbi.audit_patterns": 5,
     "bh_itbi.age": 5,
     "bh_itbi.views": 6,
     "bh_itbi.audit": 6,
@@ -166,7 +169,13 @@ def test_serving_cannot_reach_the_audit_modules() -> None:
     paths = [*sorted(PACKAGE_DIR.rglob("*.py")), ROOT / "wsgi.py"]
     modules = {module_name_for_path(path): path for path in paths}
     graph = {name: parse_internal_imports(path, set(modules)) for name, path in modules.items()}
-    audit = {"bh_itbi.robust", "bh_itbi.sensitivity", "bh_itbi.audit_checks", "bh_itbi.audit"}
+    audit = {
+        "bh_itbi.robust",
+        "bh_itbi.sensitivity",
+        "bh_itbi.audit_checks",
+        "bh_itbi.audit_patterns",
+        "bh_itbi.audit",
+    }
     serving_layers = {
         "bh_itbi.app",
         "bh_itbi.callbacks",

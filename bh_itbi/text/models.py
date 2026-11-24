@@ -11,23 +11,20 @@ from bh_itbi.config import AuditEndpoint
 from bh_itbi.formatting import (
     composition_number,
     number,
-    number_word,
     quarter_label,
 )
 from bh_itbi.text.shared import (
     ALL_TYPES_LABEL,
     COMPOSITION_LABELS,
-    TRACE_NAME_EXTRA,
     TYPE_LABELS,
 )
 
-TRAJECTORY_INDEX_AXIS_TITLE = f"Índice · {cfg.START_YEAR} = {cfg.INDEX_BASE}"
 MODELS_UNAVAILABLE_BANNER = (
     "Os índices ainda não estão disponíveis nesta instalação. "
     "Consulte a preparação descrita no README."
 )
 MODELS_EYEBROW = f"POPULAÇÕES FIXAS · {cfg.START_YEAR}–{cfg.END_YEAR}"
-MODELS_SECTION_TITLE = "Índice hedônico e trajetórias por bairro"
+MODELS_SECTION_TITLE = "Índice hedônico e padrões de trajetória"
 MODELS_DESCRIPTION = (
     "Estimativas sobre a amostra fixa descrita em cada análise. "
     "Os filtros do panorama não alteram estes resultados."
@@ -49,24 +46,32 @@ _HEDONIC_CI_PERCENT = f"{number(cfg.HEDONIC_CONFIDENCE_LEVEL * 100)}%"
 _HEDONIC_CI = f"IC {_HEDONIC_CI_PERCENT}"
 HEDONIC_INDEX_TRACE_NAME = f"{HEDONIC_INDEX_LABEL} · {_HEDONIC_CI}"
 SENSITIVITY_NOTE_EYEBROW = "SENSIBILIDADE"
-TRAJECTORIES_MODEL_TITLE = "Trajetórias anuais por bairro"
-TRAJECTORIES_NEIGHBOURHOODS_LABEL = "Bairros"
-TRAJECTORIES_MEDIAN_LABEL = "Mediana entre os bairros"
+PATTERNS_TITLE = "Padrões de trajetória por bairro"
+PATTERN_LABELS = {
+    "falling": "Queda e estabilização",
+    "stable": "Estáveis",
+    "rising": "Alta recente",
+}
+PATTERN_MEMBERS_SUMMARY = "Bairros deste padrão"
+PATTERN_FIRM_LABEL = "Firmes"
+PATTERN_BORDERLINE_LABEL = "De fronteira"
+PATTERN_MEMBER_HOVER = (
+    "<b>%{fullData.name}</b><br>%{x}: %{y:.1f}"
+    "<br>No mesmo padrão em %{customdata:.0%} das reamostragens<extra></extra>"
+)
+PATTERN_CENTRE_HOVER = (
+    "Centro do padrão<br>%{x}: %{y:.1f}<br>"
+    "8 de cada 10 reamostragens: %{customdata[0]:.1f} a %{customdata[1]:.1f}<extra></extra>"
+)
 AUDIT_LINK_TEXT = "Consultar a auditoria"
 AUDIT_REPORT_URL = f"{cfg.REPOSITORY_URL}/blob/main/docs/robustness/report.md"
-TRAJECTORIES_FOOTNOTE = (
-    "Linhas finas: bairros; linha escura: mediana entre os bairros em cada ano. "
-    "As medianas não são ajustadas pela composição das transações: a entrada de imóveis "
-    "novos ou vendidos na planta pode elevar a mediana de um bairro sem que os imóveis "
-    "existentes se valorizem. A base em 2016 transfere a incerteza amostral desse ano para "
-    "toda a trajetória. A classificação dos bairros em quatro grupos foi retirada do painel "
-    "por não se manter estável na auditoria de robustez."
-)
-TRAJECTORY_HOVER = (
-    "<b>%{customdata[0]}</b><br>%{x}<br>Índice: %{y:.1f}"
-    "<br>Transações: %{customdata[1]:,.0f}" + TRACE_NAME_EXTRA
-)
-TRAJECTORY_MEDIAN_HOVER = "%{x}<br>Mediana entre os bairros: %{y:.1f}" + TRACE_NAME_EXTRA
+_PATTERN_SHARE_LABELS = {
+    0.25: "um quarto",
+    1 / 3: "um terço",
+    0.50: "metade",
+    2 / 3: "dois terços",
+}
+_PATTERN_SHARE_TOLERANCE = 0.05
 
 
 def hedonic_note(final_contributions: Mapping[str, float]) -> str:
@@ -124,11 +129,54 @@ def sensitivity_note(endpoint: AuditEndpoint) -> str:
     )
 
 
-def trajectories_subtitle(n_neighbourhoods: int) -> str:
-    """Describe the coverage, statistic and index base of the trajectories."""
+def patterns_subtitle(n_neighbourhoods: int, period_minimum: int) -> str:
+    """Describe the pattern population, adjustment, period and index base."""
     return (
-        f"{TYPE_LABELS['apartment']} · medianas anuais observadas · "
-        f"{number(n_neighbourhoods)} bairros com ao menos {cfg.CLUSTER_YEAR_MINIMUM} "
-        f"registros em cada um dos {number_word(len(cfg.YEARS))} anos · "
-        f"{cfg.START_YEAR} = {cfg.INDEX_BASE}."
+        f"{TYPE_LABELS['apartment']} · valor real por m² ajustado por área e idade do imóvel · "
+        f"medianas por biênio · {number(n_neighbourhoods)} bairros com ao menos "
+        f"{number(period_minimum)} registros em cada biênio · "
+        f"{cfg.INDEX_BASE} = média do próprio bairro em {cfg.START_YEAR}–{cfg.END_YEAR}."
+    )
+
+
+def pattern_counts(size: int, firm: int) -> str:
+    """State the displayed pattern's total, firm and borderline counts."""
+    return (
+        f"{number(size)} bairros · {number(firm)} firmes · {number(size - firm)} de fronteira"
+    )
+
+
+def patterns_footnote(
+    resampling: tuple[int, float],
+    separation_share: float,
+    centre_ranges: tuple[Sequence[float], Sequence[float]],
+    ari_median: float,
+    borderline_share: float,
+) -> str:
+    """Describe the grouping and its stability from the prepared metadata."""
+    nearest = min(_PATTERN_SHARE_LABELS, key=lambda fraction: abs(fraction - borderline_share))
+    share = (
+        _PATTERN_SHARE_LABELS[nearest]
+        if abs(nearest - borderline_share) <= _PATTERN_SHARE_TOLERANCE
+        else f"{number(100 * borderline_share)}%"
+    )
+    draws, firm_share = resampling
+    falling, rising = centre_ranges
+    reappear = round(10 * separation_share)
+    return (
+        "Agrupamento por k-médias em três padrões, aplicado à forma das trajetórias "
+        "(cada bairro centrado na própria média). Linha forte: centro do padrão; linhas finas: "
+        f"bairros que ficam no mesmo padrão em pelo menos {number(100 * firm_share)}% de "
+        f"{number(draws)} reamostragens; tracejado cinza: bairros de fronteira. "
+        "Cada reamostragem sorteia faces de quadra inteiras, porque vendas do mesmo prédio "
+        "ou quarteirão não são independentes. "
+        f"Os três padrões reaparecem em {number(reappear)} de cada 10 reamostragens. "
+        f"Em 8 de cada 10, o primeiro biênio da queda fica entre {number(falling[0])} e "
+        f"{number(falling[1])}, e o último biênio da alta recente, entre {number(rising[0])} e "
+        f"{number(rising[1])}; os bairros que compõem a alta recente, porém, variam. "
+        f"Cerca de {share} dos bairros ficam entre padrões (concordância mediana entre "
+        f"reamostragens: {number(ari_median, 2)}). "
+        "O ajuste considera apenas área e faixa de idade; outras diferenças de composição "
+        "permanecem. A classificação anterior, em quatro grupos e sem ajuste, "
+        "foi substituída após a auditoria de robustez."
     )

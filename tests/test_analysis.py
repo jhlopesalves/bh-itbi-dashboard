@@ -6,6 +6,7 @@ from decimal import Decimal
 import numpy as np
 import pandas as pd
 import pytest
+from plotly.colors import get_colorscale
 
 from bh_itbi.data import DataError, atomic_parquet, prepare_transactions
 from bh_itbi.diagnostics import heaping_summary, heaping_table, tax_base_table
@@ -117,15 +118,26 @@ def test_map_reference_scales_use_full_eligible_geocoded_population(snapshot_fra
 def test_map_marker_sizes_are_clipped_at_the_reference(snapshot_frame):
     scales = map_reference_scales(snapshot_frame)
     points, _ = map_points(filter_transactions(snapshot_frame, Filters()))
+    trace = map_figure(points, "white-bg", scales).data[0]
+    points = points.sort_values("built_area_m2", ascending=False, kind="stable")
     area = points["built_area_m2"]
     reference = scales["area_reference"]
     assert area.gt(reference).any()
-    marker = map_figure(points, "white-bg", scales).data[0].marker
+    marker = trace.marker
     np.testing.assert_array_equal(marker.size, area.clip(upper=reference))
     np.testing.assert_array_equal(marker.color, points["price_per_m2_brl_real"])
-    assert marker.sizeref == reference / 16**2
+    assert marker.sizeref == reference / 8**2
     assert marker.sizemode == "area"
-    assert marker.sizemin == 2.5
+    assert marker.sizemin == 1.85
+    assert marker.opacity == 0.60
+    positions, colours = zip(*marker.colorscale, strict=True)
+    expected_positions, expected_colours = zip(*get_colorscale("Viridis"), strict=True)
+    assert colours == expected_colours
+    assert positions == pytest.approx(expected_positions)
+    assert "line" not in marker.to_plotly_json()
+    np.testing.assert_array_equal(trace.lat, points["lat"])
+    np.testing.assert_array_equal(trace.lon, points["lon"])
+    assert [row[3] for row in trace.customdata] == [number(size, 1) for size in area]
 
 
 def test_map_retains_selection_above_the_reference_colour_range(source_factory):
@@ -140,7 +152,8 @@ def test_map_retains_selection_above_the_reference_colour_range(source_factory):
     assert stats.shown / stats.candidates >= 0.95
     marker = map_figure(points, "white-bg", scales).data[0].marker
     assert marker.cmax == scales["price_upper"]
-    np.testing.assert_array_equal(marker.color, points[price])
+    ordered = points.sort_values("built_area_m2", ascending=False, kind="stable")
+    np.testing.assert_array_equal(marker.color, ordered[price])
 
 
 def test_quantiles_count_non_missing_values_before_suppression():

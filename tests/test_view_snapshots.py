@@ -32,21 +32,25 @@ from snapshot_io import snapshot_digest, snapshot_json
 from test_app import post_callback
 
 from bh_itbi.app import create_app
+from bh_itbi.config import PATTERN_ORDER, PATTERN_PERIODS
 from bh_itbi.filters import Filters, filter_transactions, positive_area
 from bh_itbi.overview import map_points
 from bh_itbi.text.shared import CITY_NAME, TYPE_LABELS
 from bh_itbi.theme import (
     AXIS,
+    EXTRA_NEIGHBOURHOOD_COLOUR,
     GRID,
     INK,
     MUTED,
+    PATTERN_BORDERLINE,
+    PATTERN_COLOURS,
     REFERENCE,
     SLATE,
     SURFACE,
     TRANSPARENT,
     TYPE_STYLES,
     composition_tint,
-    neighbourhood_colours,
+    neighbourhood_styles,
     rgba,
 )
 
@@ -518,13 +522,14 @@ def test_neighbourhood_cards_share_colours_and_labels(
         trace["name"]: trace for trace in figure["data"] if trace["name"] != CITY_NAME
     }
     assert trajectories
-    colours = neighbourhood_colours(sorted(VIEW_MATRIX[case][2]))
+    styles = neighbourhood_styles(sorted(VIEW_MATRIX[case][2]))
     assert [trace["name"] for trace in figure["data"]] == [
-        *(name.title() for name in colours),
+        *(name.title() for name in styles),
         CITY_NAME,
     ]
-    assert {name: trace["line"]["color"] for name, trace in trajectories.items()} == {
-        name.title(): colour for name, colour in colours.items()
+    assert {name: trace["line"] for name, trace in trajectories.items()} == {
+        name.title(): {"color": style.colour, "dash": style.dash, "width": 2}
+        for name, style in styles.items()
     }
     for trace in figure["data"]:
         assert "meta" not in trace
@@ -546,7 +551,11 @@ def test_categorical_legends_group_series_and_omit_end_label_metadata(
         assert "end_labels" not in (layout.get("meta") or {}), output
         for trace in figure["data"]:
             assert "meta" not in trace, (output, trace.get("name"))
-        if figure["data"] and not output.endswith("geo-map.figure"):
+        if (
+            figure["data"]
+            and not output.endswith("geo-map.figure")
+            and "pattern-figure-" not in output
+        ):
             assert layout["showlegend"] is True, output
             assert layout["legend"]["groupclick"] == "togglegroup", output
 
@@ -573,19 +582,34 @@ def test_categorical_legends_group_series_and_omit_end_label_metadata(
             assert ref["name"].startswith("BH · ")
             assert ref["line"] == REFERENCE
 
+
+def test_pattern_figures_share_the_scale_and_encode_membership(view_snapshots):
     payload = view_snapshots["tabs_models_and_selection"]["models"]["models"]
-    trajectories = payload["trajectories-figure"]["figure"]
-    neighbourhoods, median = trajectories["data"][:-1], trajectories["data"][-1]
-    visible = [trace for trace in trajectories["data"] if trace.get("showlegend", True)]
-    assert [trace["name"] for trace in visible] == ["Bairros", "Mediana entre os bairros"]
-    assert {trace["legendgroup"] for trace in neighbourhoods} == {"neighbourhoods"}
-    assert all(trace["line"] == {"color": SLATE, "width": 1} for trace in neighbourhoods)
-    assert all(
-        trace["mode"] == "lines" and trace["opacity"] == 0.35 for trace in neighbourhoods
-    )
-    assert median["mode"] == "lines+markers"
-    assert median["line"]["color"] == INK
-    assert "legendgroup" not in trajectories["layout"]["shapes"][0]
+    figures = [payload[f"pattern-figure-{name}"]["figure"] for name in PATTERN_ORDER]
+    ranges = {tuple(figure["layout"]["yaxis"]["range"]) for figure in figures}
+    assert len(ranges) == 1
+    for name, figure in zip(PATTERN_ORDER, figures, strict=True):
+        layout = figure["layout"]
+        assert not layout["showlegend"]
+        assert layout["xaxis"]["tickvals"] == list(PATTERN_PERIODS)
+        (reference,) = layout["shapes"]
+        assert reference["y0"] == reference["y1"] == 100
+        assert reference["line"] == REFERENCE
+        *members, centre = figure["data"]
+        colour = PATTERN_COLOURS[name]
+        assert centre["mode"] == "lines+markers"
+        assert centre["line"] == {"color": colour, "width": 3}
+        assert "Centro do padrão" in centre["hovertemplate"]
+        for member in members:
+            assert member["mode"] == "lines"
+            firm = member["customdata"]["values"][0] >= 0.80
+            assert member["opacity"] == (0.35 if firm else 1)
+            assert member["line"] == {
+                "color": colour if firm else PATTERN_BORDERLINE,
+                "dash": "solid" if firm else "dash",
+                "width": 0.9,
+            }
+            assert "das reamostragens" in member["hovertemplate"]
 
 
 def _plotly_trace_colours(trace: dict[str, Any]) -> Iterator[str]:
@@ -661,7 +685,12 @@ def test_panorama_colours_keep_their_assigned_roles(
             for colour in _plotly_trace_colours(trace)
         )
     neutrals = {INK, MUTED, SURFACE, GRID, AXIS, SLATE, TRANSPARENT, REFERENCE["color"]}
-    neutrals.update(composition_tint(SLATE, strength=strength) for strength in (0.34, 0.68))
+    neutrals.add(EXTRA_NEIGHBOURHOOD_COLOUR)
+    neutrals.update(
+        composition_tint(colour, strength=strength)
+        for colour in (SLATE, EXTRA_NEIGHBOURHOOD_COLOUR)
+        for strength in (0.34, 0.68)
+    )
     property_colours = {
         colour: TYPE_LABELS[kind]
         for kind, style in TYPE_STYLES.items()

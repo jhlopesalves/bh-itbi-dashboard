@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from dash import ClientsideFunction, Dash, Input, NoUpdate, Output, State, ctx, html, no_update
 from dash.exceptions import PreventUpdate
 
+from bh_itbi.config import PATTERN_ORDER
 from bh_itbi.figures import (
     AgeChart,
     ComparisonPlot,
@@ -23,9 +24,9 @@ from bh_itbi.figures import (
     map_figure,
     neighbourhood_comparison_data,
     neighbourhood_trajectories_figure,
+    pattern_figures,
     tax_base_figure,
     temporal_figure,
-    trajectories_figure,
 )
 from bh_itbi.filters import Filters
 from bh_itbi.layout.overview import distribution_summary
@@ -105,7 +106,7 @@ DIAGNOSTICS_OUTPUTS: dict[str, Output] = {
 
 MODELS_OUTPUTS: dict[str, Output] = {
     "hedonic_figure": Output("hedonic-figure", "figure"),
-    "trajectories_figure": Output("trajectories-figure", "figure"),
+    **{f"pattern_{name}": Output(f"pattern-figure-{name}", "figure") for name in PATTERN_ORDER},
 }
 
 TAB_PROPERTIES = {"class": "className", "selected": "aria-selected", "index": "tabIndex"}
@@ -337,7 +338,7 @@ def _register_models_callback(
     def update_models(_tab: str) -> ModelsOutput:
         return {
             "hedonic_figure": hedonic_figure(models.hedonic),
-            "trajectories_figure": trajectories_figure(models),
+            **{f"pattern_{name}": figure for name, figure in pattern_figures(models).items()},
         }
 
 

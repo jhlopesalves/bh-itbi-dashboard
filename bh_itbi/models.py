@@ -1,4 +1,4 @@
-"""Offline estimation and persistence for the hedonic index and trajectory clusters."""
+"""Offline estimation and persistence for the hedonic index and trajectory patterns."""
 
 from __future__ import annotations
 
@@ -11,13 +11,10 @@ from typing import TYPE_CHECKING, TypedDict
 import numpy as np
 import pandas as pd
 
-from bh_itbi.cluster import ClusterMetadata, cluster_trajectories
 from bh_itbi.config import (
     AUDIT_EVIDENCE_DIR,
     AUDIT_PROTOCOL_ID,
     AUDIT_PROTOCOL_SHA256,
-    CLUSTER_K,
-    CLUSTER_K_RANGE,
     END_YEAR,
     HEDONIC_ALPHA,
     HEDONIC_CONFIDENCE_LEVEL,
@@ -27,6 +24,7 @@ from bh_itbi.config import (
     INDEX_BASE,
     MODEL_DIR,
     MODEL_VERSION,
+    PATTERN_DRAWS,
     RESIDENTIAL_TYPES,
     REVISION,
     SOURCE_SHA256,
@@ -40,6 +38,7 @@ from bh_itbi.data import (
     file_sha256,
 )
 from bh_itbi.filters import positive_area_rows
+from bh_itbi.patterns import PatternMetadata, trajectory_patterns
 
 if TYPE_CHECKING:
     from statsmodels.regression.linear_model import RegressionResultsWrapper
@@ -73,6 +72,7 @@ COMPOSITION_TERMS: dict[str, str] = {
     "property_type": "C(property_type)",
 }
 QUARTER_TERM = "C(quarter_label)"
+_MODEL_TABLES = ("hedonic", "pattern_members", "pattern_centres")
 
 
 class HedonicMetadata(TypedDict):
@@ -98,18 +98,18 @@ class ModelMetadata(TypedDict):
     source_sha256: str
     model_version: str
     hedonic: HedonicMetadata
-    clusters: ClusterMetadata
+    patterns: PatternMetadata
     tables_sha256: dict[str, str]
 
 
 @dataclass(frozen=True)
 class PreparedModels:
-    """Validated offline hedonic index and k-means neighbourhood trajectory tables."""
+    """Validated offline hedonic index and neighbourhood pattern tables."""
 
     metadata: ModelMetadata
     hedonic: pd.DataFrame
-    members: pd.DataFrame
-    centres: pd.DataFrame
+    pattern_members: pd.DataFrame
+    pattern_centres: pd.DataFrame
 
 
 def hedonic_complete_cases(frame: pd.DataFrame) -> pd.DataFrame:
@@ -261,23 +261,20 @@ def prepare_models(frame: pd.DataFrame, *, force: bool = False) -> ModelMetadata
     )
     hedonic, hedonic_metadata = fit_hedonic(frame)
     print(
-        f"Clustering neighbourhood trajectories "
-        f"(k={CLUSTER_K_RANGE[0]}–{CLUSTER_K_RANGE[-1]}, displaying k={CLUSTER_K})…",
+        f"Fitting quality-adjusted trajectory patterns with {PATTERN_DRAWS} bootstrap draws…",
         flush=True,
     )
-    members, centres, cluster_metadata = cluster_trajectories(frame)
-    atomic_parquet(hedonic, MODEL_DIR / "hedonic.parquet")
-    atomic_parquet(members, MODEL_DIR / "members.parquet")
-    atomic_parquet(centres, MODEL_DIR / "centres.parquet")
+    members, centres, pattern_metadata = trajectory_patterns(frame)
+    for name, table in zip(_MODEL_TABLES, (hedonic, members, centres), strict=True):
+        atomic_parquet(table, MODEL_DIR / f"{name}.parquet")
     metadata: ModelMetadata = {
         "revision": REVISION,
         "source_sha256": SOURCE_SHA256,
         "model_version": MODEL_VERSION,
         "hedonic": hedonic_metadata,
-        "clusters": cluster_metadata,
+        "patterns": pattern_metadata,
         "tables_sha256": {
-            name: file_sha256(MODEL_DIR / f"{name}.parquet")
-            for name in ("hedonic", "members", "centres")
+            name: file_sha256(MODEL_DIR / f"{name}.parquet") for name in _MODEL_TABLES
         },
     }
     atomic_json(metadata, MODEL_DIR / "metadata.json")
@@ -294,7 +291,7 @@ def load_models(directory: Path | None = None) -> PreparedModels | None:
     """
     directory = MODEL_DIR if directory is None else directory
     metadata_path = directory / "metadata.json"
-    files = {name: directory / f"{name}.parquet" for name in ("hedonic", "members", "centres")}
+    files = {name: directory / f"{name}.parquet" for name in _MODEL_TABLES}
     if not metadata_path.exists() or not all(path.exists() for path in files.values()):
         logger.warning("Model tables are missing from %s.", directory)
         return None
@@ -318,8 +315,8 @@ def load_models(directory: Path | None = None) -> PreparedModels | None:
     return PreparedModels(
         metadata=metadata,
         hedonic=pd.read_parquet(files["hedonic"], use_threads=False),
-        members=pd.read_parquet(files["members"], use_threads=False),
-        centres=pd.read_parquet(files["centres"], use_threads=False),
+        pattern_members=pd.read_parquet(files["pattern_members"], use_threads=False),
+        pattern_centres=pd.read_parquet(files["pattern_centres"], use_threads=False),
     )
 
 
