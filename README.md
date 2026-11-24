@@ -18,6 +18,10 @@ Mapas, distribuições e índices para explorar o mercado residencial de Belo Ho
 
 A aba de índices também apresenta três padrões de trajetória para apartamentos. As medianas por biênio usam valores reais por m² ajustados por área e faixa de idade, centrados na média de cada bairro. A frequência de permanência no mesmo padrão nas reamostragens distingue bairros firmes e de fronteira.
 
+![Três painéis de padrões de trajetória por bairro: queda e estabilização, estáveis e alta recente, com o centro de cada padrão em linha forte, bairros firmes em linhas finas e bairros de fronteira em tracejado cinza.](docs/images/padroes-trajetoria.png)
+
+*Padrões de trajetória de apartamentos por biênio (100 = média do próprio bairro em 2016–2025), com firmeza avaliada por reamostragem de faces de quadra.*
+
 ## Executar localmente
 
 Com o [uv](https://docs.astral.sh/uv/) instalado, na pasta do projeto:
